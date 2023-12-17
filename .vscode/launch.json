@@ -1,0 +1,52 @@
+{
+    // Use IntelliSense to learn about possible attributes.
+    // Hover to view descriptions of existing attributes.
+    // For more information, visit: https://go.microsoft.com/fwlink/?linkid=830387
+    "version": "0.2.0",
+    "configurations": [
+        {
+            "name": "Wails: Debug myproject",
+            "type": "go",
+            "request": "launch",
+            "mode": "exec",
+            "program": "${workspaceFolder}/build/bin/myproject.exe",
+            "preLaunchTask": "build",
+            "cwd": "${workspaceFolder}",
+            "env": {
+                "CGO_ENABLED": "1",
+            }
+        },
+        {
+            "name": "Test Current File",
+            "type": "go",
+            "request": "launch",
+            "mode": "auto",
+            "program": "${workspaceFolder}/${relativeFileDirname}",
+            "logOutput": "dap",
+            "showLog": true
+        },
+        {
+            "name": "Launch test function",
+            "type": "go",
+            "request": "launch",
+            "mode": "test",
+            "program": "${workspaceFolder}",
+            "args": [
+                "-test.run",
+                "downloadInternal"
+            ],
+            "env": {
+                "LOG_LEVEL": "debug"
+            },
+            "logOutput": "dap",
+            "showLog": true
+        },
+        {
+            "name": "Attach to Process",
+            "type": "go",
+            "request": "attach",
+            "mode": "local",
+            "processId": 0
+        },
+    ]
+}
