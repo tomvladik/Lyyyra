@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { DownloadEz } from "../wailsjs/go/main/App";
-import './App.css';
+import './App.less';
+import { SongList } from './pages/SongList';
 
 function App() {
     const [resultText, setResultText] = useState("Zpěvník není inicializován");
@@ -25,6 +26,7 @@ function App() {
             {/* <img src={logo} id="logo" alt="logo"/> */}
             <div id="result" className="result">{resultText}</div>
             <button className="btn" onClick={download}>Stáhnout data z internetu</button>
+            <SongList />
         </div>
     )
 }
