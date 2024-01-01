@@ -116,7 +116,7 @@ func (a *App) DownloadEz() error {
 		return err
 	}
 
-	a.prepareDatabase()
-	a.fillDatabase()
+	a.PrepareDatabase()
+	a.FillDatabase()
 	return nil
 }

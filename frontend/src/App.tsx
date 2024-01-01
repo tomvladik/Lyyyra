@@ -5,9 +5,7 @@ import { SongList } from './pages/SongList';
 
 function App() {
     const [resultText, setResultText] = useState("Zpěvník není inicializován");
-    const [name, setName] = useState('');
-    const updateName = (e: any) => setName(e.target.value);
-    const updateResultText = (result: string) => setResultText(result);
+
 
 
     function download() {
@@ -25,7 +23,10 @@ function App() {
         <div id="App">
             {/* <img src={logo} id="logo" alt="logo"/> */}
             <div id="result" className="result">{resultText}</div>
-            <button className="btn" onClick={download}>Stáhnout data z internetu</button>
+            <div className="result">
+                Upozorňujeme, že materiály stahované z <a href='https://www.evangelickyzpevnik.cz/zpevnik/kapitoly-a-pisne/' target="_blank">www.evangelickyzpevnik.cz</a> slouží pouze pro vlastní potřebu a k případnému dalšímu užití je třeba uzavřít licenční smlouvu s nositeli autorských práv.
+                <button className="btn" onClick={download}>Stáhnout data z internetu</button>
+            </div>
             <SongList />
         </div>
     )

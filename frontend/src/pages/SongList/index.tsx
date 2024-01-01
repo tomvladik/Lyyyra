@@ -1,4 +1,4 @@
-import { useState } from "react";
+import React, { useEffect, useState } from 'react';
 
 import { Filter } from "../../components/filter";
 import { Search } from "../../components/search";
@@ -6,13 +6,15 @@ import { SongCard } from "../../components/SongCard";
 
 import styles from "./index.module.less";
 import { loremIpsum } from "lorem-ipsum";
-import { SongData } from "../../models";
-
-
+import { dtoSong, SongData } from "../../models";
+import { GetSongs } from "../../../wailsjs/go/main/App";
 
 export const SongList = () => {
+
     const [inputValue, setInputValue] = useState("");
     const [activeFilter, setActiveFilter] = useState("");
+    const [data, setData] = useState(new Array<dtoSong>());
+    const [error, setError] = useState(false);
 
     //   const posts = useMany<{
     //     id: number;
@@ -27,7 +29,7 @@ export const SongList = () => {
     function generateItems(): SongData[] {
         const items: SongData[] = [];
 
-        for (let i = 1; i <= 30; i++) {
+        for (let i = 1; i <= 777; i++) {
             const item: SongData = {
                 songNumber: i,
                 title: loremIpsum({
@@ -62,8 +64,20 @@ export const SongList = () => {
         return items;
     }
 
-    const posts: SongData[] = generateItems();
-    console.log(posts);
+    const fetchData = async () => {
+        try {
+            // Assume fetchData returns a Promise
+            const result = await GetSongs();
+            setData(result);
+        } catch (error) {
+            setError(true);
+        }
+    };
+    // useEffect with an empty dependency array runs once when the component mounts
+    useEffect(() => {
+        fetchData();
+    }, []); // Empty dependency array means it runs once when the component mounts
+
 
     const filters: string[] = ["published", "draft", "rejected"];
 
@@ -89,10 +103,11 @@ export const SongList = () => {
                     setInputValue(e.target.value);
                 }}
             />
-            {posts
-                ?.filter((el) => el.title.toLowerCase().includes(inputValue.toLowerCase()))
+            {data
+                ?.filter((el) => el.Title.toLowerCase().includes(inputValue.toLowerCase())
+                    || el.Verses.toLowerCase().includes(inputValue.toLowerCase()))
                 .map((song) => {
-                    return <SongCard data={song} title={song.title} music={song.authorMusic} text={song.authorText} lyrics={song.lyrics} />;
+                    return <SongCard data={song} />;
                 })}
         </div>
     );

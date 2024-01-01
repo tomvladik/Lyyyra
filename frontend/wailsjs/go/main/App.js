@@ -13,3 +13,15 @@ export function DownloadInternal() {
 export function DownloadSongBase() {
   return window['go']['main']['App']['DownloadSongBase']();
 }
+
+export function FillDatabase() {
+  return window['go']['main']['App']['FillDatabase']();
+}
+
+export function GetSongs() {
+  return window['go']['main']['App']['GetSongs']();
+}
+
+export function PrepareDatabase() {
+  return window['go']['main']['App']['PrepareDatabase']();
+}

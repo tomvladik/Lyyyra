@@ -9,7 +9,7 @@ import (
 	_ "github.com/mattn/go-sqlite3"
 )
 
-func (a *App) prepareDatabase() {
+func (a *App) PrepareDatabase() {
 	// Open an SQLite database (file-based)
 	db, err := sql.Open("sqlite3", a.dbFilePath)
 	if err != nil {
@@ -60,7 +60,7 @@ func (a *App) prepareDatabase() {
 	}
 }
 
-func (a *App) fillDatabase() {
+func (a *App) FillDatabase() {
 	db, err := sql.Open("sqlite3", a.dbFilePath)
 	if err != nil {
 		fmt.Println("Error opening database:", err)
@@ -134,4 +134,49 @@ func (a *App) fillDatabase() {
 
 		fmt.Printf("Data inserted for file %s\n", xmlFile.Name())
 	}
+}
+
+func (a *App) GetSongs() ([]dtoSong, error) {
+	var result []dtoSong
+	db, err := sql.Open("sqlite3", a.dbFilePath)
+	if err != nil {
+		fmt.Println("Error opening database:", err)
+		return result, err
+	}
+	defer db.Close()
+
+	// Perform a full-text search on the lyrics
+	//searchTerm := "your_search_term_here"
+	rows, err := db.Query(`
+SELECT s.id,
+       entry,
+       title,
+	   REPLACE(GROUP_CONCAT(lines, char(10)), '<br />', '===') AS all_verses
+  FROM songs s, verses v
+  WHERE s.id=v.song_id
+  GROUP BY
+  	   s.id,
+       entry,
+       title
+  order by entry, v.name`)
+	if err != nil {
+		fmt.Println("Error querying data:", err)
+		return result, err
+	}
+	defer rows.Close()
+
+	for rows.Next() {
+		var (
+			title, allVerses string
+			id, entry        int
+		)
+		err := rows.Scan(&id, &entry, &title, &allVerses)
+		if err != nil {
+			fmt.Println("Error scanning row:", err)
+			return result, err
+		}
+
+		result = append(result, dtoSong{Id: id, Entry: entry, Title: title, Verses: allVerses})
+	}
+	return result, nil
 }

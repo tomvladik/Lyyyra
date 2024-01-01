@@ -5,3 +5,9 @@ export interface SongData {
     authorMusic: string;
     lyrics: string;
 }
+export interface dtoSong {
+    Id: number
+    Entry: number
+    Title: string
+    Verses: string
+}

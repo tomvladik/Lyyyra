@@ -42,3 +42,10 @@ type Author struct {
 	Type  string `xml:"type,attr"`
 	Value string `xml:",chardata"`
 }
+
+type dtoSong struct {
+	Id     int
+	Entry  int
+	Title  string
+	Verses string
+}
