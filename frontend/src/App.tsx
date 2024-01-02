@@ -1,33 +1,46 @@
-import { useState } from 'react';
-import { DownloadEz } from "../wailsjs/go/main/App";
+import React, { useState, useEffect } from 'react';
 import './App.less';
+import { dtoSong } from './models';
+import { GetSongs } from '../wailsjs/go/main/App';
 import { SongList } from './pages/SongList';
+import { InfoBox } from './components/InfoBox';
+
+export const DataContext = React.createContext({
+    songs: new Array<dtoSong>(),
+    setSongs: () => { }
+});
 
 function App() {
-    const [resultText, setResultText] = useState("Zpěvník není inicializován");
+    const [songs, setSongs] = useState(new Array<dtoSong>());
 
+    const [error, setError] = useState(false);
 
-
-    function download() {
-        setResultText("Stahuji data")
-        DownloadEz().then(() => {
-            setResultText("Data jsou připravena")
-        }).catch(error => {
-            setResultText("Problém během stahování:" + error)
-            console.error("Error during download:", error);
-        });
-
+    const fetchData = async () => {
+        try {
+            // Assume fetchData returns a Promise
+            const result = await GetSongs();
+            setSongs(result);
+        } catch (error) {
+            setError(true);
+        }
+    };
+    const value = {
+        songs: songs,
+        setSongs: () => { fetchData() }
     }
+
+    // useEffect with an empty dependency array runs once when the component mounts
+    useEffect(() => {
+        fetchData();
+    }, []);
+
 
     return (
         <div id="App">
-            {/* <img src={logo} id="logo" alt="logo"/> */}
-            <div id="result" className="result">{resultText}</div>
-            <div className="result">
-                Upozorňujeme, že materiály stahované z <a href='https://www.evangelickyzpevnik.cz/zpevnik/kapitoly-a-pisne/' target="_blank">www.evangelickyzpevnik.cz</a> slouží pouze pro vlastní potřebu a k případnému dalšímu užití je třeba uzavřít licenční smlouvu s nositeli autorských práv.
-                <button className="btn" onClick={download}>Stáhnout data z internetu</button>
-            </div>
-            <SongList />
+            <DataContext.Provider value={value}>
+                <InfoBox />
+                <SongList />
+            </DataContext.Provider>
         </div>
     )
 }

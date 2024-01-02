@@ -1,5 +1,8 @@
 {
   "dependencies": {
     "lorem-ipsum-generator": "^1.0.4"
+  },
+  "devDependencies": {
+    "@types/jest": "^29.5.11"
   }
 }

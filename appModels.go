@@ -1,5 +1,14 @@
 package main
 
+import "time"
+
+type AppStatus struct {
+	WebResourcesReady bool
+	SongsReady        bool
+	DatabaseReady     bool
+	LastSave          time.Time
+}
+
 type SongFilesSources struct {
 	Domain    string
 	Url       string

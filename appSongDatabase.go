@@ -3,6 +3,7 @@ package main
 import (
 	"database/sql"
 	"fmt"
+	"log/slog"
 	"os"
 
 	_ "github.com/mattn/go-sqlite3"
@@ -12,7 +13,7 @@ func (a *App) PrepareDatabase() {
 	// Open an SQLite database (file-based)
 	db, err := sql.Open("sqlite3", a.dbFilePath)
 	if err != nil {
-		fmt.Println("Error opening database:", err)
+		slog.Error(fmt.Sprintf("Error opening database: %s", err))
 		return
 	}
 	defer db.Close()
@@ -24,10 +25,11 @@ func (a *App) PrepareDatabase() {
 			entry INTEGER,
 			title TEXT,
 			verse_order TEXT
-		)
+		);
+		DELETE FROM songs;
 	`)
 	if err != nil {
-		fmt.Println("Error creating songs table:", err)
+		slog.Error(fmt.Sprintf("Error creating songs table: %s", err))
 		return
 	}
 
@@ -38,10 +40,12 @@ func (a *App) PrepareDatabase() {
 		author_type TEXT,
 		author_value TEXT,
 		FOREIGN KEY(song_id) REFERENCES songs(id)
-	)
+		ON DELETE CASCADE
+	);
+	DELETE FROM authors;
 `)
 	if err != nil {
-		fmt.Println("Error creating authors table:", err)
+		slog.Error(fmt.Sprintf("Error creating authors table: %s", err))
 		return
 	}
 	_, err = db.Exec(`
@@ -51,10 +55,12 @@ func (a *App) PrepareDatabase() {
 			name TEXT,
 			lines TEXT,
 			FOREIGN KEY(song_id) REFERENCES songs(id)
-		)
+			ON DELETE CASCADE
+		);
+		DELETE FROM verses;
 	`)
 	if err != nil {
-		fmt.Println("Error creating verses table:", err)
+		slog.Error(fmt.Sprintf("Error creating verses table: %s", err))
 		return
 	}
 }
@@ -62,7 +68,7 @@ func (a *App) PrepareDatabase() {
 func (a *App) FillDatabase() {
 	db, err := sql.Open("sqlite3", a.dbFilePath)
 	if err != nil {
-		fmt.Println("Error opening database:", err)
+		slog.Error(fmt.Sprintf("Error opening database: %s", err))
 		return
 	}
 	defer db.Close()
@@ -70,10 +76,17 @@ func (a *App) FillDatabase() {
 	// Read all XML files in the specified directory
 	xmlFiles, err := os.ReadDir(a.songBookDir)
 	if err != nil {
-		fmt.Println("Error reading XML files directory:", err)
+		slog.Error(fmt.Sprintf("Error reading XML files directory: %s", err))
+		a.status.SongsReady = false
 		return
 	}
-	defer os.RemoveAll(a.songBookDir)
+	if len(xmlFiles) == 0 {
+		slog.Error(fmt.Sprintf("No XML files in directory: %s", a.songBookDir))
+		a.status.SongsReady = false
+		return
+	}
+	//defer os.RemoveAll(a.songBookDir)
+
 	// Process each XML file
 	for _, xmlFile := range xmlFiles {
 		// Construct the full path to the XML file
@@ -90,14 +103,14 @@ func (a *App) FillDatabase() {
 		INSERT INTO songs (title, verse_order, entry) VALUES (?, ?, ?)
 	`, song.Title, song.VerseOrder, song.Songbook.Entry)
 		if err != nil {
-			fmt.Printf("Error inserting song data for file %s: %v\n", xmlFile.Name(), err)
+			slog.Error(fmt.Sprintf("Error inserting song data for file %s: %v\n", xmlFile.Name(), err))
 			continue
 		}
 
 		// Get the ID of the inserted song
 		songID, err := result.LastInsertId()
 		if err != nil {
-			fmt.Printf("Error getting last insert ID for file %s: %v\n", xmlFile.Name(), err)
+			slog.Error(fmt.Sprintf("Error getting last insert ID for file %s: %v\n", xmlFile.Name(), err))
 			continue
 		}
 
@@ -107,7 +120,7 @@ func (a *App) FillDatabase() {
 			INSERT INTO authors (song_id, author_type, author_value) VALUES (?, ?, ?)
 		`, songID, author.Type, author.Value)
 			if err != nil {
-				fmt.Printf("Error inserting author data for file %s: %v\n", xmlFile.Name(), err)
+				slog.Error(fmt.Sprintf("Error inserting author data for file %s: %v\n", xmlFile.Name(), err))
 				continue
 			}
 		}
@@ -118,12 +131,12 @@ func (a *App) FillDatabase() {
 			INSERT INTO verses (song_id, name, lines) VALUES (?, ?, ?)
 		`, songID, verse.Name, verse.Lines)
 			if err != nil {
-				fmt.Printf("Error inserting verse data for file %s: %v\n", xmlFile.Name(), err)
+				slog.Error(fmt.Sprintf("Error inserting verse data for file %s: %v\n", xmlFile.Name(), err))
 				continue
 			}
 		}
 
-		fmt.Printf("Data inserted for file %s\n", xmlFile.Name())
+		slog.Debug(fmt.Sprintf("Data inserted  %s : %s file %s\n", song.Songbook.Entry, song.Title, xmlFile.Name()))
 	}
 }
 
@@ -131,7 +144,8 @@ func (a *App) GetSongs() ([]dtoSong, error) {
 	var result []dtoSong
 	db, err := sql.Open("sqlite3", a.dbFilePath)
 	if err != nil {
-		fmt.Println("Error opening database:", err)
+		slog.Error(fmt.Sprintf("Error opening database: %s", err))
+		a.status.DatabaseReady = false
 		return result, err
 	}
 	defer db.Close()
@@ -151,7 +165,7 @@ SELECT s.id,
        title
   order by entry, v.name`)
 	if err != nil {
-		fmt.Println("Error querying data:", err)
+		slog.Error(fmt.Sprintf("Error querying data: %s", err))
 		return result, err
 	}
 	defer rows.Close()
@@ -163,7 +177,7 @@ SELECT s.id,
 		)
 		err := rows.Scan(&id, &entry, &title, &allVerses)
 		if err != nil {
-			fmt.Println("Error scanning row:", err)
+			slog.Error(fmt.Sprintf("Error scanning row: %s", err))
 			return result, err
 		}
 
@@ -176,7 +190,7 @@ func (a *App) GetSongAuthors(songId int) ([]Author, error) {
 	var result []Author
 	db, err := sql.Open("sqlite3", a.dbFilePath)
 	if err != nil {
-		fmt.Println("Error opening database:", err)
+		slog.Error(fmt.Sprintf("Error opening database: %s", err))
 		return result, err
 	}
 	defer db.Close()
@@ -189,7 +203,7 @@ func (a *App) GetSongAuthors(songId int) ([]Author, error) {
 	WHERE song_id = ?
 	ORDER BY author_type`, songId)
 	if err != nil {
-		fmt.Println("Error querying data:", err)
+		slog.Error(fmt.Sprintf("Error querying data: %s", err))
 		return result, err
 	}
 	defer rows.Close()
@@ -200,7 +214,7 @@ func (a *App) GetSongAuthors(songId int) ([]Author, error) {
 		)
 		err := rows.Scan(&authType, &authValue)
 		if err != nil {
-			fmt.Println("Error scanning row:", err)
+			slog.Error(fmt.Sprintf("Error scanning row: %s", err))
 			return result, err
 		}
 

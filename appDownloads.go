@@ -3,6 +3,7 @@ package main
 import (
 	"fmt"
 	"io"
+	"log/slog"
 	"net/http"
 	"net/url"
 	"os"
@@ -52,7 +53,7 @@ func (a *App) downloadFile(fileUrl, fileName string) (string, error) {
 			return "", err
 		}
 	}
-	fmt.Printf("Downloaded file from %s to %s\n", fileUrl, fullPath)
+	slog.Info("Downloaded file", "fileUrl", fileUrl, "fullPath", fullPath)
 	return fullPath, nil
 }
 
@@ -64,9 +65,9 @@ func (a *App) downloadParts() {
 		localFileName := fmt.Sprintf("%s.PDF", node.Title)
 		fullFilePtah, err := a.downloadFile(downloadUrl, localFileName)
 		if err != nil {
-			fmt.Println("Error:", err)
+			slog.Error(err.Error())
 		}
-		fmt.Println("Downloaded to ", fullFilePtah)
+		slog.Info("Downloaded to " + fullFilePtah)
 		a.pdfFiles.Items[i].LocalFileName = localFileName
 		//parsePdf(fullFilePtah)
 	}
@@ -76,7 +77,7 @@ func (a *App) downloadParts() {
 func (a *App) DownloadSongBase() error {
 	fileName, err := a.downloadFile(a.xmlUrl, "Songs.zip")
 	if err != nil {
-		fmt.Println("Error:", err)
+		slog.Error(err.Error())
 		return err
 	}
 	defer os.Remove(fileName)
@@ -86,7 +87,7 @@ func (a *App) DownloadSongBase() error {
 
 func (a *App) DownloadInternal() error {
 
-	fmt.Println(fmt.Sprintf("Processing from %s://%s", a.pdfFiles.UrlScheme, a.pdfFiles.Domain))
+	slog.Info(fmt.Sprintf("Processing from %s://%s", a.pdfFiles.UrlScheme, a.pdfFiles.Domain))
 
 	if err := os.MkdirAll(a.appDir, os.ModePerm); err != nil {
 		return err
@@ -94,29 +95,43 @@ func (a *App) DownloadInternal() error {
 
 	fileName, err := a.downloadFile(a.pdfFiles.Url, "INDEX")
 	if err != nil {
-		fmt.Println("Error:", err)
+		slog.Error(err.Error())
 		return err
 	}
 
 	a.pdfFiles.Items = a.parseHtml(fileName)
 	a.downloadParts()
-	a.serializeToYaml(a.pdfFiles)
+	a.serializeToYaml("data.yaml", a.pdfFiles)
 	return nil
 }
 
 func (a *App) DownloadEz() error {
 
-	err := a.DownloadInternal()
-	if err != nil {
-		return err
+	var err error
+
+	if !a.status.WebResourcesReady {
+		err = a.DownloadInternal()
+		if err != nil {
+			return err
+		}
+		a.status.WebResourcesReady = true
 	}
 
-	err = a.DownloadSongBase()
-	if err != nil {
-		return err
+	if !a.status.SongsReady {
+		err = a.DownloadSongBase()
+		if err != nil {
+			return err
+
+		}
+		a.status.SongsReady = true
 	}
 
-	a.PrepareDatabase()
-	a.FillDatabase()
+	if !a.status.DatabaseReady {
+		a.PrepareDatabase()
+		a.FillDatabase()
+		a.status.DatabaseReady = true
+	}
+
+	a.saveStatus()
 	return nil
 }

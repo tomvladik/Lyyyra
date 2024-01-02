@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import { useEffect, useState } from "react";
 import { dtoSong, Author } from "../../models";
 import styles from "./index.module.less";
 import { GetSongAuthors } from "../../../wailsjs/go/main/App";

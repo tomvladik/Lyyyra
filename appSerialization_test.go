@@ -38,12 +38,38 @@ func Test_parseXmlSong(t *testing.T) {
 				},
 				Lyrics: Lyrics{
 					Verses: []Verse{
-						{Name: "v1", Lines: "<lines>Chvaliž Hospodina, slávy vždy Krále mocného, ó\u00a0duše má, neboť tužba to srdce " +
+						{Name: "v1", Lines: "Chvaliž Hospodina, slávy vždy Krále mocného, ó\u00a0duše má, neboť tužba to srdce " +
 							"je mého. Shromažďte se, harfy ať tón ozve se, zpívejte " +
-							"chvalozpěv\u00a0jeho!</lines>"},
-						{Name: "v2", Lines: "<lines>Chvaliž Hospodina, jenž všechno slavně spravuje, v\u00a0bezpečné náruči před " +
+							"chvalozpěv\u00a0jeho!"},
+						{Name: "v2", Lines: "Chvaliž Hospodina, jenž všechno slavně spravuje, v\u00a0bezpečné náruči před " +
 							"pádem tě ochraňuje a\u00a0vede tě Duchem své lásky v\u00a0světě, tvá duše to " +
-							"pociťuje.</lines>"},
+							"pociťuje."},
+					},
+				}},
+		},
+		{
+			name: "Simple song file - nonformatted XML -  is properly parsed.",
+			args: args{
+				xmlFilePath: `testdata/song-2.xml`,
+			},
+			wantErr: false,
+			want: Song{
+				Version: "0.8",
+				Title:   "Kdo se vzdává cest, kterým vládne hřích",
+				Songbook: Songbook{
+					Name:  "EZ21",
+					Entry: "1",
+				},
+				VerseOrder: "v1 v2 v3",
+				Authors: []Author{
+					{Type: "words", Value: "Miloslav Esterle"},
+					{Type: "music", Value: "Pseaumes octante trois de David, 1551"},
+				},
+				Lyrics: Lyrics{
+					Verses: []Verse{
+						{Name: "v1", Lines: "Kdo se vzdává cest, kterým vládne hřích, kdo neřídí se radou bezbožných, ten, kdo se zříká lží a\u00a0posmívání, po Božích řádech ptá se bez přestání, kdo spravedlnost hledá den co den, požehnání smí nalézt v\u00a0díle\u00a0svém."},
+						{Name: "v2", Lines: "S\u00a0vírou dál jak strom bude pevně stát a\u00a0z\u00a0čerstvých vod vždy novou sílu brát. Úrodou hojnou sytí hladového, v\u00a0žáru se stává stínem znaveného. Těm, kdo se trápí, chce být útěchou. Věrným dá Bůh znát cestu bezpečnou."},
+						{Name: "v3", Lines: "Bezbožní však svůj život ztrácejí, když vlastní vůli věří raději. Jsou jako chmýří, kterým vítr zmítá, když Boží láska zůstává jim skrytá. Před soudem s\u00a0pýchou těžko obstojí, bez milosti svou duši nezhojí."},
 					},
 				}},
 		}}

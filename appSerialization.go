@@ -3,7 +3,7 @@ package main
 import (
 	"encoding/xml"
 	"fmt"
-	"log"
+	"log/slog"
 	"os"
 	"path/filepath"
 	"regexp"
@@ -13,43 +13,58 @@ import (
 	"gopkg.in/yaml.v2"
 )
 
-func (a *App) serializeToYaml(book SongFilesSources) {
+func (a *App) serializeToYaml(fileName string, data interface{}) {
 
 	// Serialize to YAML
-	yamlData, err := yaml.Marshal(book)
+	yamlData, err := yaml.Marshal(data)
 	if err != nil {
-		fmt.Println("Error:", err)
+		slog.Error(err.Error())
 		return
 	}
 
-	yamlPath := filepath.Join(a.appDir, "data.yaml")
+	yamlPath := filepath.Join(a.appDir, fileName)
 
 	// Write YAML data to a file
 	err = os.WriteFile(yamlPath, yamlData, 0644)
 	if err != nil {
-		fmt.Println("Error writing to file:", err)
+		slog.Error(fmt.Sprintf("Error writing to file: %s", err))
 		return
 	}
-	fmt.Println("YAML Serialization to file completed.")
+	slog.Info("YAML Serialization to file completed.")
+}
+
+func (a *App) deserializeFromYaml(dataStruct interface{}, fileName string) error {
+	yamlPath := filepath.Join(a.appDir, fileName)
+	data, err := os.ReadFile(yamlPath)
+	if err != nil {
+		return err
+	}
+
+	err = yaml.Unmarshal(data, dataStruct)
+	if err != nil {
+		return err
+	}
+
+	return nil
 }
 
 func (a *App) parseHtml(fileName string) []FileItem {
 	// Open the HTML file
 	file, err := os.Open(fileName)
 	if err != nil {
-		log.Fatal(err)
+		slog.Error(err.Error())
 	}
 	defer file.Close()
 	// Parse the HTML document
 	doc, err := htmlquery.Parse(file)
 	if err != nil {
-		log.Fatal(err)
+		slog.Error(err.Error())
 	}
 
 	// Use XPath to select a list of nodes /html/body/section[1]/div/div/div/h4[xxxxxx]/a
 	nodes, err := htmlquery.QueryAll(doc, "/html/body/section[1]/div/div/div/h4/a")
 	if err != nil {
-		log.Fatal(err)
+		slog.Error(err.Error())
 	}
 
 	// Create a slice to store the list of items
@@ -73,24 +88,27 @@ func (a *App) parseHtml(fileName string) []FileItem {
 func parseXmlSong(xmlFilePath string) (*Song, error) {
 	xmlData, err := os.ReadFile(xmlFilePath)
 	if err != nil {
-		fmt.Printf("Error reading XML file %s: %v\n", xmlFilePath, err)
+		slog.Error(fmt.Sprintf("Error reading XML file %s: %v\n", xmlFilePath, err))
 		return nil, err
 	}
 
 	var song Song
 	err = xml.Unmarshal(xmlData, &song)
 	if err != nil {
-		fmt.Printf("Error unmarshalling XML in file %s: %v\n", xmlFilePath, err)
+		slog.Error(fmt.Sprintf("Error unmarshalling XML in file %s: %v\n", xmlFilePath, err))
 		return nil, err
 	}
 
-	re := regexp.MustCompile(`\s{2,}|<br />`)
+	reWhiteSpaces := regexp.MustCompile(`\s{2,}|<br />|<br/>`)
+	reToRemove := regexp.MustCompile(`<lines>|</lines>`)
 	for i, verse := range song.Lyrics.Verses {
 		// Trim leading and trailing whitespace from each line
 		trimmed := strings.TrimSpace(verse.Lines)
 
 		// Replace multiple whitespaces with a single space
-		song.Lyrics.Verses[i].Lines = re.ReplaceAllString(trimmed, " ")
+		trimmed = reWhiteSpaces.ReplaceAllString(trimmed, " ")
+		trimmed = reToRemove.ReplaceAllString(trimmed, "")
+		song.Lyrics.Verses[i].Lines = trimmed
 	}
 	return &song, nil
 }
