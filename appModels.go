@@ -43,6 +43,7 @@ type Verse struct {
 	Name  string `xml:"name,attr"`
 	Lines string `xml:",innerxml"`
 }
+
 type dtoSong struct {
 	Id     int
 	Entry  int

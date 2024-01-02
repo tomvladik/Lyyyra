@@ -10,6 +10,8 @@ export function DownloadSongBase():Promise<void>;
 
 export function FillDatabase():Promise<void>;
 
+export function GetSongAuthors(arg1:number):Promise<Array<main.Author>>;
+
 export function GetSongs():Promise<Array<main.dtoSong>>;
 
 export function PrepareDatabase():Promise<void>;

@@ -11,3 +11,8 @@ export interface dtoSong {
     Title: string
     Verses: string
 }
+
+export interface Author {
+    Type: string
+    Value: string
+}

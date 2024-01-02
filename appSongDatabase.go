@@ -171,3 +171,40 @@ SELECT s.id,
 	}
 	return result, nil
 }
+
+func (a *App) GetSongAuthors(songId int) ([]Author, error) {
+	var result []Author
+	db, err := sql.Open("sqlite3", a.dbFilePath)
+	if err != nil {
+		fmt.Println("Error opening database:", err)
+		return result, err
+	}
+	defer db.Close()
+
+	// Perform a full-text search on the lyrics
+	//searchTerm := "your_search_term_here"
+	rows, err := db.Query(`
+	SELECT DISTINCT author_type, author_value 
+	FROM authors
+	WHERE song_id = ?
+	ORDER BY author_type`, songId)
+	if err != nil {
+		fmt.Println("Error querying data:", err)
+		return result, err
+	}
+	defer rows.Close()
+
+	for rows.Next() {
+		var (
+			authType, authValue string
+		)
+		err := rows.Scan(&authType, &authValue)
+		if err != nil {
+			fmt.Println("Error scanning row:", err)
+			return result, err
+		}
+
+		result = append(result, Author{Type: authType, Value: authValue})
+	}
+	return result, nil
+}

@@ -18,6 +18,10 @@ export function FillDatabase() {
   return window['go']['main']['App']['FillDatabase']();
 }
 
+export function GetSongAuthors(arg1) {
+  return window['go']['main']['App']['GetSongAuthors'](arg1);
+}
+
 export function GetSongs() {
   return window['go']['main']['App']['GetSongs']();
 }

@@ -19,7 +19,7 @@ func Test_parseXmlSong(t *testing.T) {
 		wantErr bool
 	}{
 		{
-			name: "Blank Go file in directory",
+			name: "Simple song file is properly parsed.",
 			args: args{
 				xmlFilePath: `testdata/song-1.xml`,
 			},
@@ -38,11 +38,11 @@ func Test_parseXmlSong(t *testing.T) {
 				},
 				Lyrics: Lyrics{
 					Verses: []Verse{
-						{Name: "v1", Lines: "<lines>Chvaliž Hospodina, slávy vždy Krále mocného,<br />ó\u00a0duše má, neboť tužba to srdce " +
-							"je mého.<br />Shromažďte se,<br />harfy ať tón ozve se,<br />zpívejte " +
+						{Name: "v1", Lines: "<lines>Chvaliž Hospodina, slávy vždy Krále mocného, ó\u00a0duše má, neboť tužba to srdce " +
+							"je mého. Shromažďte se, harfy ať tón ozve se, zpívejte " +
 							"chvalozpěv\u00a0jeho!</lines>"},
-						{Name: "v2", Lines: "<lines>Chvaliž Hospodina, jenž všechno slavně spravuje,<br />v\u00a0bezpečné náruči před " +
-							"pádem tě ochraňuje<br />a\u00a0vede tě<br />Duchem své lásky v\u00a0světě,<br />tvá duše to " +
+						{Name: "v2", Lines: "<lines>Chvaliž Hospodina, jenž všechno slavně spravuje, v\u00a0bezpečné náruči před " +
+							"pádem tě ochraňuje a\u00a0vede tě Duchem své lásky v\u00a0světě, tvá duše to " +
 							"pociťuje.</lines>"},
 					},
 				}},
