@@ -1,0 +1,28 @@
+<?xml version="1.0" encoding="utf-8"?>
+<song xmlns="http://openlyrics.info/namespace/2009/song" version="0.8">
+    <properties>
+        <titles>
+            <title>ABCD</title>
+        </titles>
+        <songbooks>
+            <songbook name="EZ21" entry="288" />
+        </songbooks>
+        <verseOrder>v1 v2</verseOrder>
+        <authors>
+            <author type="words">Joachim, 1683 / Harfa, 1915 / zpěvník, 1979 / Miloslav</author>
+            <author type="music">Melica, 1674 / Bundes-Psalmen, 1683</author>
+        </authors>
+    </properties>
+    <lyrics>
+        <verse name="v1">
+            <lines>Chvaliž Hospodina, slávy vždy Krále mocného,<br />ó duše má, neboť tužba to srdce
+                je mého.<br />Shromažďte se,<br />harfy ať tón ozve se,<br />zpívejte
+                chvalozpěv jeho!</lines>
+        </verse>
+        <verse name="v2">
+            <lines>Chvaliž Hospodina, jenž všechno slavně spravuje,<br />v bezpečné náruči před
+                pádem tě ochraňuje<br />a vede tě<br />Duchem své lásky v světě,<br />tvá duše to
+                pociťuje.</lines>
+        </verse>
+    </lyrics>
+</song>

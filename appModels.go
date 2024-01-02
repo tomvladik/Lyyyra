@@ -1,7 +1,5 @@
 package main
 
-import "encoding/xml"
-
 type SongFilesSources struct {
 	Domain    string
 	Url       string
@@ -19,18 +17,12 @@ type FileItem struct {
 
 // Song represents the simplified structure of the XML document
 type Song struct {
-	XMLName    xml.Name `xml:"song"`
 	Version    string   `xml:"version,attr"`
 	Title      string   `xml:"properties>titles>title"`
 	Songbook   Songbook `xml:"properties>songbooks>songbook"`
 	VerseOrder string   `xml:"properties>verseOrder"`
 	Authors    []Author `xml:"properties>authors>author"`
-	Lyrics     struct {
-		Verses []struct {
-			Name  string `xml:"name,attr"`
-			Lines string `xml:"lines"`
-		} `xml:"verse"`
-	} `xml:"lyrics"`
+	Lyrics     Lyrics   `xml:"lyrics"`
 }
 
 type Songbook struct {
@@ -43,6 +35,14 @@ type Author struct {
 	Value string `xml:",chardata"`
 }
 
+type Lyrics struct {
+	Verses []Verse `xml:"verse"`
+}
+
+type Verse struct {
+	Name  string `xml:"name,attr"`
+	Lines string `xml:",innerxml"`
+}
 type dtoSong struct {
 	Id     int
 	Entry  int

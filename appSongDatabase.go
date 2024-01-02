@@ -2,7 +2,6 @@ package main
 
 import (
 	"database/sql"
-	"encoding/xml"
 	"fmt"
 	"os"
 
@@ -78,19 +77,11 @@ func (a *App) FillDatabase() {
 	// Process each XML file
 	for _, xmlFile := range xmlFiles {
 		// Construct the full path to the XML file
+		// Read XML data from file
 		xmlFilePath := fmt.Sprintf("%s/%s", a.songBookDir, xmlFile.Name())
 
-		// Read XML data from file
-		xmlData, err := os.ReadFile(xmlFilePath)
+		song, err := parseXmlSong(xmlFilePath)
 		if err != nil {
-			fmt.Printf("Error reading XML file %s: %v\n", xmlFile.Name(), err)
-			continue
-		}
-
-		var song Song
-		err = xml.Unmarshal(xmlData, &song)
-		if err != nil {
-			fmt.Printf("Error unmarshalling XML in file %s: %v\n", xmlFile.Name(), err)
 			continue
 		}
 

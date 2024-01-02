@@ -1,10 +1,13 @@
 package main
 
 import (
+	"encoding/xml"
 	"fmt"
 	"log"
 	"os"
 	"path/filepath"
+	"regexp"
+	"strings"
 
 	"github.com/antchfx/htmlquery"
 	"gopkg.in/yaml.v2"
@@ -65,4 +68,29 @@ func (a *App) parseHtml(fileName string) []FileItem {
 	}
 
 	return dataList
+}
+
+func parseXmlSong(xmlFilePath string) (*Song, error) {
+	xmlData, err := os.ReadFile(xmlFilePath)
+	if err != nil {
+		fmt.Printf("Error reading XML file %s: %v\n", xmlFilePath, err)
+		return nil, err
+	}
+
+	var song Song
+	err = xml.Unmarshal(xmlData, &song)
+	if err != nil {
+		fmt.Printf("Error unmarshalling XML in file %s: %v\n", xmlFilePath, err)
+		return nil, err
+	}
+
+	re := regexp.MustCompile(`\s{2,}|<br />`)
+	for i, verse := range song.Lyrics.Verses {
+		// Trim leading and trailing whitespace from each line
+		trimmed := strings.TrimSpace(verse.Lines)
+
+		// Replace multiple whitespaces with a single space
+		song.Lyrics.Verses[i].Lines = re.ReplaceAllString(trimmed, " ")
+	}
+	return &song, nil
 }
