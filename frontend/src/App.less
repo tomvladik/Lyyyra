@@ -1,5 +1,24 @@
+@import (less, reference) "vars.less";
+
 #app {
     height: 100vh;
     text-align: center;
     margin: 1rem;
+}
+
+.InfoBox {
+    margin-top: 5px;
+    padding: 10px;
+    border-radius: 10px;
+    position: sticky;
+    top: 0;
+    left: 0;
+    right: 0;
+    //  height: 30px;
+    background: @myBlueColour;
+}
+
+.ScrollablePart {
+    marginTop: 150px;
+    overflowY: 'auto';
 }
