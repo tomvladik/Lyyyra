@@ -9,10 +9,6 @@
     "preview": "vite preview"
   },
   "dependencies": {
-    "@refinedev/core": "^4.46.1",
-    "framer-motion": "^10.16.16",
-    "lorem-ipsum": "^2.0.8",
-    "lorem-ipsum-generator": "^1.0.4",
     "react": "^18.2.0",
     "react-dom": "^18.2.0"
   },
@@ -21,7 +17,6 @@
     "@types/react-dom": "^18.0.6",
     "@vitejs/plugin-react": "^2.0.1",
     "less": "^4.2.0",
-    "less-loader": "^11.1.4",
     "typescript": "^4.6.4",
     "vite": "^3.0.7"
   }
