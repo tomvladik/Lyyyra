@@ -1,37 +1,52 @@
-import React, { useContext, useState } from 'react';
+import React, { useContext, useEffect, useState } from 'react';
 
 import styles from './index.module.less';
 import { DownloadEz } from '../../../wailsjs/go/main/App';
-import { DataContext } from '../../App';
+import { StatusContext } from '../../App';
 
-export interface InfoBoxProps {
-  prop?: string;
+interface ChildProps {
+  loadFunction: Function
 }
-
-export function InfoBox({ prop = 'default value' }: InfoBoxProps) {
+export function InfoBox(props: ChildProps) {
   const [resultText, setResultText] = useState("Zpěvník není inicializován");
-  const [isVisible, setIsVisible] = useState(true);
-  const data = useContext(DataContext);
+  const [isButtonVisible, setIsButtonVisible] = useState(true);
+  const status = useContext(StatusContext);
+  //console.log(status)
 
+  // function download() {
+  //   setResultText("Stahuji data")
+  //   DownloadEz().then(() => {
+  //     setResultText("Data jsou připravena")
+  //     setIsButtonVisible(false)
+  //   }).catch(error => {
+  //     setResultText("Problém během stahování:" + error)
+  //     console.error("Error during download:", error);
+  //   });
 
-  function download() {
-    setResultText("Stahuji data")
-    DownloadEz().then(() => {
+  // }
+  // useEffect with an empty dependency array runs once when the component mounts
+
+  // useEffect with an empty dependency array runs once when the component mounts
+  useEffect(() => {
+    if (status.DatabaseReady) {
       setResultText("Data jsou připravena")
-      //!!!      setIsVisible(false)
-      data.setSongs()
-    }).catch(error => {
-      setResultText("Problém během stahování:" + error)
-      console.error("Error during download:", error);
-    });
+      //    setIsButtonVisible(false)
+    } else if (status.SongsReady) {
+      setResultText("Data jsou stažena, ale nejsou naimportována do interní datbáze")
+    }
+  }, []); // Empty dependency array means it runs once when the component mounts
 
-  }
+
 
   return (
     <div className={styles.InfoBox}>
-      <div>{resultText}</div>
+      {isButtonVisible && <div>{resultText}</div>}
       Upozorňujeme, že materiály stahované z <a href='https://www.evangelickyzpevnik.cz/zpevnik/kapitoly-a-pisne/' target="_blank">www.evangelickyzpevnik.cz</a> slouží pouze pro vlastní potřebu a k případnému dalšímu užití je třeba uzavřít licenční smlouvu s nositeli autorských práv.
-      {isVisible && <button className="btn" onClick={download}>Stáhnout data z internetu</button>}
+      {isButtonVisible && <button className="btn" onClick={props.loadFunction()}>Stáhnout data z internetu</button>}
+
+      {/* <script src="/wails/ipc.js"></script>
+      <script src="/wails/runtime.js"></script> */}
+
     </div>
   );
 

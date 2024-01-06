@@ -1,14 +1,15 @@
-import React, { useContext, useState } from 'react';
+import React, { useContext, useEffect, useState } from 'react';
 
 import { Search } from "../../components/search";
 import { SongCard } from "../../components/SongCard";
 
-import { DataContext } from '../../App';
+import { StatusContext } from '../../App';
+import { dtoSong } from '../../models';
+import { GetSongs } from '../../../wailsjs/go/main/App';
 
-export const SongList = () => {
-
+export const SongList = ({ songs }: { songs: Array<dtoSong> }) => {
+    //const [songs, setSongs] = context;
     const [inputValue, setInputValue] = useState("");
-    const data = useContext(DataContext);
 
 
     const filters: string[] = ["published", "draft", "rejected"];
@@ -35,7 +36,7 @@ export const SongList = () => {
                     setInputValue(e.target.value);
                 }}
             />
-            {data.songs
+            {songs
                 ?.filter((el) => el.Title.toLowerCase().includes(inputValue.toLowerCase())
                     || el.Verses.toLowerCase().includes(inputValue.toLowerCase()))
                 .map((song) => {

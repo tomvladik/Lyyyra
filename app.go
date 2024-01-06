@@ -2,6 +2,7 @@ package main
 
 import (
 	"context"
+	"fmt"
 	"log/slog"
 	"net/url"
 	"os"
@@ -29,6 +30,13 @@ func NewApp() *App {
 	homeDir, err := os.UserHomeDir()
 	if err != nil {
 		slog.Error("Can't open home dir", err)
+		return &App{}
+	}
+
+	path := filepath.Join(homeDir, "Lyyyra")
+	// Create directories along the path
+	err = os.MkdirAll(path, os.ModePerm)
+	if err != nil {
 		return &App{}
 	}
 
@@ -68,7 +76,7 @@ func NewApp() *App {
 		app.status = AppStatus{}
 		app.saveStatus()
 	}
-
+	slog.Info(fmt.Sprintf("Status DatabaseReady: %+v", app.status))
 	return &app
 }
 
@@ -81,4 +89,8 @@ func (a *App) startup(ctx context.Context) {
 func (a *App) saveStatus() {
 	a.status.LastSave = time.Now()
 	a.serializeToYaml("status.yaml", &a.status)
+}
+
+func (a *App) GetStatus() AppStatus {
+	return a.status
 }

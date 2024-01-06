@@ -26,6 +26,10 @@ export function GetSongs() {
   return window['go']['main']['App']['GetSongs']();
 }
 
+export function GetStatus() {
+  return window['go']['main']['App']['GetStatus']();
+}
+
 export function PrepareDatabase() {
   return window['go']['main']['App']['PrepareDatabase']();
 }

@@ -14,4 +14,6 @@ export function GetSongAuthors(arg1:number):Promise<Array<main.Author>>;
 
 export function GetSongs():Promise<Array<main.dtoSong>>;
 
+export function GetStatus():Promise<main.AppStatus>;
+
 export function PrepareDatabase():Promise<void>;

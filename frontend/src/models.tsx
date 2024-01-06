@@ -16,3 +16,10 @@ export interface Author {
     Type: string
     Value: string
 }
+
+export interface AppStatus {
+    WebResourcesReady: boolean
+    SongsReady: boolean
+    DatabaseReady: boolean
+    LastSave: string
+}
