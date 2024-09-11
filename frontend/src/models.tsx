@@ -1,3 +1,5 @@
+import { AppStatus } from "./AppStatus";
+
 export interface SongData {
     songNumber: number;
     title: string;
@@ -16,10 +18,7 @@ export interface Author {
     Type: string
     Value: string
 }
-
-export interface AppStatus {
-    WebResourcesReady: boolean
-    SongsReady: boolean
-    DatabaseReady: boolean
-    LastSave: string
+export interface SelectParams {
+    filter: string;
+    orderBy: string;
 }

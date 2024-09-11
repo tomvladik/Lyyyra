@@ -22,6 +22,7 @@ type App struct {
 	urlDomain   string
 	status      AppStatus
 	logFile     *os.File
+	testRun     bool
 }
 
 // NewApp creates a new App application struct
@@ -46,7 +47,7 @@ func NewApp() *App {
 		slog.Error(err.Error())
 	}
 	// Set the output of the log package to the log file
-	logOptions := slog.HandlerOptions{Level: slog.LevelDebug}
+	logOptions := slog.HandlerOptions{Level: slog.LevelInfo}
 	logger := slog.New(slog.NewTextHandler(logFile, &logOptions))
 	slog.SetDefault(logger)
 
@@ -74,9 +75,10 @@ func NewApp() *App {
 	err = app.deserializeFromYaml(&app.status, "status.yaml")
 	if err != nil {
 		app.status = AppStatus{}
-		app.saveStatus()
+		//app.saveStatus()
 	}
 	slog.Info(fmt.Sprintf("Status DatabaseReady: %+v", app.status))
+	app.testRun = true
 	return &app
 }
 

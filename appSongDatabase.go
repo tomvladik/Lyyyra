@@ -1,5 +1,24 @@
 package main
 
+/*
+#cgo LDFLAGS: -lsqlite3
+#include <sqlite3.h>
+#include <stdlib.h>
+
+// Custom collation function
+int myCollation(void *data, int len1, const void *str1, int len2, const void *str2) {
+    // Implement your custom comparison logic here
+    // Example: case-insensitive comparison
+    return strcasecmp(str1, str2);
+}
+
+// Register the custom collation function
+void registerCollation(sqlite3 *db) {
+    sqlite3_create_collation(db, "my_collation", SQLITE_UTF8, NULL, myCollation);
+}
+*/
+
+import "C"
 import (
 	"database/sql"
 	"fmt"
@@ -10,6 +29,7 @@ import (
 )
 
 func (a *App) PrepareDatabase() {
+	slog.Info(fmt.Sprintf("PrepareDatabase: %s", a.dbFilePath))
 	// Open an SQLite database (file-based)
 	db, err := sql.Open("sqlite3", a.dbFilePath)
 	if err != nil {
@@ -86,7 +106,9 @@ func (a *App) FillDatabase() {
 		return
 	}
 	//defer os.RemoveAll(a.songBookDir)
-
+	if a.testRun {
+		xmlFiles = xmlFiles[:25]
+	}
 	// Process each XML file
 	for _, xmlFile := range xmlFiles {
 		// Construct the full path to the XML file
@@ -140,7 +162,7 @@ func (a *App) FillDatabase() {
 	}
 }
 
-func (a *App) GetSongs() ([]dtoSong, error) {
+func (a *App) GetSongs(orderBy string) ([]dtoSong, error) {
 	var result []dtoSong
 	db, err := sql.Open("sqlite3", a.dbFilePath)
 	if err != nil {
@@ -163,7 +185,7 @@ SELECT s.id,
   	   s.id,
        entry,
        title
-  order by entry, v.name`)
+  order by ` + orderBy + `, v.name`)
 	if err != nil {
 		slog.Error(fmt.Sprintf("Error querying data: %s", err))
 		return result, err

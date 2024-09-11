@@ -30,7 +30,7 @@ func (a *App) serializeToYaml(fileName string, data interface{}) {
 		slog.Error(fmt.Sprintf("Error writing to file: %s", err))
 		return
 	}
-	slog.Info("YAML Serialization to file completed.")
+	slog.Info(fmt.Sprintf("YAML Serialization to file completed. %v %s", data, fileName))
 }
 
 func (a *App) deserializeFromYaml(dataStruct interface{}, fileName string) error {

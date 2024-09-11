@@ -22,8 +22,8 @@ export function GetSongAuthors(arg1) {
   return window['go']['main']['App']['GetSongAuthors'](arg1);
 }
 
-export function GetSongs() {
-  return window['go']['main']['App']['GetSongs']();
+export function GetSongs(arg1) {
+  return window['go']['main']['App']['GetSongs'](arg1);
 }
 
 export function GetStatus() {

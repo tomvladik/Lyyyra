@@ -100,7 +100,10 @@ func (a *App) DownloadInternal() error {
 	}
 
 	a.pdfFiles.Items = a.parseHtml(fileName)
-	a.downloadParts()
+	if !a.testRun {
+		a.downloadParts()
+	}
+
 	a.serializeToYaml("data.yaml", a.pdfFiles)
 	return nil
 }
@@ -108,30 +111,31 @@ func (a *App) DownloadInternal() error {
 func (a *App) DownloadEz() error {
 
 	var err error
-
 	if !a.status.WebResourcesReady {
 		err = a.DownloadInternal()
 		if err != nil {
 			return err
 		}
 		a.status.WebResourcesReady = true
+		a.saveStatus()
 	}
 
-	if !a.status.SongsReady {
+	if !a.status.SongsReady && !a.testRun {
 		err = a.DownloadSongBase()
 		if err != nil {
 			return err
 
 		}
 		a.status.SongsReady = true
+		a.saveStatus()
 	}
 
 	if !a.status.DatabaseReady {
 		a.PrepareDatabase()
 		a.FillDatabase()
 		a.status.DatabaseReady = true
+		a.saveStatus()
 	}
 
-	a.saveStatus()
 	return nil
 }

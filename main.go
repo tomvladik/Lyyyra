@@ -15,14 +15,14 @@ var assets embed.FS
 func main() {
 	// Create an instance of the app structure
 	app := NewApp()
-	defer app.saveStatus()
+	//defer app.saveStatus()
 	defer app.logFile.Close()
 
 	// Create application with options
 	err := wails.Run(&options.App{
 		Title:  "Lyyyra",
 		Width:  800,
-		Height: 600,
+		Height: 800,
 		AssetServer: &assetserver.Options{
 			Assets: assets,
 		},
