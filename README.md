@@ -1,11 +1,11 @@
 # README
 
 ## ToDO
- DB sorting - CS
- full text search - UI marking
- load button/progress messages
- persist select setting
- UI styles
+ - DB sorting - CS
+ - full text search - UI marking
+ - load button/progress messages
+ - persist select setting
+ - UI styles
 
 
 ## About
