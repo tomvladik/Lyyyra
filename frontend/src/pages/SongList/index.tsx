@@ -9,7 +9,7 @@ export const SongList = ({ songs, filter }: { songs: Array<dtoSong>, filter: str
                 ?.filter((el) => el.Title.toLowerCase().includes(filter.toLowerCase())
                     || el.Verses.toLowerCase().includes(filter.toLowerCase()))
                 .map((song) => {
-                    return <SongCard data={song} />;
+                    return <SongCard key={song.Id} data={song} />;
                 })}
         </div>
     );
