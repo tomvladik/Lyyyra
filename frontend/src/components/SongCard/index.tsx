@@ -1,10 +1,10 @@
 import { useEffect, useState } from "react";
-import { dtoSong, Author } from "../../models";
-import styles from "./index.module.less";
 import { GetSongAuthors } from "../../../wailsjs/go/main/App";
+import { Author, dtoSong } from "../../models";
+import styles from "./index.module.less";
 export const SongCard = ({ data }: { data: dtoSong }) => {
     const [authorData, setData] = useState(new Array<Author>());
-    const [error, setError] = useState(false);
+    const [, setError] = useState(false);
 
     const fetchData = async () => {
         try {
@@ -26,11 +26,11 @@ export const SongCard = ({ data }: { data: dtoSong }) => {
                 <div className={styles.title}><span className={styles.songNumber}>{data.Entry}:</span> {data.Title}</div>
                 {authorData?.filter((el) => el.Type === "words")
                     .map((auth) => {
-                        return <div className={styles.author}><b>T:</b> {auth.Value}</div>;
+                        return <div key={"T-" + auth.Value} className={styles.author}><b>T:</b> {auth.Value}</div>;
                     })}
                 {authorData?.filter((el) => el.Type === "music")
                     .map((auth) => {
-                        return <div className={styles.author}><b>M:</b> {auth.Value}</div>;
+                        return <div key={"M-" + auth.Value} className={styles.author}><b>M:</b> {auth.Value}</div>;
                     })}
 
             </div>

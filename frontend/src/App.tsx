@@ -1,50 +1,34 @@
-import React, { useState, useEffect, createContext, useContext } from 'react';
-import './App.less';
-import { SelectParams, dtoSong } from './models';
-import { AppStatus, isEqualAppStatus } from "./AppStatus";
+import { useEffect, useState } from 'react';
 import * as go from '../wailsjs/go/main/App';
-import { SongList } from './pages/SongList';
+import './App.less';
+import { AppStatus, isEqualAppStatus } from "./AppStatus";
 import { InfoBox } from './components/InfoBox';
-import _ from 'lodash';
-import { DataContext } from './DataProvider';
-
-// interface DataContextProps {
-//     data: AppStatus;
-//     updateData: (newData: AppStatus) => void;
-// }
-// const DataContext = createContext<DataContextProps | undefined>(undefined);
-// export const useDataContext = () => {
-//     const context = useContext(DataContext);
-//     if (!context) {
-//         throw new Error('useDataContext must be used within a DataProvider');
-//     }
-//     return context;
-// };
+import StatusPanel from './components/StatusPanel';
+import { DataContext } from './main';
+import { SelectParams, dtoSong } from './models';
+import { SongList } from './pages/SongList';
 
 
 function App() {
+    const [status, updateStatus] = useState({} as AppStatus);
+
     const [songs, setSongs] = useState(new Array<dtoSong>());
-    //const [status, setStatus] = useState({} as AppStatus);
-    // const [isProgress, setIsProgress] = useState(false);
-    const [error, setError] = useState(false);
+    const [, setError] = useState(false);
     const [filterValue, setFilterValue] = useState("");
-    const [selectParams, setSelectParams] = useState({} as SelectParams);
-    const [data, updateData] = useState<AppStatus>({} as AppStatus);
+    const [, setSelectParams] = useState({} as SelectParams);
 
     const loadSongs = () => {
-        const stat = { ...data }
+        const stat = { ...status }
         stat.IsProgress = true
-        updateData(stat)
-        //       setIsProgress(true);
+        updateStatus(stat)
         go.DownloadEz().then(() => {
             fetchStatus()
             fetchData()
         }).catch(error => {
             console.error("Error during download:", error);
         });
-        //        setIsProgress(false);
         stat.IsProgress = false
-        updateData({ ...stat })
+        updateStatus({ ...stat })
     }
 
     const fetchData = async () => {
@@ -61,10 +45,10 @@ function App() {
     const fetchStatus = async () => {
         try {
             // Assume fetchData returns a Promise
-            const newStatus = await go.GetStatus();
-            newStatus.IsProgress = data.IsProgress
-            if (!isEqualAppStatus(newStatus, data)) {
-                updateData(newStatus)
+            const newStatus: AppStatus = await go.GetStatus();
+            newStatus.IsProgress = false
+            if (!isEqualAppStatus(newStatus, status)) {
+                updateStatus(newStatus)
             }
         } catch (error) {
             setError(true);
@@ -77,18 +61,26 @@ function App() {
 
     // useEffect with an empty dependency array runs once when the component mounts
     useEffect(() => {
-        fetchStatus()
+        // Delay action after page render (500ms delay in this case)
+        const timer = setTimeout(() => {
+            console.log('This runs after 500ms delay');
+            fetchStatus()
+        }, 500);
+
+        // Cleanup function to clear the timeout if the component unmounts
+        return () => clearTimeout(timer);
     }, []);
 
     return (
-        <div id="App">
-            <DataContext.Provider value={{ data, updateData }}>
+        <DataContext.Provider value={{ status: status, updateStatus: updateStatus }}>
+            <div id="App">
                 <InfoBox loadSongs={loadSongs} setFilter={setFilterValue} />
                 <div className="ScrollablePart">
                     <SongList songs={songs} filter={filterValue} />
                 </div>
-            </DataContext.Provider>
-        </div>
+                <StatusPanel />
+            </div>
+        </DataContext.Provider>
     )
 }
 

@@ -1,12 +1,9 @@
-import React, { useContext, useEffect, useState } from 'react';
+import React, { useContext, useEffect, useMemo, useState } from 'react';
 
-import styles from './index.module.less';
+import Dropdown, { Option } from 'react-dropdown';
+import { DataContext } from '../../main';
 import { Search } from '../search';
-import { AppStatus } from "../../AppStatus";
-import { Option } from 'react-dropdown';
-import Dropdown from 'react-dropdown';
-import useDataContext from '../../DataProvider';
-//import { useDataContext } from '../../App';
+import styles from './index.module.less';
 
 interface Props {
   // status: AppStatus
@@ -15,36 +12,32 @@ interface Props {
   setFilter: (filter: string) => void
 }
 export function InfoBox(props: Props) {
+  const { status } = useContext(DataContext);
+
   const [resultText, setResultText] = useState("Zpěvník není inicializován");
   const [buttonText, setButtonText] = useState("Stáhnout data z internetu");
-  const [isButtonVisible, setIsButtonVisible] = useState(true);
   const [filterText, setFilterText] = useState("");
-  const [error, setError] = useState(false);
-  const { data, updateData } = useDataContext();
-  const [isProgress, setIsProgress] = useState(false);
+  const [, setError] = useState(false);
 
+  const isButtonVisible = useMemo(() => {
+    return !(status.DatabaseReady && status.SongsReady && status.WebResourcesReady);
+  }, [status.DatabaseReady, status.SongsReady, status.WebResourcesReady]);
 
-  const fetchStatus = () => {
+  function fetchStatus() {
     try {
       // Assume fetchData returns a Promise
-      const result = { ...data };
-      setIsProgress(result.IsProgress);
-      console.log("Status fetched", result)
+      const result = { ...status };
+      console.log("Status fetched", result);
       if (result.DatabaseReady) {
-        setResultText("Data jsou připravena")
-        setIsButtonVisible(false)
+        setResultText("Data jsou připravena");
       } else if (result.SongsReady) {
-        setResultText("Data jsou stažena, ale nejsou naimportována do interní datbáze")
-        setButtonText("Importovat data")
+        setResultText("Data jsou stažena, ale nejsou naimportována do interní datbáze");
+        setButtonText("Importovat data");
       }
     } catch (error) {
       setError(true);
     }
-  };
-
-  useEffect(() => {
-    setIsProgress(data.IsProgress);
-  }, [data.IsProgress])
+  }
 
   useEffect(() => {
     // Use a timer to debounce the onChange event
@@ -55,6 +48,18 @@ export function InfoBox(props: Props) {
     // Clear the timer if the component unmounts or if the input value changes before the timer expires
     return () => clearTimeout(timer);
   }, [filterText]);
+
+  // useEffect with an empty dependency array runs once when the component mounts
+  useEffect(() => {
+    // Delay action after page render (500ms delay in this case)
+    const timer = setTimeout(() => {
+      console.log('This runs after 600ms delay');
+      fetchStatus()
+    }, 600);
+
+    // Cleanup function to clear the timeout if the component unmounts
+    return () => clearTimeout(timer);
+  }, []);
 
   const sorting = [
     { value: 'entry', label: 'čísla' },
@@ -72,13 +77,12 @@ export function InfoBox(props: Props) {
     <div className="InfoBox">
       {isButtonVisible && <div>
         {resultText} &gt;&gt;&gt;
-        {!isProgress && <button className="btn" onClick={() => {
-          setIsProgress(true)
+        {!status.IsProgress && <button className="btn" onClick={() => {
           props.loadSongs()
         }}>{buttonText}</button>}
       </div>
       }
-      {isProgress && <div>Připravuji data, vyčkejte ....</div>}
+      {status.IsProgress && <div>Připravuji data, vyčkejte ....</div>}
       <div>
         Upozorňujeme, že materiály stahované z <a href='https://www.evangelickyzpevnik.cz/zpevnik/kapitoly-a-pisne/' target="_blank">www.evangelickyzpevnik.cz</a> slouží pouze pro vlastní potřebu a k případnému dalšímu užití je třeba uzavřít licenční smlouvu s nositeli autorských práv.
       </div>
