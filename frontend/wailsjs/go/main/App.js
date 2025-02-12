@@ -33,3 +33,7 @@ export function GetStatus() {
 export function PrepareDatabase() {
   return window['go']['main']['App']['PrepareDatabase']();
 }
+
+export function SaveSorting(arg1) {
+  return window['go']['main']['App']['SaveSorting'](arg1);
+}

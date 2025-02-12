@@ -1,6 +1,7 @@
 import React, { useContext, useEffect, useMemo, useState } from 'react';
 
 import Dropdown, { Option } from 'react-dropdown';
+import { SortingOption } from '../../AppStatus';
 import { DataContext } from '../../main';
 import { Search } from '../search';
 import styles from './index.module.less';
@@ -11,8 +12,9 @@ interface Props {
   loadSongs: () => void
   setFilter: (filter: string) => void
 }
+
 export function InfoBox(props: Props) {
-  const { status } = useContext(DataContext);
+  const { status, updateStatus } = useContext(DataContext);
 
   const [resultText, setResultText] = useState("Zpěvník není inicializován");
   const [buttonText, setButtonText] = useState("Stáhnout data z internetu");
@@ -62,15 +64,17 @@ export function InfoBox(props: Props) {
   }, []);
 
   const sorting = [
-    { value: 'entry', label: 'čísla' },
-    { value: 'title', label: 'názvu' },
-    { value: 'authorMusic', label: 'autora hudby' },
-    { value: 'authorLyric', label: 'autora textu' }
+    { value: 'entry' as SortingOption, label: 'čísla' },
+    { value: 'title' as SortingOption, label: 'názvu' },
+    { value: 'authorMusic' as SortingOption, label: 'autora hudby' },
+    { value: 'authorLyric' as SortingOption, label: 'autora textu' }
   ];
-  const sortingDdefault = sorting[1]
 
   function _onSelectSorting(arg: Option): void {
     console.info(arg)
+    const stat = { ...status }
+    stat.Sorting = arg.value as SortingOption
+    updateStatus(stat)
   }
 
   return (
@@ -91,7 +95,7 @@ export function InfoBox(props: Props) {
           setFilterText(e.target.value);
         }
         } />
-      <Dropdown className={styles.sorting} options={sorting} onChange={_onSelectSorting} value={sortingDdefault} placeholder="Select an option" />;
+      <Dropdown className={styles.sorting} options={sorting} onChange={_onSelectSorting} value={status.Sorting} placeholder="Select an option" />;
     </div>
   );
 

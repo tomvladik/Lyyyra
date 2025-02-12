@@ -10,7 +10,7 @@ import { SongList } from './pages/SongList';
 
 
 function App() {
-    const [status, updateStatus] = useState({} as AppStatus);
+    const [status, setStatus] = useState({} as AppStatus);
 
     const [songs, setSongs] = useState(new Array<dtoSong>());
     const [, setError] = useState(false);
@@ -20,7 +20,7 @@ function App() {
     const loadSongs = () => {
         const stat = { ...status }
         stat.IsProgress = true
-        updateStatus(stat)
+        setStatus(stat)
         go.DownloadEz().then(() => {
             fetchStatus()
             fetchData()
@@ -28,7 +28,7 @@ function App() {
             console.error("Error during download:", error);
         });
         stat.IsProgress = false
-        updateStatus({ ...stat })
+        setStatus({ ...stat })
     }
 
     const fetchData = async () => {
@@ -48,7 +48,7 @@ function App() {
             const newStatus: AppStatus = await go.GetStatus();
             newStatus.IsProgress = false
             if (!isEqualAppStatus(newStatus, status)) {
-                updateStatus(newStatus)
+                setStatus(newStatus)
             }
         } catch (error) {
             setError(true);
@@ -70,6 +70,11 @@ function App() {
         // Cleanup function to clear the timeout if the component unmounts
         return () => clearTimeout(timer);
     }, []);
+
+    const updateStatus = (newStatus: Partial<AppStatus>) => {
+        setStatus(prevStatus => ({ ...prevStatus, ...newStatus }));
+        go.SaveSorting(newStatus.Sorting);
+    };
 
     return (
         <DataContext.Provider value={{ status: status, updateStatus: updateStatus }}>

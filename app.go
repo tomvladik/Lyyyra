@@ -74,7 +74,7 @@ func NewApp() *App {
 	}
 	err = app.deserializeFromYaml(&app.status, "status.yaml")
 	if err != nil {
-		app.status = AppStatus{}
+		app.status = AppStatus{Sorting: Title}
 		//app.saveStatus()
 	}
 	slog.Info(fmt.Sprintf("Status DatabaseReady: %+v", app.status))
@@ -91,6 +91,14 @@ func (a *App) startup(ctx context.Context) {
 func (a *App) saveStatus() {
 	a.status.LastSave = time.Now()
 	a.serializeToYaml("status.yaml", &a.status)
+}
+
+func (a *App) SaveSorting(sorting SortingOption) {
+	if sorting != a.status.Sorting {
+		slog.Info(fmt.Sprintf("Sorting changed from %s to %s", a.status.Sorting, sorting))
+		a.status.Sorting = sorting
+		a.saveStatus()
+	}
 }
 
 func (a *App) GetStatus() AppStatus {

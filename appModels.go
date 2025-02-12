@@ -7,6 +7,7 @@ type AppStatus struct {
 	SongsReady        bool
 	DatabaseReady     bool
 	LastSave          time.Time
+	Sorting           SortingOption
 }
 
 type SongFilesSources struct {
@@ -59,3 +60,12 @@ type dtoSong struct {
 	Title  string
 	Verses string
 }
+
+type SortingOption string
+
+const (
+	Entry       SortingOption = "entry"
+	Title       SortingOption = "title"
+	AuthorMusic SortingOption = "authorMusic"
+	AuthorLyric SortingOption = "authorLyric"
+)
