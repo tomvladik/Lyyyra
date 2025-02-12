@@ -17,3 +17,5 @@ export function GetSongs(arg1:string):Promise<Array<main.dtoSong>>;
 export function GetStatus():Promise<main.AppStatus>;
 
 export function PrepareDatabase():Promise<void>;
+
+export function SaveSorting(arg1:main.SortingOption):Promise<void>;
