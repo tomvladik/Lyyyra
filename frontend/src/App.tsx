@@ -1,11 +1,11 @@
 import { useEffect, useState } from 'react';
 import * as go from '../wailsjs/go/main/App';
 import './App.less';
-import { AppStatus, isEqualAppStatus } from "./AppStatus";
+import { AppStatus, isEqualAppStatus, SortingOption } from "./AppStatus";
 import { InfoBox } from './components/InfoBox';
 import StatusPanel from './components/StatusPanel';
 import { DataContext } from './main';
-import { SelectParams, dtoSong } from './models';
+import { dtoSong, SelectParams } from './models';
 import { SongList } from './pages/SongList';
 
 
@@ -45,7 +45,11 @@ function App() {
     const fetchStatus = async () => {
         try {
             // Assume fetchData returns a Promise
-            const newStatus: AppStatus = await go.GetStatus();
+            const goStatus = await go.GetStatus();
+            const newStatus: AppStatus = {
+                ...goStatus,
+                Sorting: goStatus.Sorting as SortingOption
+            };
             newStatus.IsProgress = false
             if (!isEqualAppStatus(newStatus, status)) {
                 setStatus(newStatus)
