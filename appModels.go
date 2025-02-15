@@ -6,6 +6,7 @@ type AppStatus struct {
 	WebResourcesReady bool
 	SongsReady        bool
 	DatabaseReady     bool
+	IsProgress        bool
 	LastSave          time.Time
 	Sorting           SortingOption
 }
