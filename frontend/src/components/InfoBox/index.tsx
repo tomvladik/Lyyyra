@@ -1,10 +1,9 @@
-import React, { useContext, useEffect, useMemo, useState } from 'react';
+import React, { ChangeEvent, useContext, useEffect, useMemo, useState } from 'react';
 
-import Dropdown, { Option } from 'react-dropdown';
+import { Option } from 'react-dropdown';
 import { AppStatus, SortingOption } from '../../AppStatus';
 import { DataContext } from '../../main';
-import { Search } from '../search';
-import styles from './index.module.less';
+import styles from "./index.module.less";
 
 interface Props {
   // status: AppStatus
@@ -76,6 +75,13 @@ export function InfoBox(props: Props) {
     updateStatus(stat)
   }
 
+  function _on(event: ChangeEvent<HTMLSelectElement>): void {
+    console.info(event.target.value)
+    const stat = { ...status }
+    stat.Sorting = event.target.value as SortingOption
+    updateStatus(stat)
+  }
+
   return (
     <div className="InfoBox">
       {isButtonVisible && <div>
@@ -89,16 +95,23 @@ export function InfoBox(props: Props) {
       <div>
         Upozorňujeme, že materiály stahované z <a href='https://www.evangelickyzpevnik.cz/zpevnik/kapitoly-a-pisne/' target="_blank">www.evangelickyzpevnik.cz</a> slouží pouze pro vlastní potřebu a k případnému dalšímu užití je třeba uzavřít licenční smlouvu s nositeli autorských práv.
       </div>
-      <Search
-        onChange={(e: React.ChangeEvent<HTMLInputElement>) => {
+      <div style={{ display: 'flex', gap: '10px', alignItems: 'center', paddingTop: '1em' }}>
+        <input id="search-box" className={styles.sorting} type="text" onChange={(e: React.ChangeEvent<HTMLInputElement>) => {
           const newStatus: AppStatus = {
             ...status,
             SearchPattern: e.target.value
           };
           updateStatus(newStatus);
-        }
-        } />
-      <Dropdown className={styles.sorting} options={sorting} onChange={_onSelectSorting} value={status.Sorting} placeholder="Select an option" />;
+        }} placeholder="Hledat text ..." />
+        <select className={styles.sorting} value={status.Sorting} onChange={_on}>
+          <option value="" disabled>Řadit podle</option>
+          {sorting.map((option) => (
+            <option key={option.value} value={option.value}>
+              {option.label}
+            </option>
+          ))}
+        </select>
+      </div>
     </div>
   );
 
