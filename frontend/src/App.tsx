@@ -82,12 +82,17 @@ function App() {
 
     return (
         <DataContext.Provider value={{ status: status, updateStatus: updateStatus }}>
-            <div id="App">
-                <InfoBox loadSongs={loadSongs} setFilter={setFilterValue} />
-                <div className="ScrollablePart">
+            <div id="App" style={{ display: 'flex', flexDirection: 'column', height: '100%' }}>
+                <header className="header">
+                    <InfoBox loadSongs={loadSongs} setFilter={setFilterValue} />
+                </header>
+
+                <main className="ScrollablePart">
                     <SongList songs={songs} filter={filterValue} />
-                </div>
-                <StatusPanel />
+                </main>
+                <footer className="footer">
+                    <StatusPanel />
+                </footer>
             </div>
         </DataContext.Provider>
     )
