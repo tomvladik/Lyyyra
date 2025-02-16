@@ -111,14 +111,14 @@ func (a *App) DownloadInternal() error {
 func (a *App) DownloadEz() error {
 
 	var err error
-	if !a.status.WebResourcesReady {
-		err = a.DownloadInternal()
-		if err != nil {
-			return err
-		}
-		a.status.WebResourcesReady = true
-		a.saveStatus()
-	}
+	// if !a.status.WebResourcesReady {
+	// 	err = a.DownloadInternal()
+	// 	if err != nil {
+	// 		return err
+	// 	}
+	// 	a.status.WebResourcesReady = true
+	// 	a.saveStatus()
+	// }
 
 	if !a.status.SongsReady && !a.testRun {
 		err = a.DownloadSongBase()
@@ -126,6 +126,7 @@ func (a *App) DownloadEz() error {
 			return err
 
 		}
+		a.status.DatabaseReady = false
 		a.status.SongsReady = true
 		a.saveStatus()
 	}

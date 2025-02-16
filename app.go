@@ -53,7 +53,7 @@ func NewApp() *App {
 
 	slog.Info("=========================================================================================")
 
-	xmlUrl := "https://www.evangelickyzpevnik.cz/res/archive/001/000243.zip"
+	xmlUrl := "https://zpevnik.proscholy.cz/soubor/ez21--openlp-2022-01-25.zip"
 	pdfUrl := "https://www.evangelickyzpevnik.cz/zpevnik/kapitoly-a-pisne/"
 	// Parse the URL
 	parsedURL, err := url.Parse(pdfUrl)
