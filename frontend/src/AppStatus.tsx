@@ -1,5 +1,6 @@
 
 export interface AppStatus {
+    SearchPattern: string;
     WebResourcesReady: boolean;
     SongsReady: boolean;
     DatabaseReady: boolean;
@@ -16,6 +17,7 @@ export const isEqualAppStatus = (status1: AppStatus, status2: AppStatus): boolea
         status1.SongsReady === status2.SongsReady &&
         status1.IsProgress === status2.IsProgress &&
         status1.DatabaseReady === status2.DatabaseReady &&
-        status1.Sorting === status2.Sorting
+        status1.Sorting === status2.Sorting &&
+        status1.SearchPattern === status2.SearchPattern
     );
 };

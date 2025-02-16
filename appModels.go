@@ -9,6 +9,7 @@ type AppStatus struct {
 	IsProgress        bool
 	LastSave          time.Time
 	Sorting           SortingOption
+	SearchPattern string
 }
 
 type SongFilesSources struct {

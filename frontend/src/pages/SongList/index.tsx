@@ -6,8 +6,8 @@ export const SongList = ({ songs, filter }: { songs: Array<dtoSong>, filter: str
     return (
         <div>
             {songs
-                ?.filter((el) => el.Title.toLowerCase().includes(filter.toLowerCase())
-                    || el.Verses.toLowerCase().includes(filter.toLowerCase()))
+                ?.filter((el) => el.Title.toLowerCase().includes(filter?.toLowerCase())
+                    || el.Verses.toLowerCase().includes(filter?.toLowerCase()))
                 .map((song) => {
                     return <SongCard key={song.Id} data={song} />;
                 })}
