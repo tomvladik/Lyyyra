@@ -1,7 +1,7 @@
 import React, { useContext, useEffect, useMemo, useState } from 'react';
 
 import Dropdown, { Option } from 'react-dropdown';
-import { SortingOption } from '../../AppStatus';
+import { AppStatus, SortingOption } from '../../AppStatus';
 import { DataContext } from '../../main';
 import { Search } from '../search';
 import styles from './index.module.less';
@@ -18,7 +18,6 @@ export function InfoBox(props: Props) {
 
   const [resultText, setResultText] = useState("Zpěvník není inicializován");
   const [buttonText, setButtonText] = useState("Stáhnout data z internetu");
-  const [filterText, setFilterText] = useState("");
   const [, setError] = useState(false);
 
   const isButtonVisible = useMemo(() => {
@@ -44,12 +43,12 @@ export function InfoBox(props: Props) {
   useEffect(() => {
     // Use a timer to debounce the onChange event
     const timer = setTimeout(() => {
-      props.setFilter(filterText);
+      props.setFilter(status.SearchPattern);
     }, 500); // Adjust the delay as needed (e.g., 1000ms for 1 second)
 
     // Clear the timer if the component unmounts or if the input value changes before the timer expires
     return () => clearTimeout(timer);
-  }, [filterText]);
+  }, [status.SearchPattern]);
 
   // useEffect with an empty dependency array runs once when the component mounts
   useEffect(() => {
@@ -92,7 +91,11 @@ export function InfoBox(props: Props) {
       </div>
       <Search
         onChange={(e: React.ChangeEvent<HTMLInputElement>) => {
-          setFilterText(e.target.value);
+          const newStatus: AppStatus = {
+            ...status,
+            SearchPattern: e.target.value
+          };
+          updateStatus(newStatus);
         }
         } />
       <Dropdown className={styles.sorting} options={sorting} onChange={_onSelectSorting} value={status.Sorting} placeholder="Select an option" />;

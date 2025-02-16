@@ -1,7 +1,9 @@
 import { useEffect, useState } from "react";
 import { GetSongAuthors } from "../../../wailsjs/go/main/App";
 import { Author, dtoSong } from "../../models";
+import HighlightText from "../HighlightText";
 import styles from "./index.module.less";
+
 export const SongCard = ({ data }: { data: dtoSong }) => {
     const [authorData, setData] = useState(new Array<Author>());
     const [, setError] = useState(false);
@@ -36,7 +38,7 @@ export const SongCard = ({ data }: { data: dtoSong }) => {
             </div>
             <div className={styles.lyrics2} style={{ marginBottom: '1px' }}>
                 {data.Verses.split('\n').map((paragraph, index) => (
-                    <p key={index}>{paragraph}</p>
+                    <HighlightText key={index} text={paragraph} />
                 ))}
             </div>
         </div>
