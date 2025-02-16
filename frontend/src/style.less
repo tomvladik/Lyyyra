@@ -1,21 +1,21 @@
 @import (less, reference) "vars.less";
 
-html {
-    color: @myDarkBlueColour;
-    background-color: @myRedColour;
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
 }
 
+html,
 body {
-    margin: 1px;
+    height: 100%;
+    display: flex !important;
+    color: @myDarkBlueColour;
+    background-color: @myRedColour;
     font: normal 13px/18px 'Montserrat', 'Arial', sans-serif;
 }
 
-#app {
-    height: 100vh;
-}
-
 p {
-    display: block;
     margin-block-start: 6px;
     margin-block-end: 0px;
     margin-inline-start: 0px;
