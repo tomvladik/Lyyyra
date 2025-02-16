@@ -15,7 +15,7 @@ var assets embed.FS
 func main() {
 	// Create an instance of the app structure
 	app := NewApp()
-	//defer app.saveStatus()
+	defer app.saveStatus()
 	defer app.logFile.Close()
 
 	// Create application with options
