@@ -34,7 +34,7 @@ function App() {
     const fetchData = async () => {
         try {
             // Assume fetchData returns a Promise
-            const songs = await go.GetSongs("title");
+            const songs = await go.GetSongs(status.Sorting);
             setSongs(songs);
         } catch (error) {
             console.log(error)
@@ -61,7 +61,7 @@ function App() {
 
     useEffect(() => {
         fetchData()
-    }, [filterValue]);
+    }, [filterValue, status.Sorting]);
 
     // useEffect with an empty dependency array runs once when the component mounts
     useEffect(() => {
