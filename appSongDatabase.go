@@ -178,9 +178,17 @@ func (a *App) GetSongs(orderBy string) ([]dtoSong, error) {
 SELECT s.id,
        entry,
        title,
-	   REPLACE(GROUP_CONCAT(lines, char(10)), '<br />', '===') AS all_verses
-  FROM songs s, verses v
-  WHERE s.id=v.song_id
+	REPLACE(GROUP_CONCAT(lines, char(10)), '<br />', '===') AS all_verses,
+    COALESCE((SELECT author_value
+			FROM authors
+			WHERE song_id = s.id AND author_type = 'music'
+			ORDER BY id LIMIT 1),'') AS authorMusic,
+    COALESCE((SELECT author_value
+			FROM authors
+			WHERE song_id = s.id AND author_type = 'words'
+			ORDER BY id LIMIT 1),'') AS authorLyric
+  FROM songs s
+JOIN verses v ON s.id = v.song_id
   GROUP BY
   	   s.id,
        entry,
@@ -194,10 +202,10 @@ SELECT s.id,
 
 	for rows.Next() {
 		var (
-			title, allVerses string
-			id, entry        int
+			title, allVerses, authorMusic, authorLyric string
+			id, entry                                  int
 		)
-		err := rows.Scan(&id, &entry, &title, &allVerses)
+		err := rows.Scan(&id, &entry, &title, &allVerses, &authorMusic, &authorLyric)
 		if err != nil {
 			slog.Error(fmt.Sprintf("Error scanning row: %s", err))
 			return result, err
@@ -220,7 +228,7 @@ func (a *App) GetSongAuthors(songId int) ([]Author, error) {
 	// Perform a full-text search on the lyrics
 	//searchTerm := "your_search_term_here"
 	rows, err := db.Query(`
-	SELECT DISTINCT author_type, author_value 
+	SELECT DISTINCT author_type, author_value
 	FROM authors
 	WHERE song_id = ?
 	ORDER BY author_type`, songId)
