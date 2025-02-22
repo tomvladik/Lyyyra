@@ -30,7 +30,7 @@ func NewApp() *App {
 
 	homeDir, err := os.UserHomeDir()
 	if err != nil {
-		slog.Error("Can't open home dir", err)
+		slog.Error(err.Error())
 		return &App{}
 	}
 
