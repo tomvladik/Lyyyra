@@ -8,8 +8,12 @@ import (
 	"path/filepath"
 	"regexp"
 	"strings"
+	"unicode"
 
 	"github.com/antchfx/htmlquery"
+	"golang.org/x/text/runes"
+	"golang.org/x/text/transform"
+	"golang.org/x/text/unicode/norm"
 	"gopkg.in/yaml.v2"
 )
 
@@ -111,4 +115,16 @@ func parseXmlSong(xmlFilePath string) (*Song, error) {
 		song.Lyrics.Verses[i].Lines = trimmed
 	}
 	return &song, nil
+}
+
+// removeDiacritics removes accents from a UTF-8 string
+func removeDiacritics(s string) string {
+	t := transform.Chain(norm.NFD, runes.Remove(runes.In(unicode.Mn)), norm.NFC)
+	result, _, _ := transform.String(t, s)
+	return result
+}
+
+// isMn checks if a rune is a non-spacing mark (diacritic)
+func isMn(r rune) bool {
+	return unicode.Is(unicode.Mn, r)
 }

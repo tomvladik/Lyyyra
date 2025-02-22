@@ -88,3 +88,61 @@ func Test_parseXmlSong(t *testing.T) {
 		})
 	}
 }
+
+// TestRemoveDiacritics tests the removeDiacritics function
+func TestRemoveDiacritics(t *testing.T) {
+	tests := []struct {
+		input    string
+		expected string
+	}{
+		{"àèìòù", "aeiou"},
+		{"âêîôû", "aeiou"},
+		{"äëïöü", "aeiou"},
+		{"ãñõ", "ano"},
+		{"Çç", "Cc"},
+		{"ÀÈÌÒÙ", "AEIOU"},
+		{"ÂÊÎÔÛ", "AEIOU"},
+		{"ÄËÏÖÜ", "AEIOU"},
+		{"ÃÑÕ", "ANO"},
+		{"ß", "ß"},
+		{"Ææ", "Ææ"},
+		{"Příliš žluťoučký kůň úpěl ďábelské ódy", "Prilis zlutoucky kun upel dabelske ody"},
+		{"Loď čeří kýlem tůň - obzvlášť v Grónské úžině", "Lod ceri kylem tun - obzvlast v Gronske uzine"},
+		{"Čtyři sta čtyřicet čtyři stříbrných stříkaček stříkalo přes čtyři sta čtyřicet čtyři stříbrných střech", "Ctyri sta ctyricet ctyri stribrnych strikacek strikalo pres ctyri sta ctyricet ctyri stribrnych strech"},
+		{"Nezvyčajné kŕdle šťastných figliarskych ďatľov učia pri kótovanom ústí Váhu mĺkveho koňa Waldemara obžierať väčšie kusy exkluzívnej kôry s quesadillou.", "Nezvycajne krdle stastnych figliarskych datlov ucia pri kotovanom usti Vahu mlkveho kona Waldemara obzierat vacsie kusy exkluzivnej kory s quesadillou."},
+		{"Vypätá dcéra grófa Maxwella s IQ nižším ako kôň núti čeľaď hrýzť hŕbu jabĺk.", "Vypata dcera grofa Maxwella s IQ nizsim ako kon nuti celad hryzt hrbu jablk."},
+		{"Die heiße Zypernsonne quälte Max und Victoria ja böse auf dem Weg bis zur Küste.", "Die heiße Zypernsonne qualte Max und Victoria ja bose auf dem Weg bis zur Kuste."},
+	}
+
+	for _, test := range tests {
+		result := removeDiacritics(test.input)
+		if result != test.expected {
+			t.Errorf("removeDiacritics(%q) = %q; want %q", test.input, result, test.expected)
+		}
+	}
+}
+
+// TestIsMn tests the isMn function
+func TestIsMn(t *testing.T) {
+	tests := []struct {
+		input    rune
+		expected bool
+	}{
+		{'́', true},  // Combining Acute Accent
+		{'̀', true},  // Combining Grave Accent
+		{'̂', true},  // Combining Circumflex Accent
+		{'̈', true},  // Combining Diaeresis
+		{'̃', true},  // Combining Tilde
+		{'a', false}, // Latin Small Letter A
+		{'z', false}, // Latin Small Letter Z
+		{'A', false}, // Latin Capital Letter A
+		{'Z', false}, // Latin Capital Letter Z
+	}
+
+	for _, test := range tests {
+		result := isMn(test.input)
+		if result != test.expected {
+			t.Errorf("isMn(%q) = %v; want %v", test.input, result, test.expected)
+		}
+	}
+}
