@@ -46,6 +46,14 @@ func (a *App) PrepareDatabase() {
             title TEXT,
             verse_order TEXT
         ); DELETE FROM songs;`,
+
+		`CREATE VIRTUAL TABLE IF NOT EXISTS songs_fts USING fts5 (
+			id,
+            title,
+			content=songs,
+			content_rowid=id
+        ); DELETE FROM songs_fts;`,
+
 		`CREATE TABLE IF NOT EXISTS authors (
             id INTEGER PRIMARY KEY AUTOINCREMENT,
             song_id INTEGER,
@@ -54,6 +62,14 @@ func (a *App) PrepareDatabase() {
             FOREIGN KEY(song_id) REFERENCES songs(id)
             ON DELETE CASCADE
         ); DELETE FROM authors;`,
+
+		`CREATE VIRTUAL TABLE IF NOT EXISTS authors_fts USING fts5 (
+			id,
+            author_value,
+			content=authors,
+			content_rowid=id
+        ); DELETE FROM authors_fts;`,
+
 		`CREATE TABLE IF NOT EXISTS verses (
             id INTEGER PRIMARY KEY AUTOINCREMENT,
             song_id INTEGER,
@@ -62,6 +78,13 @@ func (a *App) PrepareDatabase() {
             FOREIGN KEY(song_id) REFERENCES songs(id)
             ON DELETE CASCADE
         ); DELETE FROM verses;`,
+
+		`CREATE VIRTUAL TABLE IF NOT EXISTS verses_fts USING fts5 (
+			id,
+            lines,
+			content=verses,
+			content_rowid=id
+        ); DELETE FROM verses_fts;`,
 	}
 
 	// Execute each table creation script
@@ -109,9 +132,8 @@ func (a *App) FillDatabase() {
 		}
 
 		// Insert song data into the songs table
-		result, err := db.Exec(`
-		INSERT INTO songs (title, verse_order, entry) VALUES (?, ?, ?)
-	`, song.Title, song.VerseOrder, song.Songbook.Entry)
+		result, err := db.Exec(`INSERT INTO songs (title, verse_order, entry) VALUES (?, ?, ?)`,
+			song.Title, song.VerseOrder, song.Songbook.Entry)
 		if err != nil {
 			slog.Error(fmt.Sprintf("Error inserting song data for file %s: %v\n", xmlFile.Name(), err))
 			continue
@@ -124,24 +146,54 @@ func (a *App) FillDatabase() {
 			continue
 		}
 
+		_, err = db.Exec(`INSERT INTO songs_fts (id, title) VALUES (?, ?)`,
+			songID, removeDiacritics(song.Title))
+		if err != nil {
+			slog.Error(fmt.Sprintf("Error inserting song index for file %s: %v\n", xmlFile.Name(), err))
+			continue
+		}
+
 		// Insert author data into the authors table
 		for _, author := range song.Authors {
-			_, err := db.Exec(`
-			INSERT INTO authors (song_id, author_type, author_value) VALUES (?, ?, ?)
-		`, songID, author.Type, author.Value)
+			result, err := db.Exec(`INSERT INTO authors (song_id, author_type, author_value) VALUES (?, ?, ?)`,
+				songID, author.Type, author.Value)
 			if err != nil {
 				slog.Error(fmt.Sprintf("Error inserting author data for file %s: %v\n", xmlFile.Name(), err))
 				continue
 			}
+			// Get the ID
+			authorID, err := result.LastInsertId()
+			if err != nil {
+				slog.Error(fmt.Sprintf("Error getting last author insert ID for file %s: %v\n", xmlFile.Name(), err))
+				continue
+			}
+			_, err = db.Exec(`INSERT INTO authors_fts (id, author_value) VALUES (?, ?)`,
+				authorID, removeDiacritics(author.Value))
+			if err != nil {
+				slog.Error(fmt.Sprintf("Error inserting author index for file %s: %v\n", xmlFile.Name(), err))
+				continue
+			}
+
 		}
 
 		// Insert verse data into the verses table
 		for _, verse := range song.Lyrics.Verses {
-			_, err := db.Exec(`
-			INSERT INTO verses (song_id, name, lines) VALUES (?, ?, ?)
-		`, songID, verse.Name, verse.Lines)
+			result, err := db.Exec(`INSERT INTO verses (song_id, name, lines) VALUES (?, ?, ?)`,
+				songID, verse.Name, verse.Lines)
 			if err != nil {
 				slog.Error(fmt.Sprintf("Error inserting verse data for file %s: %v\n", xmlFile.Name(), err))
+				continue
+			}
+			// Get the ID
+			verseID, err := result.LastInsertId()
+			if err != nil {
+				slog.Error(fmt.Sprintf("Error getting last verse insert ID for file %s: %v\n", xmlFile.Name(), err))
+				continue
+			}
+			_, err = db.Exec(`INSERT INTO verses_fts (id, lines) VALUES (?, ?)`,
+				verseID, removeDiacritics(verse.Lines))
+			if err != nil {
+				slog.Error(fmt.Sprintf("Error inserting author index for file %s: %v\n", xmlFile.Name(), err))
 				continue
 			}
 		}
