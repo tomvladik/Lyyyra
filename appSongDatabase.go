@@ -39,49 +39,37 @@ func (a *App) PrepareDatabase() {
 	defer db.Close()
 
 	// Create tables if they don't exist
-	_, err = db.Exec(`
-		CREATE TABLE IF NOT EXISTS songs (
-			id INTEGER PRIMARY KEY AUTOINCREMENT,
-			entry INTEGER,
-			title TEXT,
-			verse_order TEXT
-		);
-		DELETE FROM songs;
-	`)
-	if err != nil {
-		slog.Error(fmt.Sprintf("Error creating songs table: %s", err))
-		return
+	tableScripts := []string{
+		`CREATE TABLE IF NOT EXISTS songs (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            entry INTEGER,
+            title TEXT,
+            verse_order TEXT
+        ); DELETE FROM songs;`,
+		`CREATE TABLE IF NOT EXISTS authors (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            song_id INTEGER,
+            author_type TEXT,
+            author_value TEXT,
+            FOREIGN KEY(song_id) REFERENCES songs(id)
+            ON DELETE CASCADE
+        ); DELETE FROM authors;`,
+		`CREATE TABLE IF NOT EXISTS verses (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            song_id INTEGER,
+            name TEXT,
+            lines TEXT,
+            FOREIGN KEY(song_id) REFERENCES songs(id)
+            ON DELETE CASCADE
+        ); DELETE FROM verses;`,
 	}
 
-	_, err = db.Exec(`
-	CREATE TABLE IF NOT EXISTS authors (
-		id INTEGER PRIMARY KEY AUTOINCREMENT,
-		song_id INTEGER,
-		author_type TEXT,
-		author_value TEXT,
-		FOREIGN KEY(song_id) REFERENCES songs(id)
-		ON DELETE CASCADE
-	);
-	DELETE FROM authors;
-`)
-	if err != nil {
-		slog.Error(fmt.Sprintf("Error creating authors table: %s", err))
-		return
-	}
-	_, err = db.Exec(`
-		CREATE TABLE IF NOT EXISTS verses (
-			id INTEGER PRIMARY KEY AUTOINCREMENT,
-			song_id INTEGER,
-			name TEXT,
-			lines TEXT,
-			FOREIGN KEY(song_id) REFERENCES songs(id)
-			ON DELETE CASCADE
-		);
-		DELETE FROM verses;
-	`)
-	if err != nil {
-		slog.Error(fmt.Sprintf("Error creating verses table: %s", err))
-		return
+	// Execute each table creation script
+	for _, script := range tableScripts {
+		if _, err := db.Exec(script); err != nil {
+			slog.Error(fmt.Sprintf("Error executing script: %s", err))
+			return
+		}
 	}
 }
 
