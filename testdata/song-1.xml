@@ -2,7 +2,7 @@
 <song xmlns="http://openlyrics.info/namespace/2009/song" version="0.8">
     <properties>
         <titles>
-            <title>ABCD</title>
+            <title>ABCčDďE</title>
         </titles>
         <songbooks>
             <songbook name="EZ21" entry="288" />
@@ -18,11 +18,11 @@
             <lines>Chvaliž Hospodina, slávy vždy Krále mocného,<br />ó duše má, neboť tužba to srdce
                 je mého.<br />Shromažďte se,<br />harfy ať tón ozve se,<br />zpívejte
                 chvalozpěv jeho!</lines>
-        </verse>
-        <verse name="v2">
+</verse>
+<verse name="v2">
             <lines>Chvaliž Hospodina, jenž všechno slavně spravuje,<br />v bezpečné náruči před
                 pádem tě ochraňuje<br />a vede tě<br />Duchem své lásky v světě,<br />tvá duše to
                 pociťuje.</lines>
-        </verse>
-    </lyrics>
+</verse>
+</lyrics>
 </song>

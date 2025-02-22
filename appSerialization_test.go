@@ -26,7 +26,7 @@ func Test_parseXmlSong(t *testing.T) {
 			wantErr: false,
 			want: Song{
 				Version: "0.8",
-				Title:   "ABCD",
+				Title:   "ABCčDďE",
 				Songbook: Songbook{
 					Name:  "EZ21",
 					Entry: "288",
