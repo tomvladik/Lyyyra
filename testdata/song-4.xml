@@ -1,0 +1,42 @@
+<?xml version="1.0" encoding="utf-8"?>
+<song xmlns="http://openlyrics.info/namespace/2009/song" version="0.8">
+    <properties>
+        <titles>
+            <title>Lorem Ipsum Dólór Sít Ámét</title>
+        </titles>
+        <songbooks>
+            <songbook name="EZ21" entry="4"/>
+        </songbooks>
+        <verseOrder>v1 v2 v3</verseOrder>
+        <authors>
+            <author type="words">Ámét Lórem Ípsum Áměť</author>
+            <author type="music">Dólór Sít Ámét, 2025</author>
+        </authors>
+    </properties>
+    <lyrics>
+        <verse name="v1">
+            <lines>Lórem ípsum dólór sít ámét,<br/>
+cónsectétur ádípíscíng élít,<br/>
+séd dó éíusmód témpór íncídídúnt út lábóré ét dólóré mágná álíqúá,<br/>
+Út éním ád míním véniám,<br/>
+qúís nóstrúd éxércítátíón úllámcó lábórís nísí út álíqúíp éx éá cómmódó cónséqúát,<br/>
+Dúís áúté írúré dólór ín répréhéndérít ín vólúptáté vélít éssé cíllúm dólóré éú fúgíát núllá páríátúr.</lines>
+</verse>
+<verse name="v2">
+<lines>Éxcéptéúr sínt óccáécát cúpídátát nón próídént,<br/>
+súnt ín cúlpa qúí óffícíá désérúnt móllít áním íd ést lábórúm,<br/>
+Séd út pérspícíátís úndé ómnís ísté nátús érrór sít vólúptátém áccúsántíúm dólórémqúe láúdántíúm,<br/>
+tótám rém ápéríám,<br/>
+éáqúe ípsá qúáé áb ílló ínvéntóré vérítátís ét qúásí tuleň árchítéctó béátáé vítáé díctá súnt éxplícábó,<br/>
+Némó éním ípsám vólúptátém qúíá vólúptás sít áspérnátúr áút ódít áút fúgít.</lines>
+</verse>
+<verse name="v3">
+<lines>Séd qúíá cónséqúúntúr mágní dólórés éós qúí rátíóné vólúptátém séqúí néscíúnt,<br/>
+Néqúe pórro qúísqúám ést,<br/>
+qúí dólórém ípsúm qúíá dólór sít ámét,<br/>
+cónséctétúr,<br/>
+ádípíscí vélít,<br/>
+séd qúíá nón númqúám éíús módí témpórá íncídúnt út lábóré ét dólóré mágnám álíqúám qúáérát vólúptátém.</lines>
+</verse>
+</lyrics>
+</song>

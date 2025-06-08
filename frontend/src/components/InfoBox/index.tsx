@@ -20,8 +20,8 @@ export function InfoBox(props: Props) {
   const [, setError] = useState(false);
 
   const isButtonVisible = useMemo(() => {
-    return !(status.DatabaseReady && status.SongsReady && status.WebResourcesReady);
-  }, [status.DatabaseReady, status.SongsReady, status.WebResourcesReady]);
+    return !(status.DatabaseReady && status.SongsReady);
+  }, [status.DatabaseReady, status.SongsReady]);
 
   function fetchStatus() {
     try {

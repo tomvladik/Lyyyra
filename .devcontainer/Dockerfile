@@ -10,14 +10,22 @@ RUN set -eux; \
 
 RUN set -eux; \
     npm install -g npm@11.1.0; \
-    npm install -g esbuild; \
     npm install -g typescript;
 
 RUN set -eux; \
-    apt-get install -y dnsutils iputils-ping gosu mc vim libgtk-3-dev libwebkit2gtk-4.0-dev nsis && \
-    rm -rf /var/lib/apt/lists/*
-
-ENV DEBIAN_FRONTEND=
+    apt-get update; \
+    apt-get install -y --fix-missing dnsutils iputils-ping gosu mc vim 
 
 RUN set -eux; \
-    gosu vscode go install github.com/wailsapp/wails/v2/cmd/wails@latest    
+    apt-get install -y libgtk-3-dev libwebkit2gtk-4.1-dev
+
+RUN set -eux; \
+    apt-get install -y nsis sqlite3 libsqlite3-dev
+
+RUN set -eux; \
+    rm -rf /var/lib/apt/lists/*
+
+RUN set -eux; \
+    gosu vscode go install github.com/wailsapp/wails/v2/cmd/wails@latest
+
+ENV DEBIAN_FRONTEND=

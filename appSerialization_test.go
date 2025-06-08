@@ -104,7 +104,7 @@ func TestRemoveDiacritics(t *testing.T) {
 		{"ÂÊÎÔÛ", "AEIOU"},
 		{"ÄËÏÖÜ", "AEIOU"},
 		{"ÃÑÕ", "ANO"},
-		{"ß", "ß"},
+		{"ßł", "ßł"},
 		{"Ææ", "Ææ"},
 		{"Příliš žluťoučký kůň úpěl ďábelské ódy", "Prilis zlutoucky kun upel dabelske ody"},
 		{"Loď čeří kýlem tůň - obzvlášť v Grónské úžině", "Lod ceri kylem tun - obzvlast v Gronske uzine"},
@@ -112,6 +112,8 @@ func TestRemoveDiacritics(t *testing.T) {
 		{"Nezvyčajné kŕdle šťastných figliarskych ďatľov učia pri kótovanom ústí Váhu mĺkveho koňa Waldemara obžierať väčšie kusy exkluzívnej kôry s quesadillou.", "Nezvycajne krdle stastnych figliarskych datlov ucia pri kotovanom usti Vahu mlkveho kona Waldemara obzierat vacsie kusy exkluzivnej kory s quesadillou."},
 		{"Vypätá dcéra grófa Maxwella s IQ nižším ako kôň núti čeľaď hrýzť hŕbu jabĺk.", "Vypata dcera grofa Maxwella s IQ nizsim ako kon nuti celad hryzt hrbu jablk."},
 		{"Die heiße Zypernsonne quälte Max und Victoria ja böse auf dem Weg bis zur Küste.", "Die heiße Zypernsonne qualte Max und Victoria ja bose auf dem Weg bis zur Kuste."},
+		{"Pójdź, kińże tę chmurność w głąb flaszy!", "Pojdz, kinze te chmurnosc w głab flaszy!"},
+		{"He, Miĥĉj', ĵaŭdgrafbluzpec' vektŝanĝos!", "He, Mihcj', jaudgrafbluzpec' vektsangos!"},
 	}
 
 	for _, test := range tests {

@@ -62,6 +62,8 @@ export namespace main {
 	    Entry: number;
 	    Title: string;
 	    Verses: string;
+	    AuthorMusic: string;
+	    AuthorLyric: string;
 	
 	    static createFrom(source: any = {}) {
 	        return new dtoSong(source);
@@ -73,6 +75,26 @@ export namespace main {
 	        this.Entry = source["Entry"];
 	        this.Title = source["Title"];
 	        this.Verses = source["Verses"];
+	        this.AuthorMusic = source["AuthorMusic"];
+	        this.AuthorLyric = source["AuthorLyric"];
+	    }
+	}
+	export class dtoSongHeader {
+	    Id: number;
+	    Entry: number;
+	    Title: string;
+	    TitleD: string;
+	
+	    static createFrom(source: any = {}) {
+	        return new dtoSongHeader(source);
+	    }
+	
+	    constructor(source: any = {}) {
+	        if ('string' === typeof source) source = JSON.parse(source);
+	        this.Id = source["Id"];
+	        this.Entry = source["Entry"];
+	        this.Title = source["Title"];
+	        this.TitleD = source["TitleD"];
 	    }
 	}
 

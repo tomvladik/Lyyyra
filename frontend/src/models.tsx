@@ -1,4 +1,3 @@
-import { AppStatus } from "./AppStatus";
 
 export interface SongData {
     songNumber: number;
@@ -7,11 +6,21 @@ export interface SongData {
     authorMusic: string;
     lyrics: string;
 }
+
 export interface dtoSong {
     Id: number
     Entry: number
     Title: string
     Verses: string
+    AuthorMusic: string
+    AuthorLyric: string
+}
+
+export interface dtoSongHeader {
+    Id: number
+    Entry: number
+    Title: string
+    TitleD: string
 }
 
 export interface Author {

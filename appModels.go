@@ -9,7 +9,7 @@ type AppStatus struct {
 	IsProgress        bool
 	LastSave          time.Time
 	Sorting           SortingOption
-	SearchPattern string
+	SearchPattern     string
 }
 
 type SongFilesSources struct {
@@ -57,10 +57,19 @@ type Verse struct {
 }
 
 type dtoSong struct {
+	Id          int
+	Entry       int
+	Title       string
+	Verses      string
+	AuthorMusic string
+	AuthorLyric string
+}
+
+type dtoSongHeader struct {
 	Id     int
 	Entry  int
 	Title  string
-	Verses string
+	TitleD string
 }
 
 type SortingOption string

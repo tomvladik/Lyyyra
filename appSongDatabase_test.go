@@ -95,7 +95,35 @@ func TestFillDatabase(t *testing.T) {
 
 	// Check if the sample author is in the result
 	if found_entry != "288" {
-		t.Errorf("Expected to get other song")
+		t.Errorf("Expected to get other song, not %v", found_entry)
+	}
+
+	err = db.QueryRow(`
+    SELECT entry FROM songs
+	JOIN authors ON songs.id=authors.song_id
+	JOIN authors_fts ON authors.id=authors_fts.id
+	WHERE authors_fts MATCH '2018'`).Scan(&found_entry)
+	if err != nil {
+		t.Errorf("Sample song was not inserted: %v", err)
+	}
+
+	// Check if the sample author is in the result
+	if found_entry != "3" {
+		t.Errorf("Expected to get other song, not %v", found_entry)
+	}
+
+	err = db.QueryRow(`
+    SELECT entry FROM songs
+	JOIN verses ON songs.id=verses.song_id
+	JOIN verses_fts ON verses.id=verses_fts.id
+	WHERE verses_fts MATCH 'tulen'`).Scan(&found_entry)
+	if err != nil {
+		t.Errorf("Sample song was not inserted: %v", err)
+	}
+
+	// Check if the sample author is in the result
+	if found_entry != "4" {
+		t.Errorf("Expected to get other song, not %v", found_entry)
 	}
 
 }
@@ -112,15 +140,99 @@ func TestGetSongs(t *testing.T) {
 	defer db.Close()
 
 	_, err = db.Exec(`
+        INSERT INTO songs (title, verse_order, entry) VALUES
+            ('First Song', '1', 1),
+            ('Second Song', '1', 2),
+            ('Last Song', '1', 3);
+        INSERT INTO verses (song_id, name, lines) VALUES
+            (1, 'Verse 1', 'First song lines'),
+            (2, 'Verse 1', 'Second song first lines'),
+            (2, 'Verse 2', 'Second song second line'),
+            (3, 'Verse 1', 'Third song first line');
+        INSERT INTO authors (song_id, author_type, author_value) VALUES
+            (1, 'music', 'Mark Author Music'),
+            (1, 'words', 'Quido Author Words'),
+            (2, 'music', 'Aloys Author Music'),
+            (2, 'words', 'Xaver Author Words'),
+            (3, 'music', 'Zuzel Author Music'),
+            (3, 'words', 'Anatoliy Author Words');
+    `)
+	if err != nil {
+		t.Fatalf("Failed to insert sample data: %v", err)
+	}
+
+	testCases := []struct {
+		name          string
+		orderBy       string
+		expectedOrder []string
+	}{
+		{
+			name:          "Order by title",
+			orderBy:       "title",
+			expectedOrder: []string{"First Song", "Last Song", "Second Song"},
+		},
+		{
+			name:          "Order by entry",
+			orderBy:       "entry",
+			expectedOrder: []string{"First Song", "Second Song", "Last Song"},
+		},
+		{
+			name:          "Order by music author",
+			orderBy:       "authorMusic",
+			expectedOrder: []string{"Second Song", "First Song", "Last Song"}, // Aloys, Mark, Zuzel
+		},
+		{
+			name:          "Order by words author",
+			orderBy:       "authorLyric",
+			expectedOrder: []string{"Last Song", "First Song", "Second Song"}, // Anatoliy, Quido, Xaver
+		},
+	}
+
+	for _, tc := range testCases {
+		t.Run(tc.name, func(t *testing.T) {
+			// Get songs from the database
+			songs, err := app.GetSongs(tc.orderBy, "")
+			if err != nil {
+				t.Errorf("Failed to get songs: %v", err)
+				return
+			}
+
+			// Check if all songs are in the result
+			if len(songs) != len(tc.expectedOrder) {
+				t.Errorf("Expected to get %d songs, got %d", len(tc.expectedOrder), len(songs))
+				return
+			}
+
+			// Check if songs are in correct order
+			for i, expected := range tc.expectedOrder {
+				if songs[i].Title != expected {
+					t.Errorf("Expected song %d to be '%s', got '%s'", i+1, expected, songs[i].Title)
+				}
+			}
+		})
+	}
+}
+
+func TestGetSongs2(t *testing.T) {
+	app := setupTestDB(t)
+	defer teardownTestDB(app)
+
+	// Insert sample data into the database
+	db, err := sql.Open("sqlite3", app.dbFilePath)
+	if err != nil {
+		t.Fatalf("Failed to open database: %v", err)
+	}
+	defer db.Close()
+
+	_, err = db.Exec(`
         INSERT INTO songs (title, verse_order, entry) VALUES ('Sample Song', '1', 1);
-        INSERT INTO verses (song_id, name, lines) VALUES (1, 'Verse 1', 'Sample lines');
     `)
 	if err != nil {
 		t.Fatalf("Failed to insert sample data: %v", err)
 	}
 
 	// Get songs from the database
-	songs, err := app.GetSongs("title")
+	songs, err := app.GetSongs2("title", "")
 	if err != nil {
 		t.Errorf("Failed to get songs: %v", err)
 	}

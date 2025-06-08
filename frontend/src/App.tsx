@@ -5,7 +5,7 @@ import { AppStatus, isEqualAppStatus, SortingOption } from "./AppStatus";
 import { InfoBox } from './components/InfoBox';
 import StatusPanel from './components/StatusPanel';
 import { DataContext } from './main';
-import { dtoSong, SelectParams } from './models';
+import { dtoSong } from './models';
 import { SongList } from './pages/SongList';
 
 
@@ -13,9 +13,7 @@ function App() {
     const [status, setStatus] = useState({} as AppStatus);
 
     const [songs, setSongs] = useState(new Array<dtoSong>());
-    const [, setError] = useState(false);
     const [filterValue, setFilterValue] = useState("");
-    const [, setSelectParams] = useState({} as SelectParams);
 
     const loadSongs = () => {
         const stat = { ...status }
@@ -23,7 +21,6 @@ function App() {
         setStatus(stat)
         go.DownloadEz().then(() => {
             fetchStatus()
-            fetchData()
         }).catch(error => {
             console.error("Error during download:", error);
         });
@@ -31,16 +28,15 @@ function App() {
         setStatus({ ...stat })
     }
 
-    const fetchData = async () => {
-        try {
-            // Assume fetchData returns a Promise
-            const songs = await go.GetSongs(status.Sorting);
-            setSongs(songs);
-        } catch (error) {
-            console.log(error)
-            setError(true);
-        }
-    };
+    // const fetchData = async () => {
+    //     try {
+    //         // Assume fetchData returns a Promise
+    //         const songs = await go.GetSongs(status.Sorting, status.SearchPattern);
+    //         setSongs(songs);
+    //     } catch (error) {
+    //         console.log(error)
+    //     }
+    // };
 
     const fetchStatus = async () => {
         try {
@@ -55,13 +51,13 @@ function App() {
                 setStatus(newStatus)
             }
         } catch (error) {
-            setError(true);
+            console.log(error)
         }
     };
 
-    useEffect(() => {
-        fetchData()
-    }, [filterValue, status.Sorting]);
+    // useEffect(() => {
+    //     fetchData()
+    // }, [filterValue, status.Sorting]);
 
     // useEffect with an empty dependency array runs once when the component mounts
     useEffect(() => {
@@ -88,7 +84,7 @@ function App() {
                 </header>
 
                 <main className="ScrollablePart">
-                    <SongList songs={songs} filter={filterValue} />
+                    <SongList />
                 </main>
                 <footer className="footer">
                     <StatusPanel />

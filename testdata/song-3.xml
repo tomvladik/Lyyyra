@@ -1,0 +1,41 @@
+<?xml version="1.0" encoding="utf-8"?>
+<song xmlns="http://openlyrics.info/namespace/2009/song" version="0.8">
+    <properties>
+        <titles>
+            <title>Sit Amet Consectetur Adipiscing</title>
+        </titles>
+        <songbooks>
+            <songbook name="EZ21" entry="3"/>
+        </songbooks>
+        <verseOrder>v1 v2 v3</verseOrder>
+        <authors>
+            <author type="words">Consectetur Adipiscing</author>
+            <author type="music">Elit Sed Do, 2018</author>
+        </authors>
+    </properties>
+    <lyrics>
+        <verse name="v1">
+            <lines>Sit amet consectetur adipiscing elit,<br/>
+sed do eiusmod tempor incididunt ut labore et dolore magna aliqua,<br/>
+Ut enim ad minim veniam,<br/>
+quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat,<br/>
+Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur.</lines>
+</verse>
+<verse name="v2">
+<lines>Excepteur sint occaecat cupidatat non proident,<br/>
+sunt in culpa qui officia deserunt mollit anim id est laborum,<br/>
+Sed ut perspiciatis unde omnis iste natus error sit voluptatem accusantium doloremque laudantium,<br/>
+totam rem aperiam,<br/>
+eaque ipsa quae ab illo inventore veritatis et quasi architecto beatae vitae dicta sunt explicabo,<br/>
+Nemo enim ipsam voluptatem quia voluptas sit aspernatur aut odit aut fugit.</lines>
+</verse>
+<verse name="v3">
+<lines>Sed quia consequuntur magni dolores eos qui ratione voluptatem sequi nesciunt,<br/>
+Neque porro quisquam est,<br/>
+qui dolorem ipsum quia dolor sit amet,<br/>
+consectetur,<br/>
+adipisci velit,<br/>
+sed quia non numquam eius modi tempora incidunt ut labore et dolore magnam aliquam quaerat voluptatem.</lines>
+</verse>
+</lyrics>
+</song>

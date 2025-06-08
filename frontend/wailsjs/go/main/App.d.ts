@@ -12,7 +12,9 @@ export function FillDatabase():Promise<void>;
 
 export function GetSongAuthors(arg1:number):Promise<Array<main.Author>>;
 
-export function GetSongs(arg1:string):Promise<Array<main.dtoSong>>;
+export function GetSongs(arg1:string,arg2:string):Promise<Array<main.dtoSong>>;
+
+export function GetSongs2(arg1:string,arg2:string):Promise<Array<main.dtoSongHeader>>;
 
 export function GetStatus():Promise<main.AppStatus>;
 
