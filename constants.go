@@ -1,6 +1,6 @@
 package main
 
 const (
-    XMLUrl = "https://zpevnik.proscholy.cz/soubor/ez21--openlp-2022-01-25.zip"
-    PDFUrl = "https://www.evangelickyzpevnik.cz/zpevnik/kapitoly-a-pisne/"
+	XMLUrl = "https://www.evangelickyzpevnik.cz.www.e-cirkev.cz/res/archive/001/000243.zip?download"
+	PDFUrl = "https://www.evangelickyzpevnik.cz/zpevnik/kapitoly-a-pisne/"
 )

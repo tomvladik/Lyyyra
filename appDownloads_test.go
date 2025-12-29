@@ -64,22 +64,21 @@ func TestDownloadFile(t *testing.T) {
 	}
 }
 
-func createMinimalZip() []byte {
-	// Create a buffer to hold the ZIP file data
+func createZipFromFiles(files map[string][]byte) []byte {
 	buf := new(bytes.Buffer)
-
-	// Create a new ZIP archive writer
 	zipWriter := zip.NewWriter(buf)
 
-	// Add an empty file to the ZIP archive
-	_, err := zipWriter.Create("empty.txt")
-	if err != nil {
-		panic(err) // Handle error properly in real code
+	for name, content := range files {
+		f, err := zipWriter.Create(name)
+		if err != nil {
+			panic(err)
+		}
+		if _, err := f.Write(content); err != nil {
+			panic(err)
+		}
 	}
 
-	// Close the ZIP writer to finalize the archive
 	zipWriter.Close()
-
 	return buf.Bytes()
 }
 
@@ -90,7 +89,7 @@ func TestDownloadSongBase(t *testing.T) {
 	// Create a test server to serve a test zip file
 	ts := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		w.Header().Set("Content-Type", "application/zip")
-		w.Write(createMinimalZip())
+		w.Write(createZipFromFiles(map[string][]byte{"empty.txt": []byte("")}))
 	}))
 	defer ts.Close()
 
@@ -111,20 +110,27 @@ func TestDownloadSongBase(t *testing.T) {
 
 func TestDownloadEz(t *testing.T) {
 	app := setupTestApp(t)
-	//homeDir, _ := os.UserHomeDir()
-
-	//app.appDir = filepath.Join(homeDir, "Lyyyra", "www.evangelickyzpevnik.cz")
 	app.dbFilePath = filepath.Join(app.appDir, "Songs.db")
 	app.songBookDir = filepath.Join(app.appDir, "SongBook")
-	app.xmlUrl = XMLUrl
-	// defer teardownTestApp(app)
+
+	content, err := os.ReadFile(filepath.Join("testdata", "song-1.xml"))
+	if err != nil {
+		t.Fatalf("Failed to read fixture: %v", err)
+	}
+	zipBytes := createZipFromFiles(map[string][]byte{"song-1.xml": content})
+	ts := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		w.Header().Set("Content-Type", "application/zip")
+		w.Write(zipBytes)
+	}))
+	defer ts.Close()
+	app.xmlUrl = ts.URL
 
 	// Mock the status
 	app.status.SongsReady = false
 	app.status.DatabaseReady = false
 
 	// Test downloading EZ resources
-	err := app.DownloadEz()
+	err = app.DownloadEz()
 	if err != nil {
 		t.Fatalf("Failed to download EZ resources: %v", err)
 	}
@@ -135,5 +141,32 @@ func TestDownloadEz(t *testing.T) {
 	}
 	if !app.status.DatabaseReady {
 		t.Errorf("Expected DatabaseReady to be true, got false")
+	}
+}
+
+func TestDownloadEzRemote(t *testing.T) {
+	app := setupTestApp(t)
+	defer teardownTestApp(app)
+	app.dbFilePath = filepath.Join(app.appDir, "Songs.db")
+	app.songBookDir = filepath.Join(app.appDir, "SongBook")
+	app.xmlUrl = XMLUrl
+	app.status.SongsReady = false
+	app.status.DatabaseReady = false
+
+	if err := app.DownloadEz(); err != nil {
+		t.Fatalf("Failed to download EZ resources remotely: %v", err)
+	}
+
+	if !app.status.SongsReady {
+		t.Errorf("Expected SongsReady to be true, got false")
+	}
+	if !app.status.DatabaseReady {
+		t.Errorf("Expected DatabaseReady to be true, got false")
+	}
+	if _, err := os.Stat(app.dbFilePath); err != nil {
+		t.Errorf("Expected database file to exist: %v", err)
+	}
+	if _, err := os.Stat(app.songBookDir); err != nil {
+		t.Errorf("Expected SongBook directory to exist: %v", err)
 	}
 }

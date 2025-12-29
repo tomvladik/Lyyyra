@@ -72,13 +72,18 @@ func NewApp() *App {
 		urlDomain:   parsedURL.Host,
 		logFile:     logFile,
 	}
+
+	if err := os.MkdirAll(app.songBookDir, os.ModePerm); err != nil {
+		slog.Error(fmt.Sprintf("Failed to create directories %s: %v", app.songBookDir, err))
+		return &App{}
+	}
 	err = app.deserializeFromYaml(&app.status, "status.yaml")
 	if err != nil {
 		app.status = AppStatus{Sorting: Title}
 		//app.saveStatus()
 	}
 	slog.Info(fmt.Sprintf("Status DatabaseReady: %+v", app.status))
-	app.testRun = true
+	//app.testRun = true
 	return &app
 }
 

@@ -75,13 +75,19 @@ func (a *App) downloadParts() {
 }
 
 func (a *App) DownloadSongBase() error {
+	if err := os.MkdirAll(a.songBookDir, os.ModePerm); err != nil {
+		return err
+	}
 	fileName, err := a.downloadFile(a.xmlUrl, "Songs.zip")
 	if err != nil {
 		slog.Error(err.Error())
 		return err
 	}
 	defer os.Remove(fileName)
-	unzip(fileName, a.songBookDir)
+	if err := unzip(fileName, a.songBookDir); err != nil {
+		slog.Error("Failed to unzip song base", "error", err)
+		return err
+	}
 	return nil
 }
 

@@ -1,6 +1,6 @@
 build/bin
 node_modules
 frontend/dist
-__debug*.exe
+__debug*
 frontend/yarn.lock
 changeme
