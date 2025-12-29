@@ -64,7 +64,7 @@ wails-build: ## Build Wails application for production
 	wails build
 
 wails-build-windows: ## Build Wails application for Windows
-	wails build -platform windows/amd64
+	CGO_ENABLED=1 CC=x86_64-w64-mingw32-gcc CXX=x86_64-w64-mingw32-g++ wails build -platform windows/amd64 -tags "fts5 webkit2_41"
 
 wails-install: ## Install Wails CLI
 	go install github.com/wailsapp/wails/v2/cmd/wails@latest

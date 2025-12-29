@@ -1,24 +1,5 @@
 package main
 
-/*
-#cgo LDFLAGS: -lsqlite3
-#include <sqlite3.h>
-#include <stdlib.h>
-
-// Custom collation function
-int myCollation(void *data, int len1, const void *str1, int len2, const void *str2) {
-    // Implement your custom comparison logic here
-    // Example: case-insensitive comparison
-    return strcasecmp(str1, str2);
-}
-
-// Register the custom collation function
-void registerCollation(sqlite3 *db) {
-    sqlite3_create_collation(db, "my_collation", SQLITE_UTF8, NULL, myCollation);
-}
-*/
-
-import "C"
 import (
 	"database/sql"
 	"fmt"

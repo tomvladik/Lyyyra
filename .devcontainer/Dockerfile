@@ -20,6 +20,9 @@ RUN set -eux; \
     apt-get install -y libgtk-3-dev libwebkit2gtk-4.1-dev
 
 RUN set -eux; \
+    apt-get install -y mingw-w64
+
+RUN set -eux; \
     apt-get install -y nsis sqlite3 libsqlite3-dev
 
 RUN set -eux; \
