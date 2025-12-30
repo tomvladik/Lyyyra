@@ -4,6 +4,7 @@ import './App.less';
 import { AppStatus, isEqualAppStatus, SortingOption } from "./AppStatus";
 import { InfoBox } from './components/InfoBox';
 import StatusPanel from './components/StatusPanel';
+import { INITIAL_LOAD_DELAY, STATUS_POLL_INTERVAL } from './constants';
 import { DataContext } from './main';
 import { dtoSong } from './models';
 import { SongList } from './pages/SongList';
@@ -23,7 +24,7 @@ function App() {
         // Poll for status updates while in progress
         const pollInterval = setInterval(() => {
             fetchStatus();
-        }, 500);
+        }, STATUS_POLL_INTERVAL);
         
         go.DownloadEz().then(() => {
             clearInterval(pollInterval);
@@ -69,11 +70,11 @@ function App() {
 
     // useEffect with an empty dependency array runs once when the component mounts
     useEffect(() => {
-        // Delay action after page render (500ms delay in this case)
+        // Delay action after page render
         const timer = setTimeout(() => {
-            console.log('This runs after 500ms delay');
+            console.log('Initial load after delay');
             fetchStatus()
-        }, 500);
+        }, INITIAL_LOAD_DELAY);
 
         // Cleanup function to clear the timeout if the component unmounts
         return () => clearTimeout(timer);

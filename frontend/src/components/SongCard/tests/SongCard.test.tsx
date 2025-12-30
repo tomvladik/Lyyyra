@@ -4,6 +4,7 @@ import { describe, it, expect, vi, beforeEach } from 'vitest';
 import * as AppModule from '../../../../wailsjs/go/main/App';
 import { dtoSong } from '../../../models';
 import { DataContext } from '../../../context';
+import { createMockStatus } from '../../../test/testHelpers';
 
 vi.mock('../../../../wailsjs/go/main/App', () => ({
   GetSongAuthors: vi.fn(),
@@ -20,15 +21,11 @@ describe('<SongCard />', () => {
   };
 
   const mockContext = {
-    status: {
+    status: createMockStatus({
       DatabaseReady: true,
       SongsReady: true,
       WebResourcesReady: true,
-      IsProgress: false,
-      LastSave: '',
-      SearchPattern: '',
-      Sorting: 'entry' as const,
-    },
+    }),
     updateStatus: vi.fn(),
   };
 

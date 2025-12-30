@@ -2,6 +2,7 @@ import React, { ChangeEvent, useContext, useEffect, useMemo, useState } from 're
 
 import { Option } from 'react-dropdown';
 import { AppStatus, SortingOption } from '../../AppStatus';
+import { DEBOUNCE_DELAY, FETCH_STATUS_DELAY } from '../../constants';
 import { DataContext } from '../../context';
 import styles from "./index.module.less";
 
@@ -43,7 +44,7 @@ export function InfoBox(props: Props) {
     // Use a timer to debounce the onChange event
     const timer = setTimeout(() => {
       props.setFilter(status.SearchPattern);
-    }, 500); // Adjust the delay as needed (e.g., 1000ms for 1 second)
+    }, DEBOUNCE_DELAY);
 
     // Clear the timer if the component unmounts or if the input value changes before the timer expires
     return () => clearTimeout(timer);
@@ -51,11 +52,11 @@ export function InfoBox(props: Props) {
 
   // useEffect with an empty dependency array runs once when the component mounts
   useEffect(() => {
-    // Delay action after page render (500ms delay in this case)
+    // Delay action after page render
     const timer = setTimeout(() => {
-      console.log('This runs after 600ms delay');
+      console.log('This runs after delay');
       fetchStatus()
-    }, 600);
+    }, FETCH_STATUS_DELAY);
 
     // Cleanup function to clear the timeout if the component unmounts
     return () => clearTimeout(timer);
@@ -67,13 +68,6 @@ export function InfoBox(props: Props) {
     { value: 'authorMusic' as SortingOption, label: 'autora hudby' },
     { value: 'authorLyric' as SortingOption, label: 'autora textu' }
   ];
-
-  function _onSelectSorting(arg: Option): void {
-    console.info(arg)
-    const stat = { ...status }
-    stat.Sorting = arg.value as SortingOption
-    updateStatus(stat)
-  }
 
   function _on(event: ChangeEvent<HTMLSelectElement>): void {
     console.info(event.target.value)

@@ -2,7 +2,9 @@ import { useContext, useEffect, useState } from 'react';
 import * as go from '../../../wailsjs/go/main/App';
 
 import { SongCard } from "../../components/SongCard";
+import { INITIAL_LOAD_DELAY, SONG_POLL_INTERVAL } from '../../constants';
 import { DataContext } from '../../context';
+import { useDelayedEffect, usePolling } from '../../hooks/usePolling';
 import { dtoSong } from '../../models';
 import { removeDiacritics } from "../../utils/stringUtils";
 
@@ -24,26 +26,15 @@ export const SongList = () => {
         fetchData()
     }, [status.SearchPattern, status.Sorting]);
     
-    useEffect(() => {
-        // Poll for new songs while database is being filled
-        if (status.IsProgress && status.DatabaseReady === false && status.SongsReady === true) {
-            const pollInterval = setInterval(() => {
-                fetchData();
-            }, 7777);
-            return () => clearInterval(pollInterval);
-        }
-    }, [status.IsProgress, status.DatabaseReady, status.SongsReady]);
+    // Poll for new songs while database is being filled
+    const shouldPoll = status.IsProgress && !status.DatabaseReady && status.SongsReady;
+    usePolling(fetchData, SONG_POLL_INTERVAL, shouldPoll);
     
-    useEffect(() => {
-        // Delay action after page render (500ms delay in this case)
-        const timer = setTimeout(() => {
-            console.log('This runs after 500ms delay');
-            fetchData()
-        }, 500);
-
-        // Cleanup function to clear the timeout if the component unmounts
-        return () => clearTimeout(timer);
-    }, []);
+    // Delay action after page render
+    useDelayedEffect(() => {
+        console.log('Initial song list load');
+        fetchData();
+    }, INITIAL_LOAD_DELAY, []);
 
     const normalizedFilter = removeDiacritics(status.SearchPattern)?.toLowerCase();
     return (

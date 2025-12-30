@@ -1,5 +1,6 @@
 import { render, screen } from '@testing-library/react';
 import { describe, it, expect, vi } from 'vitest';
+import '@testing-library/jest-dom/vitest';
 import HighlightText from '../index';
 import { DataContext } from '../../../context';
 
@@ -13,6 +14,8 @@ describe('<HighlightText />', () => {
       LastSave: '',
       SearchPattern: searchPattern,
       Sorting: 'entry' as const,
+      ProgressMessage: '',
+      ProgressPercent: 0,
     };
     const mockUpdateStatus = vi.fn();
 

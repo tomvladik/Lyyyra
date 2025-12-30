@@ -1,6 +1,7 @@
 import { render, screen, fireEvent, waitFor } from '@testing-library/react';
 import { InfoBox } from '../index';
 import { DataContext } from '../../../context';
+import { createMockStatus } from '../../../test/testHelpers';
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 
 describe('<InfoBox />', () => {
@@ -8,17 +9,8 @@ describe('<InfoBox />', () => {
   const mockSetFilter = vi.fn();
   const mockUpdateStatus = vi.fn();
 
-  const defaultStatus = {
-    DatabaseReady: false,
-    SongsReady: false,
-    WebResourcesReady: false,
-    IsProgress: false,
-    LastSave: '',
-    SearchPattern: '',
-    Sorting: 'entry' as const,
-  };
-
-  const renderInfoBox = (status = defaultStatus) => {
+  const renderInfoBox = (statusOverrides = {}) => {
+    const status = createMockStatus(statusOverrides);
     return render(
       <DataContext.Provider value={{ status, updateStatus: mockUpdateStatus }}>
         <InfoBox loadSongs={mockLoadSongs} setFilter={mockSetFilter} />
@@ -37,23 +29,19 @@ describe('<InfoBox />', () => {
   });
 
   it('hides button when database and songs are ready', () => {
-    const readyStatus = {
-      ...defaultStatus,
+    renderInfoBox({
       DatabaseReady: true,
       SongsReady: true,
-    };
-    renderInfoBox(readyStatus);
+    });
     
     const button = screen.queryByText('Stáhnout data z internetu');
     expect(button).not.toBeInTheDocument();
   });
 
   it('calls setFilter after debounce delay', async () => {
-    const statusWithPattern = {
-      ...defaultStatus,
+    renderInfoBox({
       SearchPattern: 'test search',
-    };
-    renderInfoBox(statusWithPattern);
+    });
 
     await waitFor(() => {
       expect(mockSetFilter).toHaveBeenCalledWith('test search');
@@ -61,12 +49,9 @@ describe('<InfoBox />', () => {
   });
 
   it('shows button when only songs are ready', () => {
-    const songsReadyStatus = {
-      ...defaultStatus,
+    renderInfoBox({
       SongsReady: true,
-      DatabaseReady: false,
-    };
-    renderInfoBox(songsReadyStatus);
+    });
     
     const button = screen.getByRole('button');
     expect(button).toBeInTheDocument();
