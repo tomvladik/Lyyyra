@@ -2,6 +2,7 @@ package main
 
 import (
 	"context"
+	"encoding/base64"
 	"fmt"
 	"log/slog"
 	"net/url"
@@ -102,6 +103,31 @@ func NewApp() *App {
 // so we can call the runtime methods
 func (a *App) startup(ctx context.Context) {
 	a.ctx = ctx
+}
+
+// GetPdfFile returns the PDF contents encoded as a data URL
+// so the frontend can display it without violating file:// restrictions.
+func (a *App) GetPdfFile(filename string) (string, error) {
+	if filename == "" {
+		return "", fmt.Errorf("no filename provided")
+	}
+
+	filePath := filepath.Join(a.pdfDir, filename)
+	if _, err := os.Stat(filePath); os.IsNotExist(err) {
+		return "", fmt.Errorf("file not found: %s", filename)
+	}
+
+	// Return absolute path
+	absPath, err := filepath.Abs(filePath)
+	if err != nil {
+		return "", err
+	}
+	data, err := os.ReadFile(absPath)
+	if err != nil {
+		return "", err
+	}
+	encoded := base64.StdEncoding.EncodeToString(data)
+	return "data:application/pdf;base64," + encoded, nil
 }
 
 func (a *App) saveStatus() {

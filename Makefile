@@ -78,21 +78,21 @@ wails-dev: ## Start Wails development server
 	wails dev -tags "$(GO_DEV_TAGS)"
 
 wails-build: ## Build Wails application for production
-	wails build -tags "$(GO_PROD_TAGS)"
+	wails build -tags "$(GO_PROD_TAGS)" -devtools
 
 wails-build-windows: ## Build Wails for Windows (cross-compile in devcontainer)
-	CGO_ENABLED=1 CC=x86_64-w64-mingw32-gcc CXX=x86_64-w64-mingw32-g++ wails build -platform windows/amd64 -tags "$(GO_PROD_TAGS)"
+	CGO_ENABLED=1 CC=x86_64-w64-mingw32-gcc CXX=x86_64-w64-mingw32-g++ wails build -platform windows/amd64 -tags "$(GO_PROD_TAGS)" -devtools
 
 wails-build-windows-skip-frontend: ## Build Windows app (skip frontend rebuild, devcontainer cross-compile)
-	CGO_ENABLED=1 CC=x86_64-w64-mingw32-gcc CXX=x86_64-w64-mingw32-g++ wails build -platform windows/amd64 -tags "$(GO_PROD_TAGS)" -skipbindings -s
+	CGO_ENABLED=1 CC=x86_64-w64-mingw32-gcc CXX=x86_64-w64-mingw32-g++ wails build -platform windows/amd64 -tags "$(GO_PROD_TAGS)" -skipbindings -s -devtools
 
 wails-build-windows-fast: frontend-build wails-build-windows-skip-frontend ## Fast Windows build in devcontainer (pre-build frontend)
 
 wails-build-native-windows: ## Build Wails for Windows (native build on Windows)
-	wails build -platform windows/amd64 -tags "$(GO_PROD_TAGS)"
+	wails build -platform windows/amd64 -tags "$(GO_PROD_TAGS)" -devtools
 
 wails-build-native-windows-skip-frontend: ## Build Windows app native (skip frontend rebuild)
-	wails build -platform windows/amd64 -tags "$(GO_PROD_TAGS)" -skipbindings -s
+	wails build -platform windows/amd64 -tags "$(GO_PROD_TAGS)" -skipbindings -s -devtools
 
 wails-install: ## Install Wails CLI
 	go install github.com/wailsapp/wails/v2/cmd/wails@latest

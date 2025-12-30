@@ -19,6 +19,7 @@ describe('<SongCard />', () => {
     Verses: 'First verse\nSecond verse\nThird verse',
     AuthorMusic: '',
     AuthorLyric: '',
+    KytaraFile: '',
   };
 
   const renderWithContext = async (song: dtoSong, overrides: Partial<AppStatus> = {}) => {

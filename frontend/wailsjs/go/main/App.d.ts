@@ -10,6 +10,8 @@ export function DownloadSongBase():Promise<void>;
 
 export function FillDatabase():Promise<void>;
 
+export function GetPdfFile(arg1:string):Promise<string>;
+
 export function GetSongAuthors(arg1:number):Promise<Array<main.Author>>;
 
 export function GetSongs(arg1:string,arg2:string):Promise<Array<main.dtoSong>>;
@@ -19,5 +21,7 @@ export function GetSongs2(arg1:string,arg2:string):Promise<Array<main.dtoSongHea
 export function GetStatus():Promise<main.AppStatus>;
 
 export function PrepareDatabase():Promise<void>;
+
+export function ProcessKytaraPDF():Promise<void>;
 
 export function SaveSorting(arg1:main.SortingOption):Promise<void>;

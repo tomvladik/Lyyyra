@@ -18,6 +18,10 @@ export function FillDatabase() {
   return window['go']['main']['App']['FillDatabase']();
 }
 
+export function GetPdfFile(arg1) {
+  return window['go']['main']['App']['GetPdfFile'](arg1);
+}
+
 export function GetSongAuthors(arg1) {
   return window['go']['main']['App']['GetSongAuthors'](arg1);
 }
@@ -36,6 +40,10 @@ export function GetStatus() {
 
 export function PrepareDatabase() {
   return window['go']['main']['App']['PrepareDatabase']();
+}
+
+export function ProcessKytaraPDF() {
+  return window['go']['main']['App']['ProcessKytaraPDF']();
 }
 
 export function SaveSorting(arg1) {

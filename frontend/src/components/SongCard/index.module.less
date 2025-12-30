@@ -23,6 +23,13 @@
 	font-size: 1.5em;
 }
 
+.pdfIcon {
+	margin-left: 0.5em;
+	font-size: 0.8em;
+	opacity: 0.7;
+	cursor: help;
+}
+
 .songNumber {
 	font-weight: 700;
 	color: @myBlueColour;
@@ -30,6 +37,27 @@
 
 .author {
 	font-style: italic;
+}
+
+.songFooter {
+	padding: 0.3em;
+	border: 1px solid @myBlueColour;
+	border-radius: 0.4rem;
+	margin-top: 0.5rem;
+	display: flex;
+	gap: 1rem;
+	align-items: center;
+}
+
+.actionIcon {
+	font-size: 1.5em;
+	cursor: pointer;
+	opacity: 0.7;
+	transition: opacity 0.2s;
+	
+	&:hover {
+		opacity: 1;
+	}
 }
 
 .lyrics {

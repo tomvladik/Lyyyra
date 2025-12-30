@@ -2,11 +2,13 @@ import { useEffect, useState } from "react";
 import { GetSongAuthors } from "../../../wailsjs/go/main/App";
 import { Author, dtoSong } from "../../models";
 import HighlightText from "../HighlightText";
+import { PdfModal } from "../PdfModal";
 import styles from "./index.module.less";
 
 export const SongCard = ({ data }: { data: dtoSong }) => {
     const [authorData, setData] = useState(new Array<Author>());
     const [, setError] = useState(false);
+    const [pdfModalOpen, setPdfModalOpen] = useState(false);
 
     const fetchData = async () => {
         try {
@@ -17,13 +19,26 @@ export const SongCard = ({ data }: { data: dtoSong }) => {
             setError(true);
         }
     };
+
+    const handleOpenPdf = () => {
+        if (data.KytaraFile) {
+            setPdfModalOpen(true);
+        }
+    };
+
+    const handleSecondAction = () => {
+        // Placeholder for second action
+        console.log("Second action for:", data.KytaraFile);
+    };
+
     // useEffect with an empty dependency array runs once when the component mounts
     useEffect(() => {
         fetchData();
     }, []); // Empty dependency array means it runs once when the component mounts
 
     return (
-        <div className={styles.songCard}>
+        <>
+            <div className={styles.songCard}>
             <div className={styles.songHeader}>
                 <div className={styles.title}>
                     <span className={styles.songNumber}>{data.Entry}:</span>{' '}
@@ -52,6 +67,30 @@ export const SongCard = ({ data }: { data: dtoSong }) => {
                     <HighlightText key={index} text={paragraph} />
                 ))}
             </div>
+            {data.KytaraFile && (
+                <div className={styles.songFooter}>
+                    <span 
+                        className={styles.actionIcon} 
+                        onClick={handleOpenPdf}
+                        title="Otevřít PDF"
+                    >
+                        🎵
+                    </span>
+                    <span 
+                        className={styles.actionIcon}
+                        onClick={handleSecondAction}
+                        title="Další akce"
+                    >
+                        📋
+                    </span>
+                </div>
+            )}
         </div>
+            <PdfModal 
+                isOpen={pdfModalOpen} 
+                filename={data.KytaraFile || ""} 
+                onClose={() => setPdfModalOpen(false)} 
+            />
+        </>
     );
 };
