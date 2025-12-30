@@ -19,13 +19,20 @@ function App() {
         const stat = { ...status }
         stat.IsProgress = true
         setStatus(stat)
+        
+        // Poll for status updates while in progress
+        const pollInterval = setInterval(() => {
+            fetchStatus();
+        }, 500);
+        
         go.DownloadEz().then(() => {
+            clearInterval(pollInterval);
             fetchStatus()
         }).catch(error => {
+            clearInterval(pollInterval);
             console.error("Error during download:", error);
+            fetchStatus()
         });
-        stat.IsProgress = false
-        setStatus({ ...stat })
     }
 
     // const fetchData = async () => {
@@ -44,9 +51,10 @@ function App() {
             const goStatus = await go.GetStatus();
             const newStatus: AppStatus = {
                 ...goStatus,
-                Sorting: goStatus.Sorting as SortingOption
+                Sorting: goStatus.Sorting as SortingOption,
+                ProgressMessage: goStatus.ProgressMessage || '',
+                ProgressPercent: goStatus.ProgressPercent || 0
             };
-            newStatus.IsProgress = false
             if (!isEqualAppStatus(newStatus, status)) {
                 setStatus(newStatus)
             }

@@ -5,6 +5,8 @@ export namespace main {
 	    SongsReady: boolean;
 	    DatabaseReady: boolean;
 	    IsProgress: boolean;
+	    ProgressMessage: string;
+	    ProgressPercent: number;
 	    // Go type: time
 	    LastSave: any;
 	    Sorting: string;
@@ -20,6 +22,8 @@ export namespace main {
 	        this.SongsReady = source["SongsReady"];
 	        this.DatabaseReady = source["DatabaseReady"];
 	        this.IsProgress = source["IsProgress"];
+	        this.ProgressMessage = source["ProgressMessage"];
+	        this.ProgressPercent = source["ProgressPercent"];
 	        this.LastSave = this.convertValues(source["LastSave"], null);
 	        this.Sorting = source["Sorting"];
 	        this.SearchPattern = source["SearchPattern"];

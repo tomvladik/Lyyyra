@@ -7,6 +7,8 @@ type AppStatus struct {
 	SongsReady        bool
 	DatabaseReady     bool
 	IsProgress        bool
+	ProgressMessage   string
+	ProgressPercent   int
 	LastSave          time.Time
 	Sorting           SortingOption
 	SearchPattern     string

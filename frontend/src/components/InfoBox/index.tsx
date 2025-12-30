@@ -91,8 +91,36 @@ export function InfoBox(props: Props) {
         }}>{buttonText}</button>}
       </div>
       }
-      {status.IsProgress && <div>Připravuji data, vyčkejte ....</div>}
-      <div>
+      {status.IsProgress && <div>
+        <div style={{ marginBottom: '12px' }}>{status.ProgressMessage || 'Připravuji data, vyčkejte ....'}</div>
+        {status.ProgressPercent > 0 && (
+          <div>
+            <div style={{ 
+              width: '100%', 
+              backgroundColor: '#e0e0e0', 
+              borderRadius: '4px', 
+              height: '20px',
+              overflow: 'hidden'
+            }}>
+              <div style={{
+                width: `${status.ProgressPercent}%`,
+                backgroundColor: '#a67460',
+                height: '100%',
+                transition: 'width 0.3s ease',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                color: 'white',
+                fontSize: '12px',
+                fontWeight: 'bold'
+              }}>
+                {status.ProgressPercent}%
+              </div>
+            </div>
+          </div>
+        )}
+      </div>}
+      <div style={{ marginTop: '12px' }}>
         Upozorňujeme, že materiály stahované z <a href='https://www.evangelickyzpevnik.cz/zpevnik/kapitoly-a-pisne/' target="_blank">www.evangelickyzpevnik.cz</a> slouží pouze pro vlastní potřebu a k případnému dalšímu užití je třeba uzavřít licenční smlouvu s nositeli autorských práv.
       </div>
       <div style={{ display: 'flex', gap: '10px', alignItems: 'center', paddingTop: '1em' }}>

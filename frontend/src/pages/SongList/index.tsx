@@ -23,6 +23,17 @@ export const SongList = () => {
     useEffect(() => {
         fetchData()
     }, [status.SearchPattern, status.Sorting]);
+    
+    useEffect(() => {
+        // Poll for new songs while database is being filled
+        if (status.IsProgress && status.DatabaseReady === false && status.SongsReady === true) {
+            const pollInterval = setInterval(() => {
+                fetchData();
+            }, 7777);
+            return () => clearInterval(pollInterval);
+        }
+    }, [status.IsProgress, status.DatabaseReady, status.SongsReady]);
+    
     useEffect(() => {
         // Delay action after page render (500ms delay in this case)
         const timer = setTimeout(() => {

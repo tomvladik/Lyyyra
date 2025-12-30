@@ -110,8 +110,22 @@ func (a *App) FillDatabase() {
 	if a.testRun {
 		xmlFiles = xmlFiles[:25]
 	}
+
+	totalFiles := len(xmlFiles)
+	a.status.ProgressMessage = "Naplňuji databázi..."
+	a.status.ProgressPercent = 0
+	a.saveStatus()
+
 	// Process each XML file
-	for _, xmlFile := range xmlFiles {
+	for i, xmlFile := range xmlFiles {
+		// Update progress every 10 files or at the end
+		if i%10 == 0 || i == totalFiles-1 {
+			percent := int((float64(i+1) / float64(totalFiles)) * 100)
+			a.status.ProgressPercent = percent
+			a.status.ProgressMessage = fmt.Sprintf("Naplňuji databázi... (%d/%d)", i+1, totalFiles)
+			a.saveStatus()
+		}
+
 		// Construct the full path to the XML file
 		// Read XML data from file
 		xmlFilePath := fmt.Sprintf("%s/%s", a.songBookDir, xmlFile.Name())

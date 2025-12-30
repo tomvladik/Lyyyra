@@ -78,12 +78,21 @@ func (a *App) DownloadSongBase() error {
 	if err := os.MkdirAll(a.songBookDir, os.ModePerm); err != nil {
 		return err
 	}
+	a.status.ProgressMessage = "Stahuji XML soubory..."
+	a.status.ProgressPercent = 0
+	a.saveStatus()
+
 	fileName, err := a.downloadFile(a.xmlUrl, "Songs.zip")
 	if err != nil {
 		slog.Error(err.Error())
 		return err
 	}
 	defer os.Remove(fileName)
+
+	a.status.ProgressMessage = "Rozbaluji soubory..."
+	a.status.ProgressPercent = 50
+	a.saveStatus()
+
 	if err := unzip(fileName, a.songBookDir); err != nil {
 		slog.Error("Failed to unzip song base", "error", err)
 		return err
@@ -117,6 +126,12 @@ func (a *App) DownloadInternal() error {
 func (a *App) DownloadEz() error {
 
 	var err error
+	// Set progress flag at the start
+	a.status.IsProgress = true
+	a.status.ProgressMessage = "Zahajuji přípravu dat..."
+	a.status.ProgressPercent = 0
+	a.saveStatus()
+
 	// if !a.status.WebResourcesReady {
 	// 	err = a.DownloadInternal()
 	// 	if err != nil {
@@ -129,6 +144,10 @@ func (a *App) DownloadEz() error {
 	if !a.status.SongsReady && !a.testRun {
 		err = a.DownloadSongBase()
 		if err != nil {
+			a.status.IsProgress = false
+			a.status.ProgressMessage = ""
+			a.status.ProgressPercent = 0
+			a.saveStatus()
 			return err
 
 		}
@@ -138,11 +157,21 @@ func (a *App) DownloadEz() error {
 	}
 
 	if !a.status.DatabaseReady {
+		a.status.ProgressMessage = "Připravuji databázi..."
+		a.status.ProgressPercent = 0
+		a.saveStatus()
+
 		a.PrepareDatabase()
 		a.FillDatabase()
 		a.status.DatabaseReady = true
 		a.saveStatus()
 	}
+
+	// Clear progress flag at the end
+	a.status.IsProgress = false
+	a.status.ProgressMessage = ""
+	a.status.ProgressPercent = 0
+	a.saveStatus()
 
 	return nil
 }
