@@ -1,4 +1,26 @@
 {
     "go.testTags": "fts5",
-    "editor.renderWhitespace": "all"
+    "editor.renderWhitespace": "all",
+
+    "// ===== BUILD TARGETS =====": "",
+    "// Windows native builds": "make wails-build-native-windows | make wails-build-native-windows-skip-frontend",
+    "// Devcontainer cross-compile": "make wails-build-windows | make wails-build-windows-skip-frontend | make wails-build-windows-fast",
+    "// Dev server": "make wails-dev or wails dev",
+
+    "[makefile]": {
+        "editor.insertSpaces": false,
+        "editor.detectIndentation": false
+    },
+
+    "files.exclude": {
+        "**/.DS_Store": true,
+        "**/node_modules": true,
+        "**/.wails": true
+    },
+
+    "search.exclude": {
+        "frontend/node_modules": true,
+        "build": true,
+        ".wails": true
+    }
 }
