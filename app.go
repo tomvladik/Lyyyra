@@ -8,6 +8,7 @@ import (
 	"os"
 	"path/filepath"
 	"strings"
+	"sync"
 	"time"
 )
 
@@ -16,6 +17,7 @@ type App struct {
 	ctx         context.Context
 	appDir      string
 	pdfFiles    SongFilesSources
+	pdfDir      string
 	xmlUrl      string
 	dbFilePath  string
 	songBookDir string
@@ -23,6 +25,9 @@ type App struct {
 	status      AppStatus
 	logFile     *os.File
 	testRun     bool
+	// supplemental download coordination
+	supplementalMu    sync.Mutex
+	supplementalErrCh chan error
 }
 
 // NewApp creates a new App application struct
@@ -65,6 +70,7 @@ func NewApp() *App {
 
 	app := App{
 		appDir:      appDir,
+		pdfDir:      filepath.Join(appDir, "PdfSources"),
 		pdfFiles:    SongFilesSources{Domain: parsedURL.Host, Url: pdfUrl, UrlScheme: parsedURL.Scheme, Items: []FileItem{}},
 		xmlUrl:      xmlUrl,
 		dbFilePath:  filepath.Join(appDir, "Songs.db"),
@@ -75,6 +81,10 @@ func NewApp() *App {
 
 	if err := os.MkdirAll(app.songBookDir, os.ModePerm); err != nil {
 		slog.Error(fmt.Sprintf("Failed to create directories %s: %v", app.songBookDir, err))
+		return &App{}
+	}
+	if err := os.MkdirAll(app.pdfDir, os.ModePerm); err != nil {
+		slog.Error(fmt.Sprintf("Failed to create directories %s: %v", app.pdfDir, err))
 		return &App{}
 	}
 	err = app.deserializeFromYaml(&app.status, "status.yaml")

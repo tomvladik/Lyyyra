@@ -21,8 +21,9 @@ func setupTestApp(t *testing.T) *App {
 	// Initialize the App with the test directory
 	app := &App{
 		appDir:      appDir,
+		pdfDir:      filepath.Join(appDir, "PdfSources"),
 		songBookDir: filepath.Join(appDir, "songbooks"),
-		status:      AppStatus{},
+		status:      AppStatus{WebResourcesReady: true},
 	}
 
 	return app
@@ -112,6 +113,7 @@ func TestDownloadEz(t *testing.T) {
 	app := setupTestApp(t)
 	app.dbFilePath = filepath.Join(app.appDir, "Songs.db")
 	app.songBookDir = filepath.Join(app.appDir, "SongBook")
+	app.status.WebResourcesReady = true
 
 	content, err := os.ReadFile(filepath.Join("testdata", "song-1.xml"))
 	if err != nil {
@@ -153,6 +155,7 @@ func TestDownloadEzRemote(t *testing.T) {
 	defer teardownTestApp(app)
 	app.dbFilePath = filepath.Join(app.appDir, "Songs.db")
 	app.songBookDir = filepath.Join(app.appDir, "SongBook")
+	app.status.WebResourcesReady = true
 	app.xmlUrl = XMLUrl
 	app.status.SongsReady = false
 	app.status.DatabaseReady = false
@@ -172,5 +175,66 @@ func TestDownloadEzRemote(t *testing.T) {
 	}
 	if _, err := os.Stat(app.songBookDir); err != nil {
 		t.Errorf("Expected SongBook directory to exist: %v", err)
+	}
+}
+
+func TestDownloadSupplementalPDFs(t *testing.T) {
+	app := setupTestApp(t)
+	defer teardownTestApp(app)
+	app.status.WebResourcesReady = false
+
+	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		w.Write([]byte("pdf"))
+	}))
+	defer server.Close()
+
+	original := SupplementalPDFs
+	SupplementalPDFs = []SupplementalPDF{{
+		URL:      server.URL + "/test.pdf",
+		FileName: "choralnik.pdf",
+	}}
+	t.Cleanup(func() {
+		SupplementalPDFs = original
+	})
+
+	if err := app.downloadSupplementalPDFs(); err != nil {
+		t.Fatalf("Failed to download supplemental pdfs: %v", err)
+	}
+
+	if _, err := os.Stat(filepath.Join(app.pdfDir, "choralnik.pdf")); err != nil {
+		t.Fatalf("Expected pdf to be downloaded: %v", err)
+	}
+}
+
+func TestDownloadEzTriggersSupplementalDownloads(t *testing.T) {
+	app := setupTestApp(t)
+	defer teardownTestApp(app)
+	app.status.WebResourcesReady = false
+	app.status.SongsReady = true
+	app.status.DatabaseReady = true
+
+	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		w.Write([]byte("pdf"))
+	}))
+	defer server.Close()
+
+	original := SupplementalPDFs
+	SupplementalPDFs = []SupplementalPDF{{
+		URL:      server.URL + "/async.pdf",
+		FileName: "kytara.pdf",
+	}}
+	t.Cleanup(func() {
+		SupplementalPDFs = original
+	})
+
+	if err := app.DownloadEz(); err != nil {
+		t.Fatalf("DownloadEz should finish even when supplemental PDFs download concurrently: %v", err)
+	}
+
+	if _, err := os.Stat(filepath.Join(app.pdfDir, "kytara.pdf")); err != nil {
+		t.Fatalf("Expected supplemental pdf to exist after DownloadEz: %v", err)
+	}
+	if !app.status.WebResourcesReady {
+		t.Fatalf("Expected WebResourcesReady to be true")
 	}
 }

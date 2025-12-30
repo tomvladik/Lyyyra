@@ -7,12 +7,16 @@ import (
 	"net/http"
 	"net/url"
 	"os"
+	"path"
 	"path/filepath"
 )
 
 func (a *App) downloadFile(fileUrl, fileName string) (string, error) {
 	// Create or truncate the file in the app directory
 	fullPath := filepath.Join(a.appDir, fileName)
+	if err := os.MkdirAll(filepath.Dir(fullPath), os.ModePerm); err != nil {
+		return "", err
+	}
 	destFile, err := os.Create(fullPath)
 	if err != nil {
 		return "", err
@@ -74,6 +78,90 @@ func (a *App) downloadParts() {
 
 }
 
+func (a *App) downloadSupplementalPDFs() error {
+	if len(SupplementalPDFs) == 0 || a.testRun {
+		return nil
+	}
+
+	storageDir := a.pdfDir
+	if storageDir == "" {
+		storageDir = filepath.Join(a.appDir, "PdfSources")
+	}
+
+	if err := os.MkdirAll(storageDir, os.ModePerm); err != nil {
+		return err
+	}
+
+	for _, pdf := range SupplementalPDFs {
+		fileName := pdf.FileName
+		if fileName == "" {
+			fileName = path.Base(pdf.URL)
+		}
+
+		targetPath := filepath.Join(storageDir, fileName)
+		if _, err := os.Stat(targetPath); err == nil {
+			slog.Info("Supplemental PDF already present", "file", targetPath)
+			continue
+		}
+
+		relativePath, err := filepath.Rel(a.appDir, targetPath)
+		if err != nil {
+			relativePath = fileName
+		}
+
+		if _, err := a.downloadFile(pdf.URL, relativePath); err != nil {
+			return err
+		}
+	}
+	return nil
+}
+
+func (a *App) startSupplementalDownload() <-chan error {
+	if a.status.WebResourcesReady || len(SupplementalPDFs) == 0 {
+		return nil
+	}
+
+	a.supplementalMu.Lock()
+	defer a.supplementalMu.Unlock()
+	if a.supplementalErrCh != nil {
+		return a.supplementalErrCh
+	}
+
+	ch := make(chan error, 1)
+	a.supplementalErrCh = ch
+
+	go func() {
+		err := a.downloadSupplementalPDFs()
+		ch <- err
+		close(ch)
+
+		a.supplementalMu.Lock()
+		a.supplementalErrCh = nil
+		a.supplementalMu.Unlock()
+	}()
+
+	return ch
+}
+
+func (a *App) ensureBackgroundSupplementalDownload() {
+	if a.testRun {
+		return
+	}
+	ch := a.startSupplementalDownload()
+	if ch == nil {
+		return
+	}
+
+	go func() {
+		if err := <-ch; err != nil {
+			slog.Warn("Background supplemental PDF download failed", "error", err)
+			return
+		}
+		a.status.WebResourcesReady = true
+		a.saveStatus()
+	}()
+}
+
 func (a *App) DownloadSongBase() error {
 	if err := os.MkdirAll(a.songBookDir, os.ModePerm); err != nil {
 		return err
@@ -125,14 +213,7 @@ func (a *App) DownloadEz() error {
 	// Set progress flag at the start
 	a.startProgress("Zahajuji přípravu dat...")
 
-	// if !a.status.WebResourcesReady {
-	// 	err = a.DownloadInternal()
-	// 	if err != nil {
-	// 		return err
-	// 	}
-	// 	a.status.WebResourcesReady = true
-	// 	a.saveStatus()
-	// }
+	supplementalErrCh := a.startSupplementalDownload()
 
 	if !a.status.SongsReady && !a.testRun {
 		err = a.DownloadSongBase()
@@ -152,6 +233,15 @@ func (a *App) DownloadEz() error {
 		a.PrepareDatabase()
 		a.FillDatabase()
 		a.status.DatabaseReady = true
+		a.saveStatus()
+	}
+
+	if supplementalErrCh != nil {
+		if err := <-supplementalErrCh; err != nil {
+			a.clearProgress()
+			return err
+		}
+		a.status.WebResourcesReady = true
 		a.saveStatus()
 	}
 

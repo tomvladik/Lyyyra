@@ -4,6 +4,7 @@ import (
 	"database/sql"
 	"log/slog"
 	"os"
+	"path"
 	"path/filepath"
 	"strings"
 )
@@ -13,13 +14,15 @@ import (
 func (a *App) reconcileStoredStatus() {
 	songsReady := a.hasDownloadedSongs()
 	databaseReady := a.hasDatabaseContent()
+	webResourcesReady := a.hasPdfSources()
 
 	updated := false
 
-	if songsReady != a.status.SongsReady || databaseReady != a.status.DatabaseReady {
-		slog.Info("Reconciling stored status flags", "songsReady", songsReady, "databaseReady", databaseReady)
+	if songsReady != a.status.SongsReady || databaseReady != a.status.DatabaseReady || webResourcesReady != a.status.WebResourcesReady {
+		slog.Info("Reconciling stored status flags", "songsReady", songsReady, "databaseReady", databaseReady, "webResourcesReady", webResourcesReady)
 		a.status.SongsReady = songsReady
 		a.status.DatabaseReady = databaseReady
+		a.status.WebResourcesReady = webResourcesReady
 		updated = true
 	}
 
@@ -31,6 +34,10 @@ func (a *App) reconcileStoredStatus() {
 
 	if updated {
 		a.saveStatus()
+	}
+
+	if a.status.SongsReady && !a.status.WebResourcesReady {
+		a.ensureBackgroundSupplementalDownload()
 	}
 }
 
@@ -79,5 +86,33 @@ func (a *App) hasDatabaseContent() bool {
 		slog.Warn("Unexpected number of songs in database", "found", count, "expected", ExpectedSongCount)
 		return false
 	}
+	return true
+}
+
+func (a *App) hasPdfSources() bool {
+	if len(SupplementalPDFs) == 0 {
+		return true
+	}
+
+	if a.pdfDir == "" {
+		return false
+	}
+
+	for _, pdf := range SupplementalPDFs {
+		fileName := pdf.FileName
+		if fileName == "" {
+			fileName = path.Base(pdf.URL)
+		}
+		targetPath := filepath.Join(a.pdfDir, fileName)
+		if _, err := os.Stat(targetPath); err != nil {
+			if os.IsNotExist(err) {
+				slog.Warn("Missing supplemental PDF", "file", targetPath)
+			} else {
+				slog.Warn("Failed to inspect supplemental PDF", "file", targetPath, "error", err)
+			}
+			return false
+		}
+	}
+
 	return true
 }
