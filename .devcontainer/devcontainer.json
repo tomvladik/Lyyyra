@@ -5,6 +5,16 @@
 	"build": {
 		"dockerfile": "Dockerfile"
 	},
+	"mounts": [
+		"source=lyyyra-gomodcache,target=/go/pkg/mod,type=volume",
+		"source=lyyyra-gobuildcache,target=/home/vscode/.cache/go-build,type=volume",
+		"source=lyyyra-nodecache,target=/workspaces/Lyyyra/frontend/node_modules,type=volume",
+		"source=lyyyra-wailscache,target=/workspaces/Lyyyra/.wails,type=volume"
+	],
+	"containerEnv": {
+		"GOMODCACHE": "/go/pkg/mod",
+		"GOCACHE": "/home/vscode/.cache/go-build"
+	},
 	"customizations": {
 		"vscode": {
 			"settings": {
@@ -12,5 +22,5 @@
 			}
 		}
 	},
-	"postAttachCommand": "make install-tools"
+	"postAttachCommand": "bash -lc \"sudo chown -R vscode:vscode /workspaces/Lyyyra/frontend/node_modules || true && make install-tools\""
 }
