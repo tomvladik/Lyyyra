@@ -1,4 +1,4 @@
-module changeme
+module lyyyra
 
 go 1.22.0
 

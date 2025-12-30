@@ -82,6 +82,7 @@ func NewApp() *App {
 		app.status = AppStatus{Sorting: Title}
 		//app.saveStatus()
 	}
+	app.reconcileStoredStatus()
 	slog.Info(fmt.Sprintf("Status DatabaseReady: %+v", app.status))
 	//app.testRun = true
 	return &app
@@ -99,9 +100,13 @@ func (a *App) saveStatus() {
 }
 
 func (a *App) SaveSorting(sorting SortingOption) {
-	if sorting != a.status.Sorting {
-		slog.Info(fmt.Sprintf("Sorting changed from %s to %s", a.status.Sorting, sorting))
-		a.status.Sorting = sorting
+	normalized := normalizeSortingOption(string(sorting))
+	if normalized != sorting {
+		slog.Warn("Received unsupported sorting option, defaulting to entry", "requested", sorting, "normalized", normalized)
+	}
+	if normalized != a.status.Sorting {
+		slog.Info(fmt.Sprintf("Sorting changed from %s to %s", a.status.Sorting, normalized))
+		a.status.Sorting = normalized
 		a.saveStatus()
 	}
 }

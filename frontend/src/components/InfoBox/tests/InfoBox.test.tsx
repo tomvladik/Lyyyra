@@ -39,22 +39,25 @@ describe('<InfoBox />', () => {
   });
 
   it('calls setFilter after debounce delay', async () => {
-    renderInfoBox({
-      SearchPattern: 'test search',
-    });
+    renderInfoBox();
+
+    const searchInput = screen.getByPlaceholderText('Hledat text ...');
+    fireEvent.change(searchInput, { target: { value: 'test search' } });
 
     await waitFor(() => {
       expect(mockSetFilter).toHaveBeenCalledWith('test search');
     }, { timeout: 600 });
   });
 
-  it('shows button when only songs are ready', () => {
+  it('shows import message and button when only songs are ready', async () => {
     renderInfoBox({
       SongsReady: true,
     });
     
+    expect(await screen.findByText(/Data jsou stažena/)).toBeInTheDocument();
     const button = screen.getByRole('button');
     expect(button).toBeInTheDocument();
+    expect(button).toHaveTextContent('Importovat data');
   });
 });
 

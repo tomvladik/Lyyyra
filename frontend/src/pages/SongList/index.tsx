@@ -36,12 +36,12 @@ export const SongList = () => {
         fetchData();
     }, INITIAL_LOAD_DELAY, []);
 
-    const normalizedFilter = removeDiacritics(status.SearchPattern)?.toLowerCase();
+    const normalizedFilter = removeDiacritics(status.SearchPattern || '').toLowerCase();
     return (
         <div>
             {songs
                 ?.filter((el) => {
-                    if (normalizedFilter.length < 3) return true;
+                    if (!normalizedFilter || normalizedFilter.length < 3) return true;
                     return removeDiacritics(el.Title).toLowerCase().includes(normalizedFilter)
                         || removeDiacritics(el.Verses).toLowerCase().includes(normalizedFilter)
                         || removeDiacritics(el.AuthorMusic).toLowerCase().includes(normalizedFilter)

@@ -225,12 +225,14 @@ func (a *App) GetSongs(orderBy string, searchPattern string) ([]dtoSong, error) 
 		// WHERE vfts MATCH '%s'
 		// `, searchPattern)
 
+		sortOption := normalizeSortingOption(orderBy)
+		orderColumn := orderColumnForSongs(sortOption)
 		query_post := `
 GROUP BY
-       s.id,
-     entry,
-     title
-order by ` + orderBy + `, v.name`
+			 s.id,
+		 entry,
+		 title
+order by ` + orderColumn + `, v.name`
 		// Perform a full-text search on the lyrics
 		//searchTerm := "your_search_term_here"
 		rows, err := db.Query(query_pre + query_post)
@@ -282,8 +284,10 @@ SELECT DISTINCT s.id,
 		//  WHERE vfts MATCH '%s'
 		//  `, searchPattern)
 
+		sortOption := normalizeSortingOption(orderBy)
+		orderColumn := orderColumnForSongs2(sortOption)
 		query_post := `
-order by ` + orderBy
+order by ` + orderColumn
 		//searchTerm := "your_search_term_here"
 		query := query_pre + query_post
 		rows, err := db.Query(query)

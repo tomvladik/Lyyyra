@@ -1,6 +1,4 @@
 import React, { ChangeEvent, useContext, useEffect, useMemo, useState } from 'react';
-
-import { Option } from 'react-dropdown';
 import { AppStatus, SortingOption } from '../../AppStatus';
 import { DEBOUNCE_DELAY, FETCH_STATUS_DELAY } from '../../constants';
 import { DataContext } from '../../context';
@@ -18,47 +16,51 @@ export function InfoBox(props: Props) {
 
   const [resultText, setResultText] = useState("Zpěvník není inicializován");
   const [buttonText, setButtonText] = useState("Stáhnout data z internetu");
+  const [searchValue, setSearchValue] = useState(status.SearchPattern || '');
   const [, setError] = useState(false);
 
   const isButtonVisible = useMemo(() => {
     return !(status.DatabaseReady && status.SongsReady);
   }, [status.DatabaseReady, status.SongsReady]);
 
-  function fetchStatus() {
+  useEffect(() => {
     try {
-      // Assume fetchData returns a Promise
-      const result = { ...status };
-      console.log("Status fetched", result);
-      if (result.DatabaseReady) {
+      if (status.DatabaseReady) {
         setResultText("Data jsou připravena");
-      } else if (result.SongsReady) {
-        setResultText("Data jsou stažena, ale nejsou naimportována do interní datbáze");
+        setButtonText("Stáhnout data z internetu");
+      } else if (status.SongsReady) {
+        setResultText("Data jsou stažena, ale nejsou naimportována do interní databáze");
         setButtonText("Importovat data");
+      } else {
+        setResultText("Zpěvník není inicializován");
+        setButtonText("Stáhnout data z internetu");
       }
     } catch (error) {
       setError(true);
     }
-  }
+  }, [status.DatabaseReady, status.SongsReady]);
 
   useEffect(() => {
-    // Use a timer to debounce the onChange event
-    const timer = setTimeout(() => {
-      props.setFilter(status.SearchPattern);
-    }, DEBOUNCE_DELAY);
-
-    // Clear the timer if the component unmounts or if the input value changes before the timer expires
-    return () => clearTimeout(timer);
+    setSearchValue(status.SearchPattern || '');
   }, [status.SearchPattern]);
 
-  // useEffect with an empty dependency array runs once when the component mounts
   useEffect(() => {
-    // Delay action after page render
+    if (searchValue === (status.SearchPattern || '')) {
+      return;
+    }
     const timer = setTimeout(() => {
-      console.log('This runs after delay');
-      fetchStatus()
-    }, FETCH_STATUS_DELAY);
+      props.setFilter(searchValue);
+      updateStatus({ SearchPattern: searchValue });
+    }, DEBOUNCE_DELAY);
 
-    // Cleanup function to clear the timeout if the component unmounts
+    return () => clearTimeout(timer);
+  }, [searchValue, status.SearchPattern, props.setFilter, updateStatus]);
+
+  // maintain backwards compatibility with previous delayed logging for debugging
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      console.log('Status check after delay');
+    }, FETCH_STATUS_DELAY);
     return () => clearTimeout(timer);
   }, []);
 
@@ -125,13 +127,10 @@ export function InfoBox(props: Props) {
               id="search-box" 
               className={styles.sorting} 
               type="text" 
+              value={searchValue}
               onChange={(e: React.ChangeEvent<HTMLInputElement>) => {
-                const newStatus: AppStatus = {
-                  ...status,
-                  SearchPattern: e.target.value
-                };
-                updateStatus(newStatus);
-              }} 
+                setSearchValue(e.target.value);
+              }}
               placeholder="Hledat text ..." 
             />
           </div>

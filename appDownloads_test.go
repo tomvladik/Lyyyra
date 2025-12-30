@@ -145,6 +145,10 @@ func TestDownloadEz(t *testing.T) {
 }
 
 func TestDownloadEzRemote(t *testing.T) {
+	if os.Getenv("RUN_REMOTE_INTEGRATION_TESTS") == "" {
+		t.Skip("skipping remote integration test; set RUN_REMOTE_INTEGRATION_TESTS=1 to enable")
+	}
+
 	app := setupTestApp(t)
 	defer teardownTestApp(app)
 	app.dbFilePath = filepath.Join(app.appDir, "Songs.db")

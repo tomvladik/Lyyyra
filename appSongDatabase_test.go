@@ -186,6 +186,16 @@ func TestGetSongs(t *testing.T) {
 			orderBy:       "authorLyric",
 			expectedOrder: []string{"Last Song", "First Song", "Second Song"}, // Anatoliy, Quido, Xaver
 		},
+		{
+			name:          "Order by empty string defaults to entry",
+			orderBy:       "",
+			expectedOrder: []string{"First Song", "Second Song", "Last Song"},
+		},
+		{
+			name:          "Order by invalid string defaults to entry",
+			orderBy:       "drop table songs",
+			expectedOrder: []string{"First Song", "Second Song", "Last Song"},
+		},
 	}
 
 	for _, tc := range testCases {
@@ -240,6 +250,14 @@ func TestGetSongs2(t *testing.T) {
 	// Check if the sample song is in the result
 	if len(songs) != 1 || songs[0].Title != "Sample Song" {
 		t.Errorf("Expected to get 'Sample Song', got %v", songs)
+	}
+
+	invalidOrderSongs, err := app.GetSongs2("invalid", "")
+	if err != nil {
+		t.Errorf("Failed to get songs with invalid order: %v", err)
+	}
+	if len(invalidOrderSongs) != 1 || invalidOrderSongs[0].Title != "Sample Song" {
+		t.Errorf("Expected fallback ordering to return 'Sample Song', got %v", invalidOrderSongs)
 	}
 }
 

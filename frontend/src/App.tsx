@@ -10,8 +10,20 @@ import { dtoSong } from './models';
 import { SongList } from './pages/SongList';
 
 
+const createInitialStatus = (): AppStatus => ({
+    SearchPattern: '',
+    WebResourcesReady: false,
+    SongsReady: false,
+    DatabaseReady: false,
+    IsProgress: true,
+    ProgressMessage: 'Nacitam stav...',
+    ProgressPercent: 0,
+    LastSave: '',
+    Sorting: 'entry' as SortingOption,
+});
+
 function App() {
-    const [status, setStatus] = useState({} as AppStatus);
+    const [status, setStatus] = useState<AppStatus>(() => createInitialStatus());
 
     const [songs, setSongs] = useState(new Array<dtoSong>());
     const [filterValue, setFilterValue] = useState("");
@@ -70,19 +82,19 @@ function App() {
 
     // useEffect with an empty dependency array runs once when the component mounts
     useEffect(() => {
-        // Delay action after page render
+        fetchStatus();
         const timer = setTimeout(() => {
             console.log('Initial load after delay');
-            fetchStatus()
+            fetchStatus();
         }, INITIAL_LOAD_DELAY);
-
-        // Cleanup function to clear the timeout if the component unmounts
         return () => clearTimeout(timer);
     }, []);
 
     const updateStatus = (newStatus: Partial<AppStatus>) => {
         setStatus(prevStatus => ({ ...prevStatus, ...newStatus }));
-        go.SaveSorting(newStatus.Sorting);
+        if (newStatus.Sorting) {
+            go.SaveSorting(newStatus.Sorting);
+        }
     };
 
     return (

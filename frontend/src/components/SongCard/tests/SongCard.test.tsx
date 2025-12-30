@@ -1,4 +1,4 @@
-import { render, screen, waitFor } from '@testing-library/react';
+import { render, screen, waitFor, act } from '@testing-library/react';
 import { SongCard } from '../index';
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import * as AppModule from '../../../../wailsjs/go/main/App';
@@ -29,31 +29,36 @@ describe('<SongCard />', () => {
     updateStatus: vi.fn(),
   };
 
-  const renderWithContext = (song: dtoSong) => {
-    return render(
-      <DataContext.Provider value={mockContext}>
-        <SongCard data={song} />
-      </DataContext.Provider>
-    );
+  const renderWithContext = async (song: dtoSong) => {
+    let result;
+    await act(async () => {
+      result = render(
+        <DataContext.Provider value={mockContext}>
+          <SongCard data={song} />
+        </DataContext.Provider>
+      );
+      await Promise.resolve();
+    });
+    return result!;
   };
 
   beforeEach(() => {
     vi.clearAllMocks();
   });
 
-  it('renders song entry number and title', () => {
+  it('renders song entry number and title', async () => {
     vi.mocked(AppModule.GetSongAuthors).mockResolvedValue([]);
     
-    renderWithContext(mockSong);
+    await renderWithContext(mockSong);
     
     expect(screen.getByText('123:', { exact: false })).toBeInTheDocument();
     expect(screen.getByText(/Test Song Title/)).toBeInTheDocument();
   });
 
-  it('renders song verses', () => {
+  it('renders song verses', async () => {
     vi.mocked(AppModule.GetSongAuthors).mockResolvedValue([]);
     
-    renderWithContext(mockSong);
+    await renderWithContext(mockSong);
     
     expect(screen.getByText('First verse')).toBeInTheDocument();
     expect(screen.getByText('Second verse')).toBeInTheDocument();
@@ -67,7 +72,7 @@ describe('<SongCard />', () => {
     ];
     vi.mocked(AppModule.GetSongAuthors).mockResolvedValue(mockAuthors);
     
-    renderWithContext(mockSong);
+    await renderWithContext(mockSong);
     
     await waitFor(() => {
       expect(screen.getByText('John Doe')).toBeInTheDocument();
@@ -78,7 +83,7 @@ describe('<SongCard />', () => {
   it('calls GetSongAuthors with correct song ID', async () => {
     vi.mocked(AppModule.GetSongAuthors).mockResolvedValue([]);
     
-    renderWithContext(mockSong);
+    await renderWithContext(mockSong);
     
     await waitFor(() => {
       expect(AppModule.GetSongAuthors).toHaveBeenCalledWith(1);
@@ -91,7 +96,7 @@ describe('<SongCard />', () => {
     ];
     vi.mocked(AppModule.GetSongAuthors).mockResolvedValue(mockAuthors);
     
-    renderWithContext(mockSong);
+    await renderWithContext(mockSong);
     
     await waitFor(() => {
       const authorElement = screen.getByText('Lyricist Name').parentElement;
@@ -105,7 +110,7 @@ describe('<SongCard />', () => {
     ];
     vi.mocked(AppModule.GetSongAuthors).mockResolvedValue(mockAuthors);
     
-    renderWithContext(mockSong);
+    await renderWithContext(mockSong);
     
     await waitFor(() => {
       const authorElement = screen.getByText('Composer Name').parentElement;
