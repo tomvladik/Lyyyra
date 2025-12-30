@@ -5,6 +5,7 @@ import * as AppModule from '../../../../wailsjs/go/main/App';
 import { dtoSong } from '../../../models';
 import { DataContext } from '../../../context';
 import { createMockStatus } from '../../../test/testHelpers';
+import { AppStatus } from '../../../AppStatus';
 
 vi.mock('../../../../wailsjs/go/main/App', () => ({
   GetSongAuthors: vi.fn(),
@@ -20,16 +21,17 @@ describe('<SongCard />', () => {
     AuthorLyric: '',
   };
 
-  const mockContext = {
-    status: createMockStatus({
-      DatabaseReady: true,
-      SongsReady: true,
-      WebResourcesReady: true,
-    }),
-    updateStatus: vi.fn(),
-  };
+  const renderWithContext = async (song: dtoSong, overrides: Partial<AppStatus> = {}) => {
+    const mockContext = {
+      status: createMockStatus({
+        DatabaseReady: true,
+        SongsReady: true,
+        WebResourcesReady: true,
+        ...overrides,
+      }),
+      updateStatus: vi.fn(),
+    };
 
-  const renderWithContext = async (song: dtoSong) => {
     let result;
     await act(async () => {
       result = render(
@@ -115,6 +117,21 @@ describe('<SongCard />', () => {
     await waitFor(() => {
       const authorElement = screen.getByText('Composer Name').parentElement;
       expect(authorElement?.textContent).toContain('M:');
+    });
+  });
+
+  it('highlights matches in title and authors when searching', async () => {
+    const mockAuthors = [
+      { Type: 'words', Value: 'Test Lyricist' },
+      { Type: 'music', Value: 'Test Composer' },
+    ];
+    vi.mocked(AppModule.GetSongAuthors).mockResolvedValue(mockAuthors);
+
+    const { container } = await renderWithContext(mockSong, { SearchPattern: 'test' });
+
+    await waitFor(() => {
+      const marks = container.querySelectorAll('mark');
+      expect(marks.length).toBeGreaterThanOrEqual(3);
     });
   });
 });

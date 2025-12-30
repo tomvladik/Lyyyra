@@ -25,14 +25,25 @@ export const SongCard = ({ data }: { data: dtoSong }) => {
     return (
         <div className={styles.songCard}>
             <div className={styles.songHeader}>
-                <div className={styles.title}><span className={styles.songNumber}>{data.Entry}:</span> {data.Title}</div>
+                <div className={styles.title}>
+                    <span className={styles.songNumber}>{data.Entry}:</span>{' '}
+                    <HighlightText as="span" text={data.Title} />
+                </div>
                 {authorData?.filter((el) => el.Type === "words")
                     .map((auth) => {
-                        return <div key={"T-" + auth.Value} className={styles.author}><b>T:</b> {auth.Value}</div>;
+                        return (
+                            <div key={"T-" + auth.Value} className={styles.author}>
+                                <b>T:</b> <HighlightText as="span" text={auth.Value} />
+                            </div>
+                        );
                     })}
                 {authorData?.filter((el) => el.Type === "music")
                     .map((auth) => {
-                        return <div key={"M-" + auth.Value} className={styles.author}><b>M:</b> {auth.Value}</div>;
+                        return (
+                            <div key={"M-" + auth.Value} className={styles.author}>
+                                <b>M:</b> <HighlightText as="span" text={auth.Value} />
+                            </div>
+                        );
                     })}
 
             </div>

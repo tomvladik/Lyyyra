@@ -5,7 +5,7 @@ import HighlightText from '../index';
 import { DataContext } from '../../../context';
 
 describe('<HighlightText />', () => {
-  const renderWithContext = (text: string, searchPattern: string) => {
+  const renderWithContext = (text: string, searchPattern: string, as?: 'p' | 'span' | 'div') => {
     const mockStatus = {
       DatabaseReady: true,
       SongsReady: true,
@@ -21,7 +21,7 @@ describe('<HighlightText />', () => {
 
     return render(
       <DataContext.Provider value={{ status: mockStatus, updateStatus: mockUpdateStatus }}>
-        <HighlightText text={text} />
+        <HighlightText text={text} as={as} />
       </DataContext.Provider>
     );
   };
@@ -76,5 +76,11 @@ describe('<HighlightText />', () => {
     const { container } = renderWithContext('Hello world', 'xyz');
     const mark = container.querySelector('mark');
     expect(mark).toBeNull();
+  });
+
+  it('supports custom wrapper tags', () => {
+    renderWithContext('Inline text', '', 'span');
+    const element = screen.getByText('Inline text');
+    expect(element.tagName).toBe('SPAN');
   });
 });
