@@ -11,16 +11,10 @@ import (
 
 func (a *App) PrepareDatabase() {
 	slog.Info(fmt.Sprintf("PrepareDatabase: %s", a.dbFilePath))
-	// Open an SQLite database (file-based)
-	db, err := sql.Open("sqlite3", a.dbFilePath)
-	if err != nil {
-		slog.Error(fmt.Sprintf("Error opening database: %s", err))
-		return
-	}
-	defer db.Close()
-
-	// Create tables if they don't exist
-	tableScripts := []string{
+	
+	a.withDB(func(db *sql.DB) error {
+		// Create tables if they don't exist
+		tableScripts := []string{
 		`DROP TABLE IF EXISTS verses_fts;`,
 		`DROP TABLE IF EXISTS authors_fts;`,
 		`DROP TABLE IF EXISTS songs_fts;`,
@@ -77,23 +71,18 @@ func (a *App) PrepareDatabase() {
         ); DELETE FROM verses_fts;`,
 	}
 
-	// Execute each table creation script
-	for _, script := range tableScripts {
-		if _, err := db.Exec(script); err != nil {
-			slog.Error(fmt.Sprintf("Error executing script: %s", err))
-			return
+		// Execute each table creation script
+		for _, script := range tableScripts {
+			if _, err := db.Exec(script); err != nil {
+				slog.Error(fmt.Sprintf("Error executing script: %s", err))
+				return err
+			}
 		}
-	}
+		return nil
+	})
 }
 
 func (a *App) FillDatabase() {
-	db, err := sql.Open("sqlite3", a.dbFilePath)
-	if err != nil {
-		slog.Error(fmt.Sprintf("Error opening database: %s", err))
-		return
-	}
-	defer db.Close()
-
 	// Read all XML files in the specified directory
 	xmlFiles, err := os.ReadDir(a.songBookDir)
 	if err != nil {
@@ -112,19 +101,17 @@ func (a *App) FillDatabase() {
 	}
 
 	totalFiles := len(xmlFiles)
-	a.status.ProgressMessage = "Naplňuji databázi..."
-	a.status.ProgressPercent = 0
-	a.saveStatus()
+	a.updateProgress("Naplňuji databázi...", 0)
 
-	// Process each XML file
-	for i, xmlFile := range xmlFiles {
-		// Update progress every 10 files or at the end
-		if i%10 == 0 || i == totalFiles-1 {
-			percent := int((float64(i+1) / float64(totalFiles)) * 100)
-			a.status.ProgressPercent = percent
-			a.status.ProgressMessage = fmt.Sprintf("Naplňuji databázi... (%d/%d)", i+1, totalFiles)
-			a.saveStatus()
-		}
+	a.withDB(func(db *sql.DB) error {
+		// Process each XML file
+		for i, xmlFile := range xmlFiles {
+			// Update progress every 10 files or at the end
+			if i%10 == 0 || i == totalFiles-1 {
+				percent := int((float64(i+1) / float64(totalFiles)) * 100)
+				message := fmt.Sprintf("Naplňuji databázi... (%d/%d)", i+1, totalFiles)
+				a.updateProgress(message, percent)
+			}
 
 		// Construct the full path to the XML file
 		// Read XML data from file
@@ -205,19 +192,15 @@ func (a *App) FillDatabase() {
 			}
 		}
 
-		slog.Debug(fmt.Sprintf("Data inserted  %s : %s file %s\n", song.Songbook.Entry, song.Title, xmlFile.Name()))
-	}
+			slog.Debug(fmt.Sprintf("Data inserted  %s : %s file %s\n", song.Songbook.Entry, song.Title, xmlFile.Name()))
+		}
+		return nil
+	})
 }
 
 func (a *App) GetSongs(orderBy string, searchPattern string) ([]dtoSong, error) {
 	var result []dtoSong
-	db, err := sql.Open("sqlite3", a.dbFilePath)
-	if err != nil {
-		slog.Error(fmt.Sprintf("Error opening database: %s", err))
-		a.status.DatabaseReady = false
-		return result, err
-	}
-	defer db.Close()
+	err := a.withDB(func(db *sql.DB) error {
 
 	query_pre := `
     SELECT s.id,
@@ -249,39 +232,38 @@ GROUP BY
      title
 order by ` + orderBy + `, v.name`
 	// Perform a full-text search on the lyrics
-	//searchTerm := "your_search_term_here"
-	rows, err := db.Query(query_pre + query_post)
-	if err != nil {
-		slog.Error(fmt.Sprintf("Error querying data: %s", err))
-		return result, err
-	}
-	defer rows.Close()
+		//searchTerm := "your_search_term_here"
+		rows, err := db.Query(query_pre + query_post)
+		if err != nil {
+			slog.Error(fmt.Sprintf("Error querying data: %s", err))
+			return err
+		}
+		defer rows.Close()
 
 	for rows.Next() {
 		var (
 			title, allVerses, authorMusic, authorLyric string
 			id, entry                                  int
 		)
-		err := rows.Scan(&id, &entry, &title, &allVerses, &authorMusic, &authorLyric)
-		if err != nil {
-			slog.Error(fmt.Sprintf("Error scanning row: %s", err))
-			return result, err
-		}
+			err := rows.Scan(&id, &entry, &title, &allVerses, &authorMusic, &authorLyric)
+			if err != nil {
+				slog.Error(fmt.Sprintf("Error scanning row: %s", err))
+				return err
+			}
 
-		result = append(result, dtoSong{Id: id, Entry: entry, Title: title, Verses: allVerses, AuthorMusic: authorMusic, AuthorLyric: authorLyric})
+			result = append(result, dtoSong{Id: id, Entry: entry, Title: title, Verses: allVerses, AuthorMusic: authorMusic, AuthorLyric: authorLyric})
+		}
+		return nil
+	})
+	if err != nil {
+		a.status.DatabaseReady = false
 	}
-	return result, nil
+	return result, err
 }
 
 func (a *App) GetSongs2(orderBy string, searchPattern string) ([]dtoSongHeader, error) {
 	var result []dtoSongHeader
-	db, err := sql.Open("sqlite3", a.dbFilePath)
-	if err != nil {
-		slog.Error(fmt.Sprintf("Error opening database: %s", err))
-		a.status.DatabaseReady = false
-		return result, err
-	}
-	defer db.Close()
+	err := a.withDB(func(db *sql.DB) error {
 
 	query_pre := `
 SELECT DISTINCT s.id,
@@ -302,65 +284,66 @@ SELECT DISTINCT s.id,
 
 	query_post := `
 order by ` + orderBy
-	// Perform a full-text search on the lyrics
-	//searchTerm := "your_search_term_here"
-	query := query_pre + query_post
-	rows, err := db.Query(query)
-	if err != nil {
-		slog.Error(fmt.Sprintf("Error querying data: %s for: %s", err, query))
-		return result, err
-	}
-	defer rows.Close()
+		//searchTerm := "your_search_term_here"
+		query := query_pre + query_post
+		rows, err := db.Query(query)
+		if err != nil {
+			slog.Error(fmt.Sprintf("Error querying data: %s for: %s", err, query))
+			return err
+		}
+		defer rows.Close()
 
 	for rows.Next() {
 		var (
 			title, title_d, verse_order sql.NullString
 			id, entry                   int
 		)
-		err := rows.Scan(&id, &entry, &title, &title_d, &verse_order)
-		if err != nil {
-			slog.Error(fmt.Sprintf("Error scanning row: %s", err))
-			return result, err
-		}
+			err := rows.Scan(&id, &entry, &title, &title_d, &verse_order)
+			if err != nil {
+				slog.Error(fmt.Sprintf("Error scanning row: %s", err))
+				return err
+			}
 
-		result = append(result, dtoSongHeader{Id: id, Entry: entry, Title: title.String, TitleD: title_d.String})
+			result = append(result, dtoSongHeader{Id: id, Entry: entry, Title: title.String, TitleD: title_d.String})
+		}
+		return nil
+	})
+	if err != nil {
+		a.status.DatabaseReady = false
 	}
-	return result, nil
+	return result, err
 }
 
 func (a *App) GetSongAuthors(songId int) ([]Author, error) {
 	var result []Author
-	db, err := sql.Open("sqlite3", a.dbFilePath)
-	if err != nil {
-		slog.Error(fmt.Sprintf("Error opening database: %s", err))
-		return result, err
-	}
-	defer db.Close()
+	err := a.withDB(func(db *sql.DB) error {
 
-	// Perform a full-text search on the lyrics
-	//searchTerm := "your_search_term_here"
-	rows, err := db.Query(`
+		// Perform a full-text search on the lyrics
+		//searchTerm := "your_search_term_here"
+		rows, err := db.Query(`
     SELECT DISTINCT author_type, author_value
     FROM authors
     WHERE song_id = ?
     ORDER BY author_type`, songId)
-	if err != nil {
-		slog.Error(fmt.Sprintf("Error querying data: %s", err))
-		return result, err
-	}
-	defer rows.Close()
+		if err != nil {
+			slog.Error(fmt.Sprintf("Error querying data: %s", err))
+			return err
+		}
+		defer rows.Close()
 
 	for rows.Next() {
 		var (
 			authType, authValue string
 		)
-		err := rows.Scan(&authType, &authValue)
-		if err != nil {
-			slog.Error(fmt.Sprintf("Error scanning row: %s", err))
-			return result, err
-		}
+			err := rows.Scan(&authType, &authValue)
+			if err != nil {
+				slog.Error(fmt.Sprintf("Error scanning row: %s", err))
+				return err
+			}
 
-		result = append(result, Author{Type: authType, Value: authValue})
-	}
-	return result, nil
+			result = append(result, Author{Type: authType, Value: authValue})
+		}
+		return nil
+	})
+	return result, err
 }
