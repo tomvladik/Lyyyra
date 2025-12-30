@@ -1,9 +1,10 @@
-import { render, screen, waitFor, act } from '@testing-library/react';
+import { render, screen, waitFor, act, fireEvent } from '@testing-library/react';
 import { SongCard } from '../index';
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import * as AppModule from '../../../../wailsjs/go/main/App';
 import { dtoSong } from '../../../models';
 import { DataContext } from '../../../context';
+import { SelectionContext, SelectionContextValue } from '../../../selectionContext';
 import { createMockStatus } from '../../../test/testHelpers';
 import { AppStatus } from '../../../AppStatus';
 
@@ -22,7 +23,11 @@ describe('<SongCard />', () => {
     KytaraFile: '',
   };
 
-  const renderWithContext = async (song: dtoSong, overrides: Partial<AppStatus> = {}) => {
+  const renderWithContext = async (
+    song: dtoSong,
+    overrides: Partial<AppStatus> = {},
+    selectionOverrides: Partial<SelectionContextValue> = {}
+  ) => {
     const mockContext = {
       status: createMockStatus({
         DatabaseReady: true,
@@ -33,16 +38,29 @@ describe('<SongCard />', () => {
       updateStatus: vi.fn(),
     };
 
+    const selectionContextValue: SelectionContextValue = {
+      selectedSongs: [],
+      addSongToSelection: vi.fn(),
+      removeSongFromSelection: vi.fn(),
+      clearSelection: vi.fn(),
+      ...selectionOverrides,
+    };
+
     let result;
     await act(async () => {
       result = render(
         <DataContext.Provider value={mockContext}>
-          <SongCard data={song} />
+          <SelectionContext.Provider value={selectionContextValue}>
+            <SongCard data={song} />
+          </SelectionContext.Provider>
         </DataContext.Provider>
       );
       await Promise.resolve();
     });
-    return result!;
+    return {
+      ...result!,
+      selectionContextValue,
+    };
   };
 
   beforeEach(() => {
@@ -134,5 +152,41 @@ describe('<SongCard />', () => {
       const marks = container.querySelectorAll('mark');
       expect(marks.length).toBeGreaterThanOrEqual(3);
     });
+  });
+
+  it('adds song to selection when clipboard icon is clicked', async () => {
+    vi.mocked(AppModule.GetSongAuthors).mockResolvedValue([]);
+    const songWithPdf: dtoSong = { ...mockSong, KytaraFile: '123.pdf' };
+
+    const { selectionContextValue } = await renderWithContext(songWithPdf);
+
+    const clipboardButton = screen.getByTitle('Přidat do výběru');
+    fireEvent.click(clipboardButton);
+
+    expect(selectionContextValue.addSongToSelection).toHaveBeenCalledWith({
+      id: songWithPdf.Id,
+      entry: songWithPdf.Entry,
+      title: songWithPdf.Title,
+      filename: songWithPdf.KytaraFile,
+    });
+  });
+
+  it('disables selection when song already added', async () => {
+    vi.mocked(AppModule.GetSongAuthors).mockResolvedValue([]);
+    const songWithPdf: dtoSong = { ...mockSong, KytaraFile: '123.pdf' };
+    const preselected = [{
+      id: songWithPdf.Id,
+      entry: songWithPdf.Entry,
+      title: songWithPdf.Title,
+      filename: songWithPdf.KytaraFile!,
+    }];
+
+    const { selectionContextValue } = await renderWithContext(songWithPdf, {}, { selectedSongs: preselected });
+
+    const clipboardButton = screen.getByTitle('Skladba už je ve výběru');
+    expect(clipboardButton).toHaveAttribute('aria-disabled', 'true');
+
+    fireEvent.click(clipboardButton);
+    expect(selectionContextValue.addSongToSelection).not.toHaveBeenCalled();
   });
 });

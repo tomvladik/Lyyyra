@@ -1,0 +1,172 @@
+@import (less, reference) "../../vars.less";
+
+.panel {
+    flex: 0 0 320px;
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+    padding: 24px;
+    border-radius: 10px;
+    background: @backgroundColour;
+    color: @myDarkBlueColour;
+    border: 0.2rem solid @myBlueColour;
+    box-shadow: 0 6px 18px rgba(0, 0, 0, 0.08);
+    position: sticky;
+    top: 20px;
+    align-self: flex-start;
+    min-height: 200px;
+    font-family: 'Montserrat', 'Arial', sans-serif;
+}
+
+.panelHeader {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    gap: 16px;
+}
+
+.panelLabel {
+    text-transform: uppercase;
+    letter-spacing: 0.2em;
+    font-size: 11px;
+    margin-bottom: 4px;
+    color: fade(@myDarkBlueColour, 60%);
+}
+
+.panelTitle {
+    font-size: 22px;
+    font-weight: 600;
+    margin: 0;
+}
+
+.clearButton {
+    background: transparent;
+    border: 1px solid fade(@myDarkBlueColour, 40%);
+    border-radius: 999px;
+    padding: 6px 14px;
+    color: @myDarkBlueColour;
+    cursor: pointer;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    font-size: 11px;
+    transition: background 0.2s ease, color 0.2s ease;
+
+    &:disabled {
+        opacity: 0.4;
+        cursor: not-allowed;
+    }
+
+    &:not(:disabled):hover {
+        background: fade(@myBlueColour, 15%);
+        color: @myDarkBlueColour;
+    }
+}
+
+.list {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    max-height: 50vh;
+    overflow-y: auto;
+    padding-right: 4px;
+}
+
+.emptyState {
+    font-size: 14px;
+    line-height: 1.4;
+    color: fade(@myDarkBlueColour, 60%);
+}
+
+.listItem {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 12px 14px;
+    border-radius: 10px;
+    background: fade(@myBlueColour, 6%);
+    border: 1px solid fade(@myBlueColour, 35%);
+    animation: drift-in 0.35s ease;
+}
+
+.itemNumber {
+    font-weight: 700;
+    margin-right: 6px;
+    color: @myBlueColour;
+}
+
+.itemTitle {
+    font-weight: 500;
+}
+
+.removeButton {
+    background: fade(@myRedColour, 30%);
+    border: none;
+    border-radius: 999px;
+    color: @myDarkBlueColour;
+    width: 28px;
+    height: 28px;
+    cursor: pointer;
+    font-size: 16px;
+    line-height: 1;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: background 0.2s ease;
+
+    &:hover {
+        background: fade(@myRedColour, 45%);
+    }
+}
+
+.actions {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+}
+
+.combineButton {
+    border: none;
+    border-radius: 12px;
+    padding: 12px 16px;
+    font-size: 15px;
+    font-weight: 600;
+    cursor: pointer;
+    background: @myBlueColour;
+    color: @backgroundColour;
+    box-shadow: 0 6px 18px fade(@myBlueColour, 40%);
+    transition: transform 0.2s ease, box-shadow 0.2s ease;
+
+    &:disabled {
+        opacity: 0.5;
+        cursor: not-allowed;
+        box-shadow: none;
+    }
+
+    &:not(:disabled):hover {
+        transform: translateY(-2px);
+        box-shadow: 0 12px 24px fade(@myBlueColour, 45%);
+    }
+}
+
+.errorText {
+    font-size: 13px;
+    color: @myRedColour;
+}
+
+@keyframes drift-in {
+    from {
+        opacity: 0;
+        transform: translateY(8px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+@media (max-width: 960px) {
+    .panel {
+        position: static;
+        width: 100%;
+    }
+}

@@ -6,7 +6,9 @@ import { InfoBox } from './components/InfoBox';
 import StatusPanel from './components/StatusPanel';
 import { INITIAL_LOAD_DELAY, STATUS_POLL_INTERVAL } from './constants';
 import { DataContext } from './main';
-import { dtoSong } from './models';
+import { dtoSong, SelectedSong } from './models';
+import { SelectionContext } from './selectionContext';
+import { SelectedSongsPanel } from './components/SelectedSongsPanel';
 import { SongList } from './pages/SongList';
 
 
@@ -28,6 +30,7 @@ function App() {
     const [songs, setSongs] = useState(new Array<dtoSong>());
     const [filterValue, setFilterValue] = useState("");
     const [isStatusPanelVisible, setIsStatusPanelVisible] = useState(false);
+    const [selectedSongs, setSelectedSongs] = useState<SelectedSong[]>([]);
 
     const loadSongs = () => {
         const stat = { ...status }
@@ -104,26 +107,47 @@ function App() {
         }
     };
 
+    const addSongToSelection = (song: SelectedSong) => {
+        setSelectedSongs(prev => {
+            if (prev.some(existing => existing.id === song.id)) {
+                return prev;
+            }
+            return [...prev, song];
+        });
+    };
+
+    const removeSongFromSelection = (id: number) => {
+        setSelectedSongs(prev => prev.filter(song => song.id !== id));
+    };
+
+    const clearSelection = () => setSelectedSongs([]);
+
     return (
         <DataContext.Provider value={{ status: status, updateStatus: updateStatus }}>
-            <div
-                id="App"
-                style={{ display: 'flex', flexDirection: 'column', height: '100%' }}
-                onDoubleClick={handleBackgroundDoubleClick}
-            >
-                <header className="header" style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-                    <InfoBox loadSongs={loadSongs} setFilter={setFilterValue} />
-                </header>
-
-                <main className="ScrollablePart">
-                    <SongList />
-                </main>
-                {isStatusPanelVisible && (
-                    <footer className="footer">
-                        <StatusPanel onHide={() => setIsStatusPanelVisible(false)} />
-                    </footer>
-                )}
-            </div>
+            <SelectionContext.Provider value={{ selectedSongs, addSongToSelection, removeSongFromSelection, clearSelection }}>
+                <div
+                    id="App"
+                    style={{ display: 'flex', flexDirection: 'column', height: '100%' }}
+                    onDoubleClick={handleBackgroundDoubleClick}
+                >
+                    <header className="header" style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+                        <InfoBox loadSongs={loadSongs} setFilter={setFilterValue} />
+                    </header>
+                    <main className="ScrollablePart">
+                        <div className="ContentLayout">
+                            <div className="SongListArea">
+                                <SongList />
+                            </div>
+                            <SelectedSongsPanel />
+                        </div>
+                    </main>
+                    {isStatusPanelVisible && (
+                        <footer className="footer">
+                            <StatusPanel onHide={() => setIsStatusPanelVisible(false)} />
+                        </footer>
+                    )}
+                </div>
+            </SelectionContext.Provider>
         </DataContext.Provider>
     )
 }

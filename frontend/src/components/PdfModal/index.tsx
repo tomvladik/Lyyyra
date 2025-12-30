@@ -13,7 +13,10 @@ interface WindowWithWails extends Window {
 
 interface PdfModalProps {
     isOpen: boolean;
-    filename: string;
+    filename?: string;
+    dataUrl?: string;
+    songNumber?: number;
+    songName?: string;
     onClose: () => void;
 }
 
@@ -27,9 +30,10 @@ const invokeGetPdfFile = (filename: string) => {
     return getPdfFile(filename);
 };
 
-export const PdfModal = ({ isOpen, filename, onClose }: PdfModalProps) => {
+export const PdfModal = ({ isOpen, filename, dataUrl, songNumber, songName, onClose }: PdfModalProps) => {
     const [pdfPath, setPdfPath] = useState<string>("");
     const [error, setError] = useState<string>("");
+    const modalTitle = Number.isFinite(songNumber) ? `${songNumber} – ${songName}` : songName || filename || "PDF";
 
     useEffect(() => {
         const handleEscape = (e: KeyboardEvent) => {
@@ -45,19 +49,32 @@ export const PdfModal = ({ isOpen, filename, onClose }: PdfModalProps) => {
     }, [isOpen, onClose]);
 
     useEffect(() => {
-        if (isOpen && filename) {
-            setError("");
-            setPdfPath("");
-            invokeGetPdfFile(filename)
-                .then((dataUrl: string) => {
-                    setPdfPath(dataUrl);
-                })
-                .catch((err: any) => {
-                    console.error("Failed to get PDF path:", err);
-                    setError(`Failed to load PDF: ${err}`);
-                });
+        if (!isOpen) {
+            return;
         }
-    }, [isOpen, filename]);
+
+        setError("");
+        setPdfPath("");
+
+        if (dataUrl) {
+            setPdfPath(dataUrl);
+            return;
+        }
+
+        if (!filename) {
+            setError("PDF source is missing");
+            return;
+        }
+
+        invokeGetPdfFile(filename)
+            .then((remoteDataUrl: string) => {
+                setPdfPath(remoteDataUrl);
+            })
+            .catch((err: any) => {
+                console.error("Failed to get PDF path:", err);
+                setError(`Failed to load PDF: ${err}`);
+            });
+    }, [isOpen, filename, dataUrl]);
 
     if (!isOpen) return null;
 
@@ -65,7 +82,7 @@ export const PdfModal = ({ isOpen, filename, onClose }: PdfModalProps) => {
         <div className={styles.modalOverlay} onClick={onClose}>
             <div className={styles.modalContent} onClick={(e) => e.stopPropagation()}>
                 <div className={styles.modalHeader}>
-                    <h2 className={styles.modalTitle}>{filename}</h2>
+                    <h2 className={styles.modalTitle}>{modalTitle}</h2>
                     <button className={styles.closeButton} onClick={onClose} title="Zavřít (Esc)">
                         ✕
                     </button>

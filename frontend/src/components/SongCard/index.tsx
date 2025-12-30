@@ -1,14 +1,16 @@
-import { useEffect, useState } from "react";
+import { useContext, useEffect, useMemo, useState } from "react";
 import { GetSongAuthors } from "../../../wailsjs/go/main/App";
 import { Author, dtoSong } from "../../models";
 import HighlightText from "../HighlightText";
 import { PdfModal } from "../PdfModal";
 import styles from "./index.module.less";
+import { SelectionContext } from "../../selectionContext";
 
 export const SongCard = ({ data }: { data: dtoSong }) => {
     const [authorData, setData] = useState(new Array<Author>());
     const [, setError] = useState(false);
     const [pdfModalOpen, setPdfModalOpen] = useState(false);
+    const { addSongToSelection, selectedSongs } = useContext(SelectionContext);
 
     const fetchData = async () => {
         try {
@@ -26,9 +28,19 @@ export const SongCard = ({ data }: { data: dtoSong }) => {
         }
     };
 
-    const handleSecondAction = () => {
-        // Placeholder for second action
-        console.log("Second action for:", data.KytaraFile);
+    const isSelected = useMemo(() => selectedSongs.some(song => song.id === data.Id), [selectedSongs, data.Id]);
+
+    const handleAddToSelection = () => {
+        if (!data.KytaraFile || isSelected) {
+            return;
+        }
+
+        addSongToSelection({
+            id: data.Id,
+            entry: data.Entry,
+            title: data.Title,
+            filename: data.KytaraFile,
+        });
     };
 
     // useEffect with an empty dependency array runs once when the component mounts
@@ -72,14 +84,15 @@ export const SongCard = ({ data }: { data: dtoSong }) => {
                     <span 
                         className={styles.actionIcon} 
                         onClick={handleOpenPdf}
-                        title="Otevřít PDF"
+                        title="Zobrazit noty"
                     >
                         🎵
                     </span>
                     <span 
-                        className={styles.actionIcon}
-                        onClick={handleSecondAction}
-                        title="Další akce"
+                        className={[styles.actionIcon, isSelected ? styles.actionIconDisabled : ""].join(" ").trim()}
+                        onClick={handleAddToSelection}
+                        title={isSelected ? "Skladba už je ve výběru" : "Přidat do výběru"}
+                        aria-disabled={isSelected}
                     >
                         📋
                     </span>
@@ -88,7 +101,9 @@ export const SongCard = ({ data }: { data: dtoSong }) => {
         </div>
             <PdfModal 
                 isOpen={pdfModalOpen} 
-                filename={data.KytaraFile || ""} 
+                filename={data.KytaraFile || undefined} 
+                songNumber={data.Entry}
+                songName={data.Title}
                 onClose={() => setPdfModalOpen(false)} 
             />
         </>

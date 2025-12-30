@@ -18,6 +18,10 @@ export function FillDatabase() {
   return window['go']['main']['App']['FillDatabase']();
 }
 
+export function GetCombinedPdf(arg1) {
+  return window['go']['main']['App']['GetCombinedPdf'](arg1);
+}
+
 export function GetPdfFile(arg1) {
   return window['go']['main']['App']['GetPdfFile'](arg1);
 }

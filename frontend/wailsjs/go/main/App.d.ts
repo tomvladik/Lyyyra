@@ -10,6 +10,8 @@ export function DownloadSongBase():Promise<void>;
 
 export function FillDatabase():Promise<void>;
 
+export function GetCombinedPdf(arg1:Array<string>):Promise<string>;
+
 export function GetPdfFile(arg1:string):Promise<string>;
 
 export function GetSongAuthors(arg1:number):Promise<Array<main.Author>>;

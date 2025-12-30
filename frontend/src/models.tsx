@@ -17,6 +17,13 @@ export interface dtoSong {
     KytaraFile: string
 }
 
+export interface SelectedSong {
+    id: number;
+    entry: number;
+    title: string;
+    filename: string;
+}
+
 export interface dtoSongHeader {
     Id: number
     Entry: number
