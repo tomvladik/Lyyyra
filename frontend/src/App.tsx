@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { MouseEvent, useEffect, useState } from 'react';
 import * as go from '../wailsjs/go/main/App';
 import './App.less';
 import { AppStatus, isEqualAppStatus, SortingOption } from "./AppStatus";
@@ -27,7 +27,7 @@ function App() {
 
     const [songs, setSongs] = useState(new Array<dtoSong>());
     const [filterValue, setFilterValue] = useState("");
-    const [isStatusPanelVisible, setIsStatusPanelVisible] = useState(true);
+    const [isStatusPanelVisible, setIsStatusPanelVisible] = useState(false);
 
     const loadSongs = () => {
         const stat = { ...status }
@@ -98,19 +98,21 @@ function App() {
         }
     };
 
+    const handleBackgroundDoubleClick = (_event: MouseEvent<HTMLDivElement>) => {
+        if (!isStatusPanelVisible) {
+            setIsStatusPanelVisible(true);
+        }
+    };
+
     return (
         <DataContext.Provider value={{ status: status, updateStatus: updateStatus }}>
-            <div id="App" style={{ display: 'flex', flexDirection: 'column', height: '100%' }}>
+            <div
+                id="App"
+                style={{ display: 'flex', flexDirection: 'column', height: '100%' }}
+                onDoubleClick={handleBackgroundDoubleClick}
+            >
                 <header className="header" style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
                     <InfoBox loadSongs={loadSongs} setFilter={setFilterValue} />
-                    <label style={{ display: 'flex', alignItems: 'center', gap: '0.35rem', fontSize: '0.9rem' }}>
-                        <input
-                            type="checkbox"
-                            checked={isStatusPanelVisible}
-                            onChange={(event) => setIsStatusPanelVisible(event.target.checked)}
-                        />
-                        Zobrazit stav
-                    </label>
                 </header>
 
                 <main className="ScrollablePart">
@@ -118,7 +120,7 @@ function App() {
                 </main>
                 {isStatusPanelVisible && (
                     <footer className="footer">
-                        <StatusPanel />
+                        <StatusPanel onHide={() => setIsStatusPanelVisible(false)} />
                     </footer>
                 )}
             </div>
