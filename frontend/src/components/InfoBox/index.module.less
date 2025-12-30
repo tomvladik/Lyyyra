@@ -1,11 +1,19 @@
 @import (less, reference) "../../vars.less";
 
 .sorting {
-    width: 96%;
-    min-height: 30px;
-
+    width: 100%;
+    height: 40px;
     padding: @myControlPadding;
     border: @myControlBorder;
     border-radius: @myControlRadius;
     font-size: @myControlFontSize;
+    font-family: inherit;
+    background-color: white;
+    box-sizing: border-box;
+    appearance: none;
+    cursor: pointer;
+
+    &:focus {
+        outline: none;
+    }
 }

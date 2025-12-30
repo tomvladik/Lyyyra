@@ -123,22 +123,36 @@ export function InfoBox(props: Props) {
       <div style={{ marginTop: '12px' }}>
         Upozorňujeme, že materiály stahované z <a href='https://www.evangelickyzpevnik.cz/zpevnik/kapitoly-a-pisne/' target="_blank">www.evangelickyzpevnik.cz</a> slouží pouze pro vlastní potřebu a k případnému dalšímu užití je třeba uzavřít licenční smlouvu s nositeli autorských práv.
       </div>
-      <div style={{ display: 'flex', gap: '10px', alignItems: 'center', paddingTop: '1em' }}>
-        <input id="search-box" className={styles.sorting} type="text" onChange={(e: React.ChangeEvent<HTMLInputElement>) => {
-          const newStatus: AppStatus = {
-            ...status,
-            SearchPattern: e.target.value
-          };
-          updateStatus(newStatus);
-        }} placeholder="Hledat text ..." />
-        <select className={styles.sorting} value={status.Sorting} onChange={_on}>
-          <option value="" disabled>Řadit podle</option>
-          {sorting.map((option) => (
-            <option key={option.value} value={option.value}>
-              {option.label}
-            </option>
-          ))}
-        </select>
+      <div style={{ marginTop: '12px' }}>
+        <div style={{ display: 'flex', gap: '20px', flexWrap: 'wrap' }}>
+          <div style={{ flex: '1', minWidth: '250px' }}>
+            <label htmlFor="search-box" style={{ display: 'block', marginBottom: '6px', fontSize: '15px', fontWeight: '500', textAlign: 'left' }}>Hledat v textu</label>
+            <input 
+              id="search-box" 
+              className={styles.sorting} 
+              type="text" 
+              onChange={(e: React.ChangeEvent<HTMLInputElement>) => {
+                const newStatus: AppStatus = {
+                  ...status,
+                  SearchPattern: e.target.value
+                };
+                updateStatus(newStatus);
+              }} 
+              placeholder="Hledat text ..." 
+            />
+          </div>
+          <div style={{ flex: '1', minWidth: '200px' }}>
+            <label htmlFor="sort-select" style={{ display: 'block', marginBottom: '6px', fontSize: '15px', fontWeight: '500', textAlign: 'left' }}>Řadit podle</label>
+            <select id="sort-select" className={styles.sorting} value={status.Sorting} onChange={_on}>
+              <option value="" disabled>Vyberte možnost</option>
+              {sorting.map((option) => (
+                <option key={option.value} value={option.value}>
+                  {option.label}
+                </option>
+              ))}
+            </select>
+          </div>
+        </div>
       </div>
     </div>
   );

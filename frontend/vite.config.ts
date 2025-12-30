@@ -7,6 +7,11 @@ export default defineConfig({
   server: {
     watch: {
       ignored: ['**/node_modules/**', '**/build/**']
+    },
+    hmr: {
+      protocol: 'ws',
+      host: 'localhost',
+      port: 5173
     }
   },
   build: {
