@@ -23,7 +23,8 @@ func (a *App) PrepareDatabase() {
             entry INTEGER,
             title TEXT,
             title_d TEXT,
-            verse_order TEXT
+            verse_order TEXT,
+            kytara_file TEXT
         ); DELETE FROM songs;`,
 			`CREATE TABLE IF NOT EXISTS authors (
             id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -75,7 +76,7 @@ func (a *App) FillDatabase() {
 	}
 
 	totalFiles := len(xmlFiles)
-	a.updateProgress("Naplňuji databázi...", 0)
+	a.updateProgress("Plním databázi...", 0)
 
 	a.withDB(func(db *sql.DB) error {
 		// Process each XML file
@@ -83,7 +84,7 @@ func (a *App) FillDatabase() {
 			// Update progress every 10 files or at the end
 			if i%10 == 0 || i == totalFiles-1 {
 				percent := int((float64(i+1) / float64(totalFiles)) * 100)
-				message := fmt.Sprintf("Naplňuji databázi... (%d/%d)", i+1, totalFiles)
+				message := fmt.Sprintf("Plním databázi... (%d/%d)", i+1, totalFiles)
 				a.updateProgress(message, percent)
 			}
 
@@ -112,29 +113,29 @@ func (a *App) FillDatabase() {
 				continue
 			}
 
-		// Insert author data into the authors table
-		for _, author := range song.Authors {
-			author_d := removeDiacritics(author.Value)
-			_, err := db.Exec(`INSERT INTO authors (song_id, author_type, author_value, author_value_d) VALUES (?, ?, ?, ?)`,
-				songID, author.Type, author.Value, author_d)
-			if err != nil {
-				slog.Error(fmt.Sprintf("Error inserting author data for file %s: %v\n", xmlFile.Name(), err))
-				continue
+			// Insert author data into the authors table
+			for _, author := range song.Authors {
+				author_d := removeDiacritics(author.Value)
+				_, err := db.Exec(`INSERT INTO authors (song_id, author_type, author_value, author_value_d) VALUES (?, ?, ?, ?)`,
+					songID, author.Type, author.Value, author_d)
+				if err != nil {
+					slog.Error(fmt.Sprintf("Error inserting author data for file %s: %v\n", xmlFile.Name(), err))
+					continue
+				}
 			}
-		}
 
-		// Insert verse data into the verses table
-		for _, verse := range song.Lyrics.Verses {
-			lines_d := removeDiacritics(verse.Lines)
-			_, err := db.Exec(`INSERT INTO verses (song_id, name, lines, lines_d) VALUES (?, ?, ?, ?)`,
-				songID, verse.Name, verse.Lines, lines_d)
-			if err != nil {
-				slog.Error(fmt.Sprintf("Error inserting verse data for file %s: %v\n", xmlFile.Name(), err))
-				continue
+			// Insert verse data into the verses table
+			for _, verse := range song.Lyrics.Verses {
+				lines_d := removeDiacritics(verse.Lines)
+				_, err := db.Exec(`INSERT INTO verses (song_id, name, lines, lines_d) VALUES (?, ?, ?, ?)`,
+					songID, verse.Name, verse.Lines, lines_d)
+				if err != nil {
+					slog.Error(fmt.Sprintf("Error inserting verse data for file %s: %v\n", xmlFile.Name(), err))
+					continue
+				}
 			}
-		}
 
-		slog.Debug(fmt.Sprintf("Data inserted  %s : %s file %s\n", song.Songbook.Entry, song.Title, xmlFile.Name()))
+			slog.Debug(fmt.Sprintf("Data inserted  %s : %s file %s\n", song.Songbook.Entry, song.Title, xmlFile.Name()))
 		}
 		return nil
 	})
@@ -156,7 +157,8 @@ func (a *App) GetSongs(orderBy string, searchPattern string) ([]dtoSong, error) 
     COALESCE((SELECT author_value
             FROM authors
             WHERE song_id = s.id AND author_type = 'words'
-            ORDER BY id LIMIT 1),'') AS authorLyric
+            ORDER BY id LIMIT 1),'') AS authorLyric,
+    COALESCE(kytara_file, '') AS kytara_file
   FROM songs s
   JOIN verses v ON s.id = v.song_id
 `
@@ -186,16 +188,16 @@ order by ` + orderColumn + `, v.name`
 
 		for rows.Next() {
 			var (
-				title, allVerses, authorMusic, authorLyric string
-				id, entry                                  int
+				title, allVerses, authorMusic, authorLyric, kytaraFile string
+				id, entry                                              int
 			)
-			err := rows.Scan(&id, &entry, &title, &allVerses, &authorMusic, &authorLyric)
+			err := rows.Scan(&id, &entry, &title, &allVerses, &authorMusic, &authorLyric, &kytaraFile)
 			if err != nil {
 				slog.Error(fmt.Sprintf("Error scanning row: %s", err))
 				return err
 			}
 
-			result = append(result, dtoSong{Id: id, Entry: entry, Title: title, Verses: allVerses, AuthorMusic: authorMusic, AuthorLyric: authorLyric})
+			result = append(result, dtoSong{Id: id, Entry: entry, Title: title, Verses: allVerses, AuthorMusic: authorMusic, AuthorLyric: authorLyric, KytaraFile: kytaraFile})
 		}
 		return nil
 	})
@@ -214,7 +216,8 @@ SELECT DISTINCT s.id,
        entry,
        s.title,
        title_d,
-       verse_order
+       verse_order,
+       kytara_file
   FROM songs s
 --  JOIN verses v ON v.song_id = s.id
 --  JOIN authors a ON a.song_id = s.id
@@ -241,16 +244,16 @@ order by ` + orderColumn
 
 		for rows.Next() {
 			var (
-				title, title_d, verse_order sql.NullString
-				id, entry                   int
+				title, title_d, verse_order, kytaraFile sql.NullString
+				id, entry                               int
 			)
-			err := rows.Scan(&id, &entry, &title, &title_d, &verse_order)
+			err := rows.Scan(&id, &entry, &title, &title_d, &verse_order, &kytaraFile)
 			if err != nil {
 				slog.Error(fmt.Sprintf("Error scanning row: %s", err))
 				return err
 			}
 
-			result = append(result, dtoSongHeader{Id: id, Entry: entry, Title: title.String, TitleD: title_d.String})
+			result = append(result, dtoSongHeader{Id: id, Entry: entry, Title: title.String, TitleD: title_d.String, KytaraFile: kytaraFile.String})
 		}
 		return nil
 	})

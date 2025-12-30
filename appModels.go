@@ -65,13 +65,15 @@ type dtoSong struct {
 	Verses      string
 	AuthorMusic string
 	AuthorLyric string
+	KytaraFile  string
 }
 
 type dtoSongHeader struct {
-	Id     int
-	Entry  int
-	Title  string
-	TitleD string
+	Id         int
+	Entry      int
+	Title      string
+	TitleD     string
+	KytaraFile string
 }
 
 type SortingOption string

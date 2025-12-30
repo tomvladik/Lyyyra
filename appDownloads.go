@@ -243,6 +243,13 @@ func (a *App) DownloadEz() error {
 		}
 		a.status.WebResourcesReady = true
 		a.saveStatus()
+
+		// Process kytara.pdf after download
+		a.updateProgress("Zpracovávám PDF soubory...", 90)
+		if err := a.ProcessKytaraPDF(); err != nil {
+			slog.Warn("Error processing kytara.pdf", "error", err)
+			// Don't fail the whole process if PDF splitting fails
+		}
 	}
 
 	// Clear progress flag at the end

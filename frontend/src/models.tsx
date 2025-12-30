@@ -14,6 +14,7 @@ export interface dtoSong {
     Verses: string
     AuthorMusic: string
     AuthorLyric: string
+    KytaraFile: string
 }
 
 export interface dtoSongHeader {
@@ -21,6 +22,7 @@ export interface dtoSongHeader {
     Entry: number
     Title: string
     TitleD: string
+    KytaraFile: string
 }
 
 export interface Author {

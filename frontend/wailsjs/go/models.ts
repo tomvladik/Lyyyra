@@ -68,6 +68,7 @@ export namespace main {
 	    Verses: string;
 	    AuthorMusic: string;
 	    AuthorLyric: string;
+	    KytaraFile: string;
 	
 	    static createFrom(source: any = {}) {
 	        return new dtoSong(source);
@@ -81,6 +82,7 @@ export namespace main {
 	        this.Verses = source["Verses"];
 	        this.AuthorMusic = source["AuthorMusic"];
 	        this.AuthorLyric = source["AuthorLyric"];
+	        this.KytaraFile = source["KytaraFile"];
 	    }
 	}
 	export class dtoSongHeader {
@@ -88,6 +90,7 @@ export namespace main {
 	    Entry: number;
 	    Title: string;
 	    TitleD: string;
+	    KytaraFile: string;
 	
 	    static createFrom(source: any = {}) {
 	        return new dtoSongHeader(source);
@@ -99,6 +102,7 @@ export namespace main {
 	        this.Entry = source["Entry"];
 	        this.Title = source["Title"];
 	        this.TitleD = source["TitleD"];
+	        this.KytaraFile = source["KytaraFile"];
 	    }
 	}
 
