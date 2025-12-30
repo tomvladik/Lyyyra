@@ -7,8 +7,8 @@ help:
 # Build tags
 # Devcontainer ships with WebKitGTK 4.1 libraries, so default to that.
 WEBKIT_TAG ?= webkit2_41
-GO_DEV_TAGS ?= dev fts5 $(WEBKIT_TAG)
-GO_PROD_TAGS ?= fts5 $(WEBKIT_TAG)
+GO_DEV_TAGS ?= dev $(WEBKIT_TAG)
+GO_PROD_TAGS ?= $(WEBKIT_TAG)
 
 # Go backend tasks
 .PHONY: build test fmt lint

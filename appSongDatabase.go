@@ -15,9 +15,6 @@ func (a *App) PrepareDatabase() {
 	a.withDB(func(db *sql.DB) error {
 		// Create tables if they don't exist
 		tableScripts := []string{
-			`DROP TABLE IF EXISTS verses_fts;`,
-			`DROP TABLE IF EXISTS authors_fts;`,
-			`DROP TABLE IF EXISTS songs_fts;`,
 			`DROP TABLE IF EXISTS authors;`,
 			`DROP TABLE IF EXISTS verses;`,
 			`DROP TABLE IF EXISTS songs;`,
@@ -28,14 +25,6 @@ func (a *App) PrepareDatabase() {
             title_d TEXT,
             verse_order TEXT
         ); DELETE FROM songs;`,
-
-			`CREATE VIRTUAL TABLE IF NOT EXISTS songs_fts USING fts5 (
-            id,
-            title,
-            content=songs,
-            content_rowid=id
-        ); DELETE FROM songs_fts;`,
-
 			`CREATE TABLE IF NOT EXISTS authors (
             id INTEGER PRIMARY KEY AUTOINCREMENT,
             song_id INTEGER,
@@ -45,14 +34,6 @@ func (a *App) PrepareDatabase() {
             FOREIGN KEY(song_id) REFERENCES songs(id)
             ON DELETE CASCADE
         ); DELETE FROM authors;`,
-
-			`CREATE VIRTUAL TABLE IF NOT EXISTS authors_fts USING fts5 (
-            id,
-            author_value,
-            content=authors,
-            content_rowid=id
-        ); DELETE FROM authors_fts;`,
-
 			`CREATE TABLE IF NOT EXISTS verses (
             id INTEGER PRIMARY KEY AUTOINCREMENT,
             song_id INTEGER,
@@ -62,13 +43,6 @@ func (a *App) PrepareDatabase() {
             FOREIGN KEY(song_id) REFERENCES songs(id)
             ON DELETE CASCADE
         ); DELETE FROM verses;`,
-
-			`CREATE VIRTUAL TABLE IF NOT EXISTS verses_fts USING fts5 (
-            id,
-            lines,
-            content=verses,
-            content_rowid=id
-        ); DELETE FROM verses_fts;`,
 		}
 
 		// Execute each table creation script
@@ -138,61 +112,29 @@ func (a *App) FillDatabase() {
 				continue
 			}
 
-			_, err = db.Exec(`INSERT INTO songs_fts (id, title) VALUES (?, ?)`,
-				songID, title_d)
+		// Insert author data into the authors table
+		for _, author := range song.Authors {
+			author_d := removeDiacritics(author.Value)
+			_, err := db.Exec(`INSERT INTO authors (song_id, author_type, author_value, author_value_d) VALUES (?, ?, ?, ?)`,
+				songID, author.Type, author.Value, author_d)
 			if err != nil {
-				slog.Error(fmt.Sprintf("Error inserting song index for file %s: %v\n", xmlFile.Name(), err))
+				slog.Error(fmt.Sprintf("Error inserting author data for file %s: %v\n", xmlFile.Name(), err))
 				continue
 			}
+		}
 
-			// Insert author data into the authors table
-			for _, author := range song.Authors {
-				author_d := removeDiacritics(author.Value)
-				result, err := db.Exec(`INSERT INTO authors (song_id, author_type, author_value, author_value_d) VALUES (?, ?, ?, ?)`,
-					songID, author.Type, author.Value, author_d)
-				if err != nil {
-					slog.Error(fmt.Sprintf("Error inserting author data for file %s: %v\n", xmlFile.Name(), err))
-					continue
-				}
-				// Get the ID
-				authorID, err := result.LastInsertId()
-				if err != nil {
-					slog.Error(fmt.Sprintf("Error getting last author insert ID for file %s: %v\n", xmlFile.Name(), err))
-					continue
-				}
-				_, err = db.Exec(`INSERT INTO authors_fts (id, author_value) VALUES (?, ?)`,
-					authorID, author_d)
-				if err != nil {
-					slog.Error(fmt.Sprintf("Error inserting author index for file %s: %v\n", xmlFile.Name(), err))
-					continue
-				}
-
+		// Insert verse data into the verses table
+		for _, verse := range song.Lyrics.Verses {
+			lines_d := removeDiacritics(verse.Lines)
+			_, err := db.Exec(`INSERT INTO verses (song_id, name, lines, lines_d) VALUES (?, ?, ?, ?)`,
+				songID, verse.Name, verse.Lines, lines_d)
+			if err != nil {
+				slog.Error(fmt.Sprintf("Error inserting verse data for file %s: %v\n", xmlFile.Name(), err))
+				continue
 			}
+		}
 
-			// Insert verse data into the verses table
-			for _, verse := range song.Lyrics.Verses {
-				lines_d := removeDiacritics(verse.Lines)
-				result, err := db.Exec(`INSERT INTO verses (song_id, name, lines, lines_d) VALUES (?, ?, ?, ?)`,
-					songID, verse.Name, verse.Lines, lines_d)
-				if err != nil {
-					slog.Error(fmt.Sprintf("Error inserting verse data for file %s: %v\n", xmlFile.Name(), err))
-					continue
-				}
-				// Get the ID
-				verseID, err := result.LastInsertId()
-				if err != nil {
-					slog.Error(fmt.Sprintf("Error getting last verse insert ID for file %s: %v\n", xmlFile.Name(), err))
-					continue
-				}
-				_, err = db.Exec(`INSERT INTO verses_fts (id, lines) VALUES (?, ?)`,
-					verseID, lines_d)
-				if err != nil {
-					slog.Error(fmt.Sprintf("Error inserting author index for file %s: %v\n", xmlFile.Name(), err))
-					continue
-				}
-			}
-
-			slog.Debug(fmt.Sprintf("Data inserted  %s : %s file %s\n", song.Songbook.Entry, song.Title, xmlFile.Name()))
+		slog.Debug(fmt.Sprintf("Data inserted  %s : %s file %s\n", song.Songbook.Entry, song.Title, xmlFile.Name()))
 		}
 		return nil
 	})

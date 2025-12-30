@@ -1,5 +1,4 @@
 {
-    "go.testTags": "fts5",
     "editor.renderWhitespace": "all",
 
     "// ===== BUILD TARGETS =====": "",

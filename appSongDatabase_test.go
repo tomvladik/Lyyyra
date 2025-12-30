@@ -87,8 +87,7 @@ func TestFillDatabase(t *testing.T) {
 	var found_entry string
 	err = db.QueryRow(`
 		SELECT entry FROM songs
-		JOIN songs_fts ON songs.id=songs_fts.id
-		WHERE songs_fts MATCH 'abccdde'`).Scan(&found_entry)
+		WHERE title_d LIKE '%abccdde%'`).Scan(&found_entry)
 	if err != nil {
 		t.Errorf("Sample song was not inserted: %v", err)
 	}
@@ -101,8 +100,7 @@ func TestFillDatabase(t *testing.T) {
 	err = db.QueryRow(`
     SELECT entry FROM songs
 	JOIN authors ON songs.id=authors.song_id
-	JOIN authors_fts ON authors.id=authors_fts.id
-	WHERE authors_fts MATCH '2018'`).Scan(&found_entry)
+	WHERE authors.author_value_d LIKE '%2018%'`).Scan(&found_entry)
 	if err != nil {
 		t.Errorf("Sample song was not inserted: %v", err)
 	}
@@ -115,8 +113,7 @@ func TestFillDatabase(t *testing.T) {
 	err = db.QueryRow(`
     SELECT entry FROM songs
 	JOIN verses ON songs.id=verses.song_id
-	JOIN verses_fts ON verses.id=verses_fts.id
-	WHERE verses_fts MATCH 'tulen'`).Scan(&found_entry)
+	WHERE verses.lines_d LIKE '%tulen%'`).Scan(&found_entry)
 	if err != nil {
 		t.Errorf("Sample song was not inserted: %v", err)
 	}

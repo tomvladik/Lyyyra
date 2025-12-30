@@ -40,7 +40,6 @@
                 "build",
                 "-tags",
                 "dev",
-                "fts5",
                 "-gcflags",
                 "all=-N -l",
                 "-o",
