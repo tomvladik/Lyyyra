@@ -30,7 +30,7 @@ lint: ## Lint Go code (requires golangci-lint)
 	golangci-lint run
 
 # Node.js/Frontend tasks
-.PHONY: frontend-install frontend-build frontend-dev
+.PHONY: frontend-install frontend-build frontend-dev frontend-test
 
 frontend-install: ## Install frontend dependencies
 	cd frontend && npm install
@@ -41,6 +41,15 @@ frontend-build: ## Build frontend for production
 frontend-dev: ## Start frontend development server
 	cd frontend && npm run dev
 
+frontend-test: ## Run frontend tests
+	cd frontend && npm test -- --run
+
+frontend-test-watch: ## Run frontend tests in watch mode
+	cd frontend && npm test
+
+frontend-test-ui: ## Run frontend tests with UI
+	cd frontend && npm run test:ui
+
 # Clean up build artifacts
 .PHONY: clean test-all install-tools
 
@@ -48,7 +57,7 @@ clean: ## Clean Go and frontend build artifacts
 	go clean
 	rm -rf frontend/dist
 
-test-all: test ## Run all tests (Go + frontend, if available)
+test-all: test frontend-test ## Run all tests (Go + frontend)
 	cd frontend && npm test || true
 
 install-tools: ## Install Go test and lint tools
@@ -65,6 +74,11 @@ wails-build: ## Build Wails application for production
 
 wails-build-windows: ## Build Wails application for Windows
 	CGO_ENABLED=1 CC=x86_64-w64-mingw32-gcc CXX=x86_64-w64-mingw32-g++ wails build -platform windows/amd64 -tags "fts5 webkit2_41"
+
+wails-build-windows-skip-frontend: ## Build Windows app (skip frontend rebuild)
+	CGO_ENABLED=1 CC=x86_64-w64-mingw32-gcc CXX=x86_64-w64-mingw32-g++ wails build -platform windows/amd64 -tags "fts5 webkit2_41" -skipbindings -s
+
+wails-build-windows-fast: frontend-build wails-build-windows-skip-frontend ## Fast Windows build (pre-build frontend)
 
 wails-install: ## Install Wails CLI
 	go install github.com/wailsapp/wails/v2/cmd/wails@latest

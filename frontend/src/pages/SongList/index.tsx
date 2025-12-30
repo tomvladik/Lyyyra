@@ -2,7 +2,7 @@ import { useContext, useEffect, useState } from 'react';
 import * as go from '../../../wailsjs/go/main/App';
 
 import { SongCard } from "../../components/SongCard";
-import { DataContext } from '../../main';
+import { DataContext } from '../../context';
 import { dtoSong } from '../../models';
 import { removeDiacritics } from "../../utils/stringUtils";
 

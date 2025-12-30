@@ -2,7 +2,7 @@ import React, { ChangeEvent, useContext, useEffect, useMemo, useState } from 're
 
 import { Option } from 'react-dropdown';
 import { AppStatus, SortingOption } from '../../AppStatus';
-import { DataContext } from '../../main';
+import { DataContext } from '../../context';
 import styles from "./index.module.less";
 
 interface Props {

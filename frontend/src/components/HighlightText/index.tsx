@@ -1,5 +1,5 @@
 import { FC, useContext } from 'react';
-import { DataContext } from '../../main';
+import { DataContext } from '../../context';
 import { removeDiacritics } from '../../utils/stringUtils';
 
 interface HighlightTextProps {
