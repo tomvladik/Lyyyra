@@ -105,21 +105,23 @@ jobs:
         id: package_win
         run: |
           platform="$(echo '${{ matrix.build_platform }}' | tr '/' '-')"
-          artifact="Lyyyra-${platform}-${{ github.ref_name }}.zip"
-          cd build/bin && zip -9 "$artifact" "${{ matrix.binary_name }}" && mv "$artifact" ../..
-          echo "artifact-name=$artifact" >> "$GITHUB_OUTPUT"
+          filename="Lyyyra-${platform}-${{ github.ref_name }}.zip"
+          cd build/bin && zip -9 "$filename" "${{ matrix.binary_name }}" && mv "$filename" ../..
+          echo "artifact-name=Lyyyra-${platform}-${{ github.ref_name }}" >> "$GITHUB_OUTPUT"
+          echo "filename=$filename" >> "$GITHUB_OUTPUT"
 
       - name: Package Linux artifact
         if: matrix.platform == 'Linux'
         id: package_linux
         run: |
           platform="$(echo '${{ matrix.build_platform }}' | tr '/' '-')"
-          artifact="Lyyyra-${platform}-${{ github.ref_name }}.tar.gz"
-          tar -c -C build/bin ${{ matrix.binary_name }} | gzip -9 > "$artifact"
-          echo "artifact-name=$artifact" >> "$GITHUB_OUTPUT"
+          filename="Lyyyra-${platform}-${{ github.ref_name }}.tar.gz"
+          tar -c -C build/bin ${{ matrix.binary_name }} | gzip -9 > "$filename"
+          echo "artifact-name=Lyyyra-${platform}-${{ github.ref_name }}" >> "$GITHUB_OUTPUT"
+          echo "filename=$filename" >> "$GITHUB_OUTPUT"
 
       - name: Upload artifact
         uses: actions/upload-artifact@v4
         with:
           name: ${{ steps.package_win.outputs.artifact-name || steps.package_linux.outputs.artifact-name }}
-          path: ${{ steps.package_win.outputs.artifact-name || steps.package_linux.outputs.artifact-name }}
+          path: ${{ steps.package_win.outputs.filename || steps.package_linux.outputs.filename }}
