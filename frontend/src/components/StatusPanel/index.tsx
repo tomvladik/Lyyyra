@@ -10,12 +10,6 @@ interface StatusPanelProps {
 const StatusPanel: React.FC<StatusPanelProps> = ({ onHide }) => {
     const { status: data } = useContext(DataContext);
 
-    const readiness = [
-        { label: "Notové podklady", ready: data.WebResourcesReady },
-        { label: "Databáze", ready: data.DatabaseReady },
-        { label: "Skladby", ready: data.SongsReady },
-    ];
-
     const formatDate = (value: string) => {
         if (!value) {
             return "---";
@@ -25,12 +19,10 @@ const StatusPanel: React.FC<StatusPanelProps> = ({ onHide }) => {
             return value;
         }
         return parsed.toLocaleString("cs-CZ", {
-            weekday: "short",
             hour: "2-digit",
             minute: "2-digit",
             day: "2-digit",
             month: "2-digit",
-            year: "numeric",
         });
     };
 
@@ -38,8 +30,11 @@ const StatusPanel: React.FC<StatusPanelProps> = ({ onHide }) => {
     const isBusy = data.IsProgress && progressPercent < 100;
     const progressMessage = data.ProgressMessage?.trim() || (isBusy ? "Pracuji..." : "Hotovo");
     const versionLabel = data.BuildVersion || "dev";
+    const lastSaveLabel = formatDate(data.LastSave);
+    const allReady = data.WebResourcesReady && data.DatabaseReady && data.SongsReady;
+    const showProgress = isBusy || !allReady;
 
-    const handleHideClick = (event: React.MouseEvent<HTMLButtonElement>) => {
+    const handleClick = (event: React.MouseEvent<HTMLDivElement>) => {
         event.stopPropagation();
         onHide?.();
     };
@@ -49,54 +44,40 @@ const StatusPanel: React.FC<StatusPanelProps> = ({ onHide }) => {
     };
 
     return (
-        <div className={styles.statusPanel} onDoubleClick={handleDoubleClick}>
-            <div className={styles.panelHeader}>
-                <div>
-                    <p className={styles.panelEyebrow}>Diagnostika</p>
-                    <h2 className={styles.panelTitle}>Stav aplikace</h2>
-                </div>
-                <button type="button" className={styles.hideButton} onClick={handleHideClick}>
-                    Skrýt panel
-                </button>
+        <div
+            className={styles.statusPanel}
+            onClick={handleClick}
+            onDoubleClick={handleDoubleClick}
+        >
+            <div className={styles.statusRow}>
+                <span className={styles.statusLabel}>Verze:</span>
+                <span className={styles.statusValueTight} title={versionLabel}>
+                    {versionLabel}
+                </span>
             </div>
-
-            <div className={styles.readyGrid}>
-                {readiness.map(({ label, ready }) => (
-                    <div
-                        key={label}
-                        className={ready ? styles.statusChipReady : styles.statusChipPending}
-                    >
-                        <span className={styles.statusDot} />
-                        <div>
-                            <p className={styles.chipLabel}>{label}</p>
-                            <p className={styles.chipState}>{ready ? "připraveno" : "čekám"}</p>
-                        </div>
-                    </div>
-                ))}
+            {showProgress && (
+                <div className={styles.progressRow}>
+                    <span className={styles.statusLabel}>{progressMessage}</span>
+                    <span className={styles.statusValue}>{progressPercent}%</span>
+                </div>
+            )}
+            <div className={styles.statusRow}>
+                <span className={styles.statusLabel}>Uloženo:</span>
+                <span className={styles.statusValueTight} title={lastSaveLabel}>
+                    {lastSaveLabel}
+                </span>
             </div>
-
-            <div className={styles.metaRow}>
-                <div className={styles.metaGroup}>
-                    <p className={styles.metaLabel}>Poslední uložení</p>
-                    <p className={styles.metaValue}>{formatDate(data.LastSave)}</p>
-                </div>
-                <div className={styles.metaGroup}>
-                    <p className={styles.metaLabel}>Verze</p>
-                    <p className={styles.metaValue}>{versionLabel}</p>
-                </div>
+            <div className={styles.statusRow}>
+                <span className={styles.statusLabel}>Podklady:</span>
+                <span className={styles.statusValue}>{data.WebResourcesReady ? "OK" : "čekám"}</span>
             </div>
-
-            <div className={styles.progressBlock}>
-                <div className={styles.progressHeader}>
-                    <p className={styles.progressLabel}>{progressMessage}</p>
-                    <p className={styles.progressValue}>{progressPercent}%</p>
-                </div>
-                <div className={styles.progressTrack}>
-                    <div
-                        className={styles.progressBar}
-                        style={{ width: `${progressPercent}%` }}
-                    />
-                </div>
+            <div className={styles.statusRow}>
+                <span className={styles.statusLabel}>Databáze:</span>
+                <span className={styles.statusValue}>{data.DatabaseReady ? "OK" : "čekám"}</span>
+            </div>
+            <div className={styles.statusRow}>
+                <span className={styles.statusLabel}>Skladby:</span>
+                <span className={styles.statusValue}>{data.SongsReady ? "OK" : "čekám"}</span>
             </div>
         </div>
     );

@@ -2,181 +2,48 @@
 
 .statusPanel {
     width: 100%;
-    background: fade(@myDarkBlueColour, 95%);
-    color: #f5f6fa;
-    padding: 22px 26px;
-    border-radius: 22px;
-    border: 1px solid fade(#ffffff, 12%);
-    box-shadow: 0 24px 46px fade(#000000, 40%);
-    backdrop-filter: blur(10px);
-    display: flex;
-    flex-direction: column;
-    gap: 18px;
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
+    gap: 8px 16px;
+    padding: 10px 18px;
+    background: fade(@myDarkBlueColour, 88%);
+    color: #f2f4f8;
+    font-size: 12px;
+    border-radius: 12px 12px 0 0;
+    border-top: 1px solid fade(#ffffff, 12%);
+    border-left: 1px solid fade(#ffffff, 6%);
+    border-right: 1px solid fade(#000000, 10%);
 }
 
-.panelHeader {
-    display: flex;
-    align-items: flex-start;
-    justify-content: space-between;
-    gap: 24px;
-}
-
-.panelEyebrow {
-    font-size: 11px;
-    letter-spacing: 0.3em;
-    text-transform: uppercase;
-    opacity: 0.7;
-    margin-bottom: 4px;
-}
-
-.panelTitle {
-    font-size: 22px;
-    font-weight: 600;
-    letter-spacing: 0.04em;
-}
-
-.hideButton {
-    border: 1px solid fade(#ffffff, 30%);
-    color: #f5f6fa;
-    background: transparent;
-    border-radius: 999px;
-    padding: 8px 16px;
-    font-size: 13px;
-    cursor: pointer;
-    transition: background 0.2s ease, border-color 0.2s ease;
-}
-
-.hideButton:hover {
-    background: fade(#ffffff, 12%);
-    border-color: fade(#ffffff, 50%);
-}
-
-.readyGrid {
-    display: flex;
-    flex-wrap: wrap;
-    gap: 12px;
-}
-
-.statusChipReady,
-.statusChipPending {
-    display: flex;
+.statusRow,
+.progressRow {
+    display: grid;
+    grid-template-columns: max-content 1fr;
     align-items: center;
-    gap: 10px;
-    padding: 12px 16px;
-    border-radius: 16px;
-    border: 1px solid transparent;
-    min-width: 150px;
+    gap: 6px;
 }
 
-.statusChipReady {
-    background: fade(#27d07d, 18%);
-    border-color: fade(#27d07d, 70%);
-    color: #c8ffe3;
-}
-
-.statusChipPending {
-    background: fade(#ff6b6b, 14%);
-    border-color: fade(#ff6b6b, 60%);
-    color: #ffe2e2;
-}
-
-.statusDot {
-    width: 12px;
-    height: 12px;
-    border-radius: 999px;
-    background: currentColor;
-    display: inline-block;
-    box-shadow: 0 0 12px fade(#000, 35%);
-}
-
-.chipLabel {
-    font-size: 12px;
+.statusLabel {
     text-transform: uppercase;
     letter-spacing: 0.2em;
-    opacity: 0.75;
+    opacity: 0.7;
+    white-space: nowrap;
 }
 
-.chipState {
-    font-size: 15px;
+.statusValue {
     font-weight: 600;
-    text-transform: lowercase;
+    justify-self: start;
 }
 
-.metaRow {
-    display: flex;
-    gap: 32px;
-    flex-wrap: wrap;
-    background: fade(#000000, 25%);
-    border-radius: 18px;
-    border: 1px solid fade(#ffffff, 10%);
-    padding: 14px 18px;
-}
-
-.metaGroup {
-    flex: 1;
-    min-width: 200px;
-}
-
-.metaLabel {
-    font-size: 12px;
-    text-transform: uppercase;
-    letter-spacing: 0.2em;
-    opacity: 0.6;
-    margin-bottom: 6px;
-}
-
-.metaValue {
-    font-size: 15px;
-    font-weight: 600;
-}
-
-.progressBlock {
-    display: flex;
-    flex-direction: column;
-    gap: 10px;
-}
-
-.progressHeader {
-    display: flex;
-    justify-content: space-between;
-    align-items: baseline;
-}
-
-.progressLabel {
-    font-size: 14px;
-    opacity: 0.9;
-}
-
-.progressValue {
-    font-size: 18px;
-    font-weight: 600;
-}
-
-.progressTrack {
-    width: 100%;
-    height: 8px;
-    border-radius: 999px;
-    background: fade(#ffffff, 12%);
+.statusValueTight {
+    .statusValue();
+    white-space: nowrap;
     overflow: hidden;
+    text-overflow: ellipsis;
 }
 
-.progressBar {
-    height: 100%;
-    background: linear-gradient(90deg, #ffb347 0%, #ffcc33 50%, #f4e2d8 100%);
-}
-
-@media (max-width: 720px) {
-    .panelHeader {
-        flex-direction: column;
-        align-items: flex-start;
-    }
-
-    .hideButton {
-        width: 100%;
-        text-align: center;
-    }
-
-    .readyGrid {
-        flex-direction: column;
-    }
+.progressRow {
+    grid-column: 1 / -1;
+    border-top: 1px solid fade(#ffffff, 12%);
+    padding-top: 6px;
 }
