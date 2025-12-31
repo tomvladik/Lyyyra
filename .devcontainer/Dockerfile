@@ -30,6 +30,26 @@ RUN set -eux; \
 
 RUN set -eux; \
     apt-get update; \
+    apt-get install -y ca-certificates curl; \
+    install -m 0755 -d /etc/apt/keyrings; \
+    curl -fsSL https://download.docker.com/linux/debian/gpg -o /etc/apt/keyrings/docker.asc; \
+    chmod a+r /etc/apt/keyrings/docker.asc; \
+    echo "deb [arch=$(dpkg --print-architecture) signed-by=/etc/apt/keyrings/docker.asc] https://download.docker.com/linux/debian bookworm stable" | tee /etc/apt/sources.list.d/docker.list > /dev/null; \
+    apt-get update; \
+    apt-get install -y docker-ce-cli docker-compose-plugin
+
+RUN set -eux; \
+    usermod -aG docker vscode || true
+
+RUN set -eux; \
+    gosu vscode go install gotest.tools/gotestsum@v1.11.0; \
+    gosu vscode go install github.com/golangci/golangci-lint/cmd/golangci-lint@v1.54.2
+
+RUN set -eux; \
+    curl -fsSL https://raw.githubusercontent.com/nektos/act/master/install.sh | bash
+
+RUN set -eux; \
+    apt-get update; \
     apt-get install -y wget; \
     wget -q https://packages.microsoft.com/config/debian/12/packages-microsoft-prod.deb; \
     dpkg -i packages-microsoft-prod.deb; \

@@ -68,9 +68,11 @@ clean-data: ## Delete local app data (database, songs, status, logs)
 test-all: test frontend-test ## Run all tests (Go + frontend)
 	cd frontend && npm test || true
 
-install-tools: ## Install Go test and lint tools
+install-tools: ## Install Go test, lint tools, and act for CI testing
 	go install gotest.tools/gotestsum@v1.11.0
 	go install github.com/golangci/golangci-lint/cmd/golangci-lint@v1.54.2
+	@echo "Installing act for local CI testing..."
+	@curl -s https://raw.githubusercontent.com/nektos/act/master/install.sh | sudo bash
 
 # Wails tasks
 .PHONY: wails-dev wails-build wails-build-windows wails-install
@@ -103,3 +105,14 @@ wails-build-native-windows-skip-frontend: ## Build Windows app native (skip fron
 	wails build -platform windows/amd64 -tags "$(GO_PROD_TAGS)" -skipbindings -s
 wails-install: ## Install Wails CLI
 	go install github.com/wailsapp/wails/v2/cmd/wails@latest
+
+# CI/CD testing
+.PHONY: ci-test
+
+ci-test: ## Test GitHub Actions workflow locally (requires act and sudo access)
+	@if ! command -v act >/dev/null 2>&1; then \
+		echo "Installing act locally..."; \
+		curl -fsSL https://raw.githubusercontent.com/nektos/act/master/install.sh | bash; \
+	fi
+	@echo "Running GitHub Actions workflow locally..."
+	sudo -E $(shell command -v act) workflow_dispatch -j test --artifact-server-path /tmp/artifacts
