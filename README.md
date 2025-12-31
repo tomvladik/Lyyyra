@@ -17,6 +17,12 @@ Lyyyra je desktopová aplikace pro zpěvníky. Stahuje podklady z [evangelickyzp
 3. Po dokončení importu můžete okamžitě vyhledávat, filtrovat a tisknout.
 4. Ikona 📋 přidá píseň do pravého panelu „Připravené noty“, kde lze stáhnout společné PDF.
 
+## Stažení hotových binárek
+
+- Při každém vydání tagu `v*` (nebo ručním spuštění workflow) GitHub Actions spustí sestavení „Build and Package“.
+- Po dokončení najdete artefakt `Lyyyra-windows-amd64-<tag>.zip` v sekci **Actions → Build and Package**. Archiv obsahuje `Lyyyra.exe`, připravený ke stažení.
+- Manuální build je stále možný z příkazové řádky podle instrukcí v části Developer Notes níže.
+
 > **Licenční upozornění:** Materiály stažené z evangelickyzpevnik.cz slouží pouze pro osobní potřebu. Pro veřejné použití je nutné zajistit licenci u držitelů práv.
 
 ## Často kladené dotazy
@@ -54,10 +60,16 @@ make build
 make test-all
 ```
 
+### Continuous Integration
+
+- Automated builds live in [.github/workflows/build-release.yml](.github/workflows/build-release.yml).
+- The workflow runs Go/Vitest tests, performs a Windows Wails build, zips `Lyyyra.exe`, and exposes it as an artifact on tag pushes (`v*`) or manual dispatches.
+
 ## Development
 
 - `make wails-dev` / `wails dev` – Wails + Vite dev server (hot reload on http://localhost:34115)
 - The devcontainer targets WebKitGTK 4.1 (`webkit2_41`). Override via `WEBKIT_TAG=webkit2_40 make wails-dev` if needed.
+- Inside a headless devcontainer there is no GUI session, so `make wails-dev` automatically falls back to `xvfb-run` when `$DISPLAY` is empty. Install it via `sudo apt-get update && sudo apt-get install -y xvfb` if the command is missing, or run `xvfb-run -a wails dev -tags "dev webkit2_41"` manually.
 
 ## Make Targets
 

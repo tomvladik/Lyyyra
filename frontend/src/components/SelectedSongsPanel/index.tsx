@@ -66,9 +66,7 @@ export const SelectedSongsPanel = () => {
                     className={styles.clearButton}
                     onClick={clearSelection}
                     disabled={!selectedSongs.length || isCombining}
-                >
-                    Vyčistit
-                </button>
+                >Zrušit</button>
             </header>
 
             <div className={styles.list} role="list">
