@@ -68,7 +68,7 @@ describe('<SelectedSongsPanel />', () => {
     const value = defaultSelectionValue({ selectedSongs: [sampleSong] });
     renderWithSelection(value);
 
-    const clearButton = screen.getByRole('button', { name: /Vyčistit/ });
+    const clearButton = screen.getByRole('button', { name: /Zrušit/ });
     fireEvent.click(clearButton);
 
     expect(value.clearSelection).toHaveBeenCalledTimes(1);

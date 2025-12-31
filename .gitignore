@@ -4,3 +4,4 @@ frontend/dist
 __debug*
 frontend/yarn.lock
 changeme
+status.yaml
