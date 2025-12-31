@@ -134,13 +134,11 @@ function App() {
                     <header className="header" style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
                         <InfoBox loadSongs={loadSongs} setFilter={setFilterValue} />
                     </header>
-                    <main className="ScrollablePart">
-                        <div className="ContentLayout">
-                            <div className="SongListArea">
-                                <SongList />
-                            </div>
-                            <SelectedSongsPanel />
+                    <main className="ContentShell">
+                        <div className="SongScrollArea">
+                            <SongList />
                         </div>
+                        <SelectedSongsPanel />
                     </main>
                     {isStatusPanelVisible && (
                         <footer className="footer">
