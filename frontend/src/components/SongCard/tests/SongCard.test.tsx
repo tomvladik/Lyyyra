@@ -1,4 +1,5 @@
 import { render, screen, waitFor, act, fireEvent } from '@testing-library/react';
+import type { RenderResult } from '@testing-library/react';
 import { SongCard } from '../index';
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import * as AppModule from '../../../../wailsjs/go/main/App';
@@ -43,10 +44,11 @@ describe('<SongCard />', () => {
       addSongToSelection: vi.fn(),
       removeSongFromSelection: vi.fn(),
       clearSelection: vi.fn(),
+      isSongSelected: () => false,
       ...selectionOverrides,
     };
 
-    let result;
+    let result: RenderResult | undefined;
     await act(async () => {
       result = render(
         <DataContext.Provider value={mockContext}>
@@ -57,8 +59,11 @@ describe('<SongCard />', () => {
       );
       await Promise.resolve();
     });
+    if (!result) {
+      throw new Error('Failed to render SongCard');
+    }
     return {
-      ...result!,
+      ...result,
       selectionContextValue,
     };
   };
@@ -181,7 +186,14 @@ describe('<SongCard />', () => {
       filename: songWithPdf.KytaraFile!,
     }];
 
-    const { selectionContextValue } = await renderWithContext(songWithPdf, {}, { selectedSongs: preselected });
+    const { selectionContextValue } = await renderWithContext(
+      songWithPdf,
+      {},
+      {
+        selectedSongs: preselected,
+        isSongSelected: (id: number) => preselected.some(song => song.id === id),
+      }
+    );
 
     const clipboardButton = screen.getByTitle('Skladba už je ve výběru');
     expect(clipboardButton).toHaveAttribute('aria-disabled', 'true');

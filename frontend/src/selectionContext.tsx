@@ -6,6 +6,7 @@ export type SelectionContextValue = {
     addSongToSelection: (song: SelectedSong) => void;
     removeSongFromSelection: (id: number) => void;
     clearSelection: () => void;
+    isSongSelected: (id: number) => boolean;
 };
 
 export const SelectionContext = createContext<SelectionContextValue>({
@@ -13,4 +14,5 @@ export const SelectionContext = createContext<SelectionContextValue>({
     addSongToSelection: () => undefined,
     removeSongFromSelection: () => undefined,
     clearSelection: () => undefined,
+    isSongSelected: () => false,
 });

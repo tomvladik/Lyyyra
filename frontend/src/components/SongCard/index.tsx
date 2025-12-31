@@ -1,4 +1,4 @@
-import { useContext, useEffect, useMemo, useState } from "react";
+import { useContext, useEffect, useState } from "react";
 import { GetSongAuthors } from "../../../wailsjs/go/main/App";
 import { Author, dtoSong } from "../../models";
 import HighlightText from "../HighlightText";
@@ -10,7 +10,7 @@ export const SongCard = ({ data }: { data: dtoSong }) => {
     const [authorData, setData] = useState(new Array<Author>());
     const [, setError] = useState(false);
     const [pdfModalOpen, setPdfModalOpen] = useState(false);
-    const { addSongToSelection, selectedSongs } = useContext(SelectionContext);
+    const { addSongToSelection, isSongSelected } = useContext(SelectionContext);
 
     const fetchData = async () => {
         try {
@@ -28,7 +28,7 @@ export const SongCard = ({ data }: { data: dtoSong }) => {
         }
     };
 
-    const isSelected = useMemo(() => selectedSongs.some(song => song.id === data.Id), [selectedSongs, data.Id]);
+    const isSelected = isSongSelected(data.Id);
 
     const handleAddToSelection = () => {
         if (!data.KytaraFile || isSelected) {

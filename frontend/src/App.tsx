@@ -1,4 +1,4 @@
-import { MouseEvent, useEffect, useState } from 'react';
+import { MouseEvent, useCallback, useEffect, useState } from 'react';
 import * as go from '../wailsjs/go/main/App';
 import './App.less';
 import { AppStatus, isEqualAppStatus, SortingOption } from "./AppStatus";
@@ -6,7 +6,7 @@ import { InfoBox } from './components/InfoBox';
 import StatusPanel from './components/StatusPanel';
 import { INITIAL_LOAD_DELAY, STATUS_POLL_INTERVAL } from './constants';
 import { DataContext } from './main';
-import { dtoSong, SelectedSong } from './models';
+import { SelectedSong } from './models';
 import { SelectionContext } from './selectionContext';
 import { SelectedSongsPanel } from './components/SelectedSongsPanel';
 import { SongList } from './pages/SongList';
@@ -27,7 +27,6 @@ const createInitialStatus = (): AppStatus => ({
 function App() {
     const [status, setStatus] = useState<AppStatus>(() => createInitialStatus());
 
-    const [songs, setSongs] = useState(new Array<dtoSong>());
     const [filterValue, setFilterValue] = useState("");
     const [isStatusPanelVisible, setIsStatusPanelVisible] = useState(false);
     const [selectedSongs, setSelectedSongs] = useState<SelectedSong[]>([]);
@@ -107,24 +106,26 @@ function App() {
         }
     };
 
-    const addSongToSelection = (song: SelectedSong) => {
+    const addSongToSelection = useCallback((song: SelectedSong) => {
         setSelectedSongs(prev => {
             if (prev.some(existing => existing.id === song.id)) {
                 return prev;
             }
             return [...prev, song];
         });
-    };
+    }, []);
 
-    const removeSongFromSelection = (id: number) => {
+    const removeSongFromSelection = useCallback((id: number) => {
         setSelectedSongs(prev => prev.filter(song => song.id !== id));
-    };
+    }, []);
 
-    const clearSelection = () => setSelectedSongs([]);
+    const clearSelection = useCallback(() => setSelectedSongs([]), []);
+
+    const isSongSelected = useCallback((id: number) => selectedSongs.some(song => song.id === id), [selectedSongs]);
 
     return (
         <DataContext.Provider value={{ status: status, updateStatus: updateStatus }}>
-            <SelectionContext.Provider value={{ selectedSongs, addSongToSelection, removeSongFromSelection, clearSelection }}>
+            <SelectionContext.Provider value={{ selectedSongs, addSongToSelection, removeSongFromSelection, clearSelection, isSongSelected }}>
                 <div
                     id="App"
                     style={{ display: 'flex', flexDirection: 'column', height: '100%' }}

@@ -19,6 +19,7 @@ describe('<SelectedSongsPanel />', () => {
     addSongToSelection: vi.fn(),
     removeSongFromSelection: vi.fn(),
     clearSelection: vi.fn(),
+    isSongSelected: () => false,
     ...overrides,
   });
 

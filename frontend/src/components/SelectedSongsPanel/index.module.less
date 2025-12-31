@@ -2,6 +2,7 @@
 
 .panel {
     flex: 0 0 320px;
+    max-width: 360px;
     display: flex;
     flex-direction: column;
     gap: 16px;
@@ -168,5 +169,41 @@
     .panel {
         position: static;
         width: 100%;
+        flex: 1 1 100%;
+        max-width: none;
+    }
+
+    .list {
+        max-height: none;
+    }
+}
+
+@media (max-width: 640px) {
+    .panel {
+        padding: 18px;
+        border-width: 0.15rem;
+        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.06);
+    }
+
+    .panelHeader {
+        flex-direction: column;
+        align-items: stretch;
+    }
+}
+
+@media (max-width: 480px) {
+    .panel {
+        padding: 14px;
+        gap: 12px;
+    }
+
+    .listItem {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 8px;
+    }
+
+    .removeButton {
+        align-self: flex-end;
     }
 }
