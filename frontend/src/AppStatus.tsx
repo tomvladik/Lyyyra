@@ -9,6 +9,7 @@ export interface AppStatus {
     ProgressPercent: number;
     LastSave: string;
     Sorting: SortingOption;
+    BuildVersion?: string;
 }
 
 export type SortingOption = 'entry' | 'title' | 'authorMusic' | 'authorLyric';
@@ -22,6 +23,7 @@ export const isEqualAppStatus = (status1: AppStatus, status2: AppStatus): boolea
         status1.Sorting === status2.Sorting &&
         status1.SearchPattern === status2.SearchPattern &&
         status1.ProgressMessage === status2.ProgressMessage &&
-        status1.ProgressPercent === status2.ProgressPercent
+        status1.ProgressPercent === status2.ProgressPercent &&
+        status1.BuildVersion === status2.BuildVersion
     );
 };

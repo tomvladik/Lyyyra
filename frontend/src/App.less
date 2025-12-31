@@ -1,29 +1,41 @@
 @import (less, reference) "vars.less";
 
-#app {
+.AppShell {
+    height: 100%;
+    min-height: 100vh;
+    min-height: 100dvh;
+    flex: 1;
     display: flex !important;
     flex-direction: column;
-    height: 100vh;
+    background: linear-gradient(180deg, fade(@myRedColour, 92%) 0%, fade(@myRedColour, 82%) 60%, fade(@myDarkBlueColour, 10%) 100%);
+    overflow: hidden;
 }
 
 .ContentShell {
     display: flex !important;
     flex-direction: column;
     flex: 1;
+    height: 100%;
+    min-height: 0;
     padding: 20px;
+    overflow: hidden;
 }
 
 .ContentShell--withPanel {
     display: grid !important;
     grid-template-columns: minmax(0, 1fr) 360px;
+    grid-template-rows: minmax(0, 1fr);
     gap: 24px;
     overflow: hidden;
+    height: 100%;
 }
 
 .SongScrollArea {
     overflow-y: auto;
     padding-right: 8px;
     flex: 1;
+    min-height: 0;
+    height: 100%;
 }
 
 @media (max-width: 1100px) {
@@ -50,6 +62,16 @@
     text-align: center;
     padding: 15px;
     flex-shrink: 0;
+}
+
+.footer {
+    margin-top: auto;
+    width: 100%;
+    position: sticky;
+    bottom: 0;
+    left: 0;
+    background: linear-gradient(180deg, transparent 0%, fade(@myDarkBlueColour, 30%) 45%, fade(@myDarkBlueColour, 65%) 100%);
+    z-index: 5;
 }
 
 .InfoBox {

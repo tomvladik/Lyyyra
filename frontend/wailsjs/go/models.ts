@@ -11,6 +11,7 @@ export namespace main {
 	    LastSave: any;
 	    Sorting: string;
 	    SearchPattern: string;
+	    BuildVersion: string;
 	
 	    static createFrom(source: any = {}) {
 	        return new AppStatus(source);
@@ -27,6 +28,7 @@ export namespace main {
 	        this.LastSave = this.convertValues(source["LastSave"], null);
 	        this.Sorting = source["Sorting"];
 	        this.SearchPattern = source["SearchPattern"];
+	        this.BuildVersion = source["BuildVersion"];
 	    }
 	
 		convertValues(a: any, classs: any, asMap: boolean = false): any {

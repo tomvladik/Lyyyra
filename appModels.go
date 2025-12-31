@@ -1,7 +1,5 @@
 package main
 
-import "time"
-
 type AppStatus struct {
 	WebResourcesReady bool
 	SongsReady        bool
@@ -9,9 +7,10 @@ type AppStatus struct {
 	IsProgress        bool
 	ProgressMessage   string
 	ProgressPercent   int
-	LastSave          time.Time
+	LastSave          string
 	Sorting           SortingOption
 	SearchPattern     string
+	BuildVersion      string
 }
 
 type SongFilesSources struct {

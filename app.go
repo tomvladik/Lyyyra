@@ -95,8 +95,8 @@ func NewApp() *App {
 	err = app.deserializeFromYaml(&app.status, "status.yaml")
 	if err != nil {
 		app.status = AppStatus{Sorting: Title}
-		//app.saveStatus()
 	}
+	app.status.BuildVersion = buildVersion
 	app.reconcileStoredStatus()
 	slog.Info(fmt.Sprintf("Status DatabaseReady: %+v", app.status))
 	//app.testRun = true
@@ -198,7 +198,7 @@ func (a *App) GetCombinedPdf(filenames []string) (string, error) {
 }
 
 func (a *App) saveStatus() {
-	a.status.LastSave = time.Now()
+	a.status.LastSave = time.Now().UTC().Format(time.RFC3339)
 	a.serializeToYaml("status.yaml", &a.status)
 }
 
@@ -215,5 +215,6 @@ func (a *App) SaveSorting(sorting SortingOption) {
 }
 
 func (a *App) GetStatus() AppStatus {
+	a.status.BuildVersion = buildVersion
 	return a.status
 }

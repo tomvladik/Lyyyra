@@ -22,6 +22,7 @@ const createInitialStatus = (): AppStatus => ({
     ProgressPercent: 0,
     LastSave: '',
     Sorting: 'entry' as SortingOption,
+    BuildVersion: 'dev',
 });
 
 function App() {
@@ -128,7 +129,7 @@ function App() {
             <SelectionContext.Provider value={{ selectedSongs, addSongToSelection, removeSongFromSelection, clearSelection, isSongSelected }}>
                 <div
                     id="App"
-                    style={{ display: 'flex', flexDirection: 'column', height: '100%' }}
+                    className="AppShell"
                     onDoubleClick={handleBackgroundDoubleClick}
                 >
                     <header className="header" style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
