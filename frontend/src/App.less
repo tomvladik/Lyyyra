@@ -7,31 +7,33 @@
 }
 
 .ContentShell {
+    display: flex !important;
+    flex-direction: column;
+    flex: 1;
+    padding: 20px;
+}
+
+.ContentShell--withPanel {
     display: grid !important;
     grid-template-columns: minmax(0, 1fr) 360px;
     gap: 24px;
-    flex: 1;
-    padding: 20px;
     overflow: hidden;
-}
-
-.ContentShell--single {
-    grid-template-columns: 1fr;
 }
 
 .SongScrollArea {
     overflow-y: auto;
     padding-right: 8px;
+    flex: 1;
 }
 
 @media (max-width: 1100px) {
-    .ContentShell {
+    .ContentShell--withPanel {
         grid-template-columns: minmax(0, 1fr) 320px;
     }
 }
 
 @media (max-width: 960px) {
-    .ContentShell {
+    .ContentShell--withPanel {
         grid-template-columns: 1fr;
         grid-template-rows: auto auto;
         overflow-y: auto;

@@ -58,8 +58,8 @@ export const SelectedSongsPanel = () => {
         <aside className={styles.panel} aria-label="Výběr skladeb">
             <header className={styles.panelHeader}>
                 <div>
-                    <p className={styles.panelLabel}>Připravené noty</p>
-                    <h4 className={styles.panelTitle}>{panelTitle}</h4>
+                    <h1 className={styles.panelTitle}>Připravené noty</h1>
+                    <p className={styles.panelLabel}>{panelTitle}</p>
                 </div>
                 <button
                     type="button"

@@ -82,7 +82,7 @@ export function InfoBox(props: Props) {
     <div className="InfoBox">
       {isButtonVisible && <div>
         {resultText} &gt;&gt;&gt;
-        {!status.IsProgress && <button className="btn" onClick={() => {
+        {!status.IsProgress && <button className={styles.actionButton} onClick={() => {
           props.loadSongs()
         }}>{buttonText}</button>}
       </div>

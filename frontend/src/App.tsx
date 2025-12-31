@@ -134,7 +134,7 @@ function App() {
                     <header className="header" style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
                         <InfoBox loadSongs={loadSongs} setFilter={setFilterValue} />
                     </header>
-                    <main className={selectedSongs.length ? "ContentShell" : "ContentShell ContentShell--single"}>
+                    <main className={selectedSongs.length ? "ContentShell ContentShell--withPanel" : "ContentShell"}>
                         <div className="SongScrollArea">
                             <SongList />
                         </div>
