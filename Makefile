@@ -75,24 +75,31 @@ install-tools: ## Install Go test and lint tools
 # Wails tasks
 .PHONY: wails-dev wails-build wails-build-windows wails-install
 wails-dev: ## Start Wails development server
+ifeq ($(OS),Windows_NT)
 	wails dev -tags "$(GO_DEV_TAGS)"
+else
+	@if [ -z "$$DISPLAY" ] && command -v xvfb-run >/dev/null 2>&1; then \
+		echo "[wails-dev] DISPLAY not set, starting via xvfb-run"; \
+		xvfb-run -a wails dev -tags "$(GO_DEV_TAGS)"; \
+	else \
+		wails dev -tags "$(GO_DEV_TAGS)"; \
+	fi
+endif
 
 wails-build: ## Build Wails application for production
-	wails build -tags "$(GO_PROD_TAGS)" -devtools
-
+	wails build -tags "$(GO_PROD_TAGS)"
 wails-build-windows: ## Build Wails for Windows (cross-compile in devcontainer)
-	CGO_ENABLED=1 CC=x86_64-w64-mingw32-gcc CXX=x86_64-w64-mingw32-g++ wails build -platform windows/amd64 -tags "$(GO_PROD_TAGS)" -devtools
+	CGO_ENABLED=1 CC=x86_64-w64-mingw32-gcc CXX=x86_64-w64-mingw32-g++ wails build -platform windows/amd64 -tags "$(GO_PROD_TAGS)"
 
 wails-build-windows-skip-frontend: ## Build Windows app (skip frontend rebuild, devcontainer cross-compile)
-	CGO_ENABLED=1 CC=x86_64-w64-mingw32-gcc CXX=x86_64-w64-mingw32-g++ wails build -platform windows/amd64 -tags "$(GO_PROD_TAGS)" -skipbindings -s -devtools
+	CGO_ENABLED=1 CC=x86_64-w64-mingw32-gcc CXX=x86_64-w64-mingw32-g++ wails build -platform windows/amd64 -tags "$(GO_PROD_TAGS)" -skipbindings -s
 
 wails-build-windows-fast: frontend-build wails-build-windows-skip-frontend ## Fast Windows build in devcontainer (pre-build frontend)
 
 wails-build-native-windows: ## Build Wails for Windows (native build on Windows)
-	wails build -platform windows/amd64 -tags "$(GO_PROD_TAGS)" -devtools
+	wails build -platform windows/amd64 -tags "$(GO_PROD_TAGS)"
 
 wails-build-native-windows-skip-frontend: ## Build Windows app native (skip frontend rebuild)
-	wails build -platform windows/amd64 -tags "$(GO_PROD_TAGS)" -skipbindings -s -devtools
-
+	wails build -platform windows/amd64 -tags "$(GO_PROD_TAGS)" -skipbindings -s
 wails-install: ## Install Wails CLI
 	go install github.com/wailsapp/wails/v2/cmd/wails@latest

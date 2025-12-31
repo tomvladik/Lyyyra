@@ -26,6 +26,9 @@ RUN set -eux; \
     apt-get install -y nsis sqlite3 libsqlite3-dev
 
 RUN set -eux; \
+    apt-get install -y xvfb
+
+RUN set -eux; \
     apt-get update; \
     apt-get install -y wget; \
     wget -q https://packages.microsoft.com/config/debian/12/packages-microsoft-prod.deb; \
