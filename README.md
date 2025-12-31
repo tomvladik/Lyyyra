@@ -17,13 +17,34 @@ Lyyyra je desktopová aplikace pro zpěvníky. Stahuje podklady z [evangelickyzp
 3. Po dokončení importu můžete okamžitě vyhledávat, filtrovat a tisknout.
 4. Ikona 📋 přidá píseň do pravého panelu „Připravené noty“, kde lze stáhnout společné PDF.
 
+> [!WARNING]
+> **Licenční upozornění:**
+> 
+> Materiály stažené z evangelickyzpevnik.cz slouží pouze pro osobní potřebu. Pro veřejné použití je nutné zajistit licenci u držitelů práv.
+
 ## Stažení hotových binárek
 
-- Při každém vydání tagu `v*` (nebo ručním spuštění workflow) GitHub Actions spustí sestavení „Build and Package“.
-- Po dokončení najdete artefakt `Lyyyra-windows-amd64-<tag>.zip` v sekci **Actions → Build and Package**. Archiv obsahuje `Lyyyra.exe`, připravený ke stažení.
-- Manuální build je stále možný z příkazové řádky podle instrukcí v části Developer Notes níže.
+### Z vydaných verzí (doporučeno)
 
-> **Licenční upozornění:** Materiály stažené z evangelickyzpevnik.cz slouží pouze pro osobní potřebu. Pro veřejné použití je nutné zajistit licenci u držitelů práv.
+Hotové binárky pro Windows a Linux najdete v [sekci Releases](https://github.com/tomvladik/Lyyyra/releases):
+
+1. Přejděte na [GitHub Releases](https://github.com/tomvladik/Lyyyra/releases)
+2. Vyberte poslední verzi (tag `v*`)
+3. Stáhněte odpovídající archiv:
+   - `Lyyyra-windows-amd64-*.zip` pro Windows
+   - `Lyyyra-linux-amd64-*.tar.gz` pro Linux
+
+### Z GitHub Actions (nejnovější buildy)
+
+Pro nejnovější neveřejné buildy z větve `main`:
+
+1. Přejděte na [GitHub Actions](https://github.com/tomvladik/Lyyyra/actions)
+2. Otevřete poslední úspěšný běh workflow **Build and Package**
+3. V sekci **Artifacts** stáhněte binárku pro svůj systém
+
+### Ručnní build
+
+Manuální build je stále možný z příkazové řádky podle instrukcí v části Developer Notes níže.
 
 ## Často kladené dotazy
 
@@ -60,10 +81,12 @@ make build
 make test-all
 ```
 
-### Continuous Integration
+### Continuous Integration & Releases
 
 - Automated builds live in [.github/workflows/build-release.yml](.github/workflows/build-release.yml).
-- The workflow runs Go/Vitest tests, performs a Windows Wails build, zips `Lyyyra.exe`, and exposes it as an artifact on tag pushes (`v*`) or manual dispatches.
+- The workflow runs Go/Vitest tests, performs cross-platform builds (Windows via mingw-w64, Linux native), and uploads compressed artifacts.
+- **Releases**: Tag pushes (`v*`) automatically trigger the workflow; binaries appear in [Releases](https://github.com/tomvladik/Lyyyra/releases).
+- **Latest builds**: Manual dispatches or `main` branch pushes upload artifacts to [Actions](https://github.com/tomvladik/Lyyyra/actions).
 
 ## Development
 
