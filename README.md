@@ -22,6 +22,10 @@ Lyyyra je desktopová aplikace pro zpěvníky. Stahuje podklady z [evangelickyzp
 > 
 > Materiály stažené z evangelickyzpevnik.cz slouží pouze pro osobní potřebu. Pro veřejné použití je nutné zajistit licenci u držitelů práv.
 
+## Ukázka aplikace
+
+![Lyyyra demo](docs/images/demo.gif)
+
 ## Stažení hotových binárek
 
 ### Z vydaných verzí (doporučeno)
@@ -33,6 +37,12 @@ Hotové binárky pro Windows a Linux najdete v [sekci Releases](https://github.c
 3. Stáhněte odpovídající archiv:
    - `Lyyyra-windows-amd64-*.zip` pro Windows
    - `Lyyyra-linux-amd64-*.tar.gz` pro Linux
+
+**Pro Windows uživatele:** Binárka není digitálně podepsaná, proto Windows může zobrazit varování. Postup:
+- Po stažení extrahujte `Lyyyra.exe` z archivu
+- Při prvním spuštění klikněte na **„Další informace"** (More info) v okně Windows SmartScreen
+- Poté vyberte **„Přesto spustit"** (Run anyway)
+- Alternativně: klikněte pravým tlačítkem na `Lyyyra.exe` → Vlastnosti → zaškrtněte „Odblokovat" (Unblock) → OK
 
 ### Z GitHub Actions (nejnovější buildy)
 
@@ -59,10 +69,6 @@ Zkontrolujte připojení k internetu a klikněte znovu na „Stáhnout data z in
 
 **Jak přepínat třídění?**
 V InfoBoxu je rozbalovací nabídka „Řadit podle“. Volba se uloží a příště se použije automaticky.
-
-## Snímky obrazovek
-
-_(Sem můžete doplnit obrázky aplikace, pokud jsou k dispozici.)_
 
 ---
 
