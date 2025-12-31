@@ -1,6 +1,7 @@
 package main
 
 import (
+	"bytes"
 	"context"
 	"encoding/base64"
 	"fmt"
@@ -11,6 +12,9 @@ import (
 	"strings"
 	"sync"
 	"time"
+
+	"github.com/oliverpool/unipdf/v3/creator"
+	"github.com/oliverpool/unipdf/v3/model"
 )
 
 // App struct
@@ -127,6 +131,69 @@ func (a *App) GetPdfFile(filename string) (string, error) {
 		return "", err
 	}
 	encoded := base64.StdEncoding.EncodeToString(data)
+	return "data:application/pdf;base64," + encoded, nil
+}
+
+// GetCombinedPdf merges the provided PDF files (in order) into a single PDF
+// and returns it as a base64 data URL
+func (a *App) GetCombinedPdf(filenames []string) (string, error) {
+	if len(filenames) == 0 {
+		return "", fmt.Errorf("no filenames provided")
+	}
+
+	c := creator.New()
+	pagesAdded := 0
+
+	for _, name := range filenames {
+		name = strings.TrimSpace(name)
+		if name == "" {
+			continue
+		}
+
+		filePath := filepath.Join(a.pdfDir, name)
+		file, err := os.Open(filePath)
+		if err != nil {
+			return "", fmt.Errorf("unable to open %s: %w", name, err)
+		}
+
+		reader, err := model.NewPdfReader(file)
+		if err != nil {
+			file.Close()
+			return "", fmt.Errorf("unable to read %s: %w", name, err)
+		}
+
+		numPages, err := reader.GetNumPages()
+		if err != nil {
+			file.Close()
+			return "", fmt.Errorf("unable to get page count for %s: %w", name, err)
+		}
+
+		for pageNum := 1; pageNum <= numPages; pageNum++ {
+			page, err := reader.GetPage(pageNum)
+			if err != nil {
+				file.Close()
+				return "", fmt.Errorf("unable to read page %d from %s: %w", pageNum, name, err)
+			}
+			if err := c.AddPage(page); err != nil {
+				file.Close()
+				return "", fmt.Errorf("unable to add page %d from %s: %w", pageNum, name, err)
+			}
+			pagesAdded++
+		}
+
+		file.Close()
+	}
+
+	if pagesAdded == 0 {
+		return "", fmt.Errorf("no pages added to compilation")
+	}
+
+	buf := &bytes.Buffer{}
+	if err := c.Write(buf); err != nil {
+		return "", fmt.Errorf("unable to write compiled PDF: %w", err)
+	}
+
+	encoded := base64.StdEncoding.EncodeToString(buf.Bytes())
 	return "data:application/pdf;base64," + encoded, nil
 }
 
