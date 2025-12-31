@@ -80,22 +80,24 @@ export const SongCard = ({ data }: { data: dtoSong }) => {
                 ))}
             </div>
             {data.KytaraFile && (
-                <div className={styles.songFooter}>
-                    <span 
-                        className={styles.actionIcon} 
-                        onClick={handleOpenPdf}
-                        title="Zobrazit noty"
-                    >
-                        🎵
-                    </span>
-                    <span 
-                        className={[styles.actionIcon, isSelected ? styles.actionIconDisabled : ""].join(" ").trim()}
-                        onClick={handleAddToSelection}
-                        title={isSelected ? "Skladba už je ve výběru" : "Přidat do výběru"}
-                        aria-disabled={isSelected}
-                    >
-                        📋
-                    </span>
+                <div className={styles.songFooterRow}>
+                    <div className={styles.songFooter}>
+                        <span 
+                            className={styles.actionIcon} 
+                            onClick={handleOpenPdf}
+                            title="Zobrazit noty"
+                        >
+                            🎵
+                        </span>
+                        <span 
+                            className={[styles.actionIcon, isSelected ? styles.actionIconDisabled : ""].join(" ").trim()}
+                            onClick={handleAddToSelection}
+                            title={isSelected ? "Skladba už je ve výběru" : "Přidat do výběru"}
+                            aria-disabled={isSelected}
+                        >
+                            📋
+                        </span>
+                    </div>
                 </div>
             )}
         </div>

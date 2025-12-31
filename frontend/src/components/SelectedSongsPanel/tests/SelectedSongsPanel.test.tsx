@@ -47,14 +47,11 @@ describe('<SelectedSongsPanel />', () => {
     vi.clearAllMocks();
   });
 
-  it('shows empty state and disables controls with no selection', () => {
+  it('does not render when there are no selections', () => {
     const value = defaultSelectionValue();
-    renderWithSelection(value);
+    const { container } = renderWithSelection(value);
 
-    expect(screen.getByText(/Výběr je prázdný/)).toBeInTheDocument();
-    expect(screen.getByText(/Klepněte na ikonu/)).toBeInTheDocument();
-    expect(screen.getByRole('button', { name: /Vyčistit/ })).toBeDisabled();
-    expect(screen.getByRole('button', { name: /Zobrazit společné PDF/ })).toBeDisabled();
+    expect(container).toBeEmptyDOMElement();
   });
 
   it('calls remove handler when clicking remove button', () => {
@@ -85,7 +82,7 @@ describe('<SelectedSongsPanel />', () => {
       renderWithSelection(value);
     });
 
-    const combineButton = screen.getByRole('button', { name: /Zobrazit společné PDF/ });
+    const combineButton = screen.getByRole('button', { name: /Zobrazit připravené noty/ });
     fireEvent.click(combineButton);
 
     await waitFor(() => {

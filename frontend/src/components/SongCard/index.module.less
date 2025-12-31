@@ -39,14 +39,20 @@
 	font-style: italic;
 }
 
+.songFooterRow {
+	display: flex;
+	justify-content: flex-end;
+	margin-top: 0.5rem;
+}
+
 .songFooter {
-	padding: 0.3em;
+	display: inline-flex;
+	gap: 0.75rem;
+	align-items: center;
 	border: 1px solid @myBlueColour;
 	border-radius: 0.4rem;
-	margin-top: 0.5rem;
-	display: flex;
-	gap: 1rem;
-	align-items: center;
+	padding: 0.3em 0.8em;
+	background-color: fade(@myBlueColour, 8%);
 }
 
 .actionIcon {

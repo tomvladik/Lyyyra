@@ -18,7 +18,7 @@ export const SelectedSongsPanel = () => {
         if (selectedSongs.length === 1) {
             return "1 skladba ve výběru";
         }
-        return `${selectedSongs.length} skladeb ve výběru`;
+        return `skladeb ve výběru: ${selectedSongs.length}`;
     }, [selectedSongs.length]);
 
     const handleRemove = (id: number) => {
@@ -50,12 +50,16 @@ export const SelectedSongsPanel = () => {
         setCombinedPdf("");
     };
 
+    if (!selectedSongs.length) {
+        return null;
+    }
+
     return (
         <aside className={styles.panel} aria-label="Výběr skladeb">
             <header className={styles.panelHeader}>
                 <div>
                     <p className={styles.panelLabel}>Připravené noty</p>
-                    <h2 className={styles.panelTitle}>{panelTitle}</h2>
+                    <h4 className={styles.panelTitle}>{panelTitle}</h4>
                 </div>
                 <button
                     type="button"
@@ -98,7 +102,7 @@ export const SelectedSongsPanel = () => {
                     onClick={handleCombineClick}
                     disabled={!selectedSongs.length || isCombining}
                 >
-                    {isCombining ? "Vytvářím PDF…" : "Zobrazit společné PDF"}
+                    {isCombining ? "Vytvářím PDF…" : "Zobrazit připravené noty"}
                 </button>
                 {error && <p className={styles.errorText}>{error}</p>}
             </div>
@@ -106,7 +110,7 @@ export const SelectedSongsPanel = () => {
             <PdfModal
                 isOpen={isModalOpen}
                 dataUrl={combinedPdf}
-                songName="Spojené noty"
+                songName="Připravené noty"
                 onClose={handleCloseModal}
             />
         </aside>
