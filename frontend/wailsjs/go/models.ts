@@ -7,8 +7,7 @@ export namespace main {
 	    IsProgress: boolean;
 	    ProgressMessage: string;
 	    ProgressPercent: number;
-	    // Go type: time
-	    LastSave: any;
+	    LastSave: string;
 	    Sorting: string;
 	    SearchPattern: string;
 	    BuildVersion: string;
@@ -25,29 +24,11 @@ export namespace main {
 	        this.IsProgress = source["IsProgress"];
 	        this.ProgressMessage = source["ProgressMessage"];
 	        this.ProgressPercent = source["ProgressPercent"];
-	        this.LastSave = this.convertValues(source["LastSave"], null);
+	        this.LastSave = source["LastSave"];
 	        this.Sorting = source["Sorting"];
 	        this.SearchPattern = source["SearchPattern"];
 	        this.BuildVersion = source["BuildVersion"];
 	    }
-	
-		convertValues(a: any, classs: any, asMap: boolean = false): any {
-		    if (!a) {
-		        return a;
-		    }
-		    if (a.slice && a.map) {
-		        return (a as any[]).map(elem => this.convertValues(elem, classs));
-		    } else if ("object" === typeof a) {
-		        if (asMap) {
-		            for (const key of Object.keys(a)) {
-		                a[key] = new classs(a[key]);
-		            }
-		            return a;
-		        }
-		        return new classs(a);
-		    }
-		    return a;
-		}
 	}
 	export class Author {
 	    Type: string;

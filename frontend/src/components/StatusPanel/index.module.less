@@ -2,10 +2,181 @@
 
 .statusPanel {
     width: 100%;
-    min-height: 38px;
-    background: #333;
-    color: white;
-    text-align: center;
-    padding: 10px;
+    background: fade(@myDarkBlueColour, 95%);
+    color: #f5f6fa;
+    padding: 22px 26px;
+    border-radius: 22px;
+    border: 1px solid fade(#ffffff, 12%);
+    box-shadow: 0 24px 46px fade(#000000, 40%);
+    backdrop-filter: blur(10px);
+    display: flex;
+    flex-direction: column;
+    gap: 18px;
+}
+
+.panelHeader {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: 24px;
+}
+
+.panelEyebrow {
+    font-size: 11px;
+    letter-spacing: 0.3em;
+    text-transform: uppercase;
+    opacity: 0.7;
+    margin-bottom: 4px;
+}
+
+.panelTitle {
+    font-size: 22px;
+    font-weight: 600;
+    letter-spacing: 0.04em;
+}
+
+.hideButton {
+    border: 1px solid fade(#ffffff, 30%);
+    color: #f5f6fa;
+    background: transparent;
+    border-radius: 999px;
+    padding: 8px 16px;
+    font-size: 13px;
+    cursor: pointer;
+    transition: background 0.2s ease, border-color 0.2s ease;
+}
+
+.hideButton:hover {
+    background: fade(#ffffff, 12%);
+    border-color: fade(#ffffff, 50%);
+}
+
+.readyGrid {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 12px;
+}
+
+.statusChipReady,
+.statusChipPending {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 12px 16px;
+    border-radius: 16px;
+    border: 1px solid transparent;
+    min-width: 150px;
+}
+
+.statusChipReady {
+    background: fade(#27d07d, 18%);
+    border-color: fade(#27d07d, 70%);
+    color: #c8ffe3;
+}
+
+.statusChipPending {
+    background: fade(#ff6b6b, 14%);
+    border-color: fade(#ff6b6b, 60%);
+    color: #ffe2e2;
+}
+
+.statusDot {
+    width: 12px;
+    height: 12px;
+    border-radius: 999px;
+    background: currentColor;
+    display: inline-block;
+    box-shadow: 0 0 12px fade(#000, 35%);
+}
+
+.chipLabel {
+    font-size: 12px;
+    text-transform: uppercase;
+    letter-spacing: 0.2em;
+    opacity: 0.75;
+}
+
+.chipState {
+    font-size: 15px;
+    font-weight: 600;
+    text-transform: lowercase;
+}
+
+.metaRow {
+    display: flex;
+    gap: 32px;
+    flex-wrap: wrap;
+    background: fade(#000000, 25%);
+    border-radius: 18px;
+    border: 1px solid fade(#ffffff, 10%);
+    padding: 14px 18px;
+}
+
+.metaGroup {
+    flex: 1;
+    min-width: 200px;
+}
+
+.metaLabel {
+    font-size: 12px;
+    text-transform: uppercase;
+    letter-spacing: 0.2em;
+    opacity: 0.6;
+    margin-bottom: 6px;
+}
+
+.metaValue {
+    font-size: 15px;
+    font-weight: 600;
+}
+
+.progressBlock {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+}
+
+.progressHeader {
+    display: flex;
+    justify-content: space-between;
+    align-items: baseline;
+}
+
+.progressLabel {
     font-size: 14px;
+    opacity: 0.9;
+}
+
+.progressValue {
+    font-size: 18px;
+    font-weight: 600;
+}
+
+.progressTrack {
+    width: 100%;
+    height: 8px;
+    border-radius: 999px;
+    background: fade(#ffffff, 12%);
+    overflow: hidden;
+}
+
+.progressBar {
+    height: 100%;
+    background: linear-gradient(90deg, #ffb347 0%, #ffcc33 50%, #f4e2d8 100%);
+}
+
+@media (max-width: 720px) {
+    .panelHeader {
+        flex-direction: column;
+        align-items: flex-start;
+    }
+
+    .hideButton {
+        width: 100%;
+        text-align: center;
+    }
+
+    .readyGrid {
+        flex-direction: column;
+    }
 }
