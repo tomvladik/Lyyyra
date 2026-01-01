@@ -16,6 +16,10 @@ export function GetPdfFile(arg1:string):Promise<string>;
 
 export function GetSongAuthors(arg1:number):Promise<Array<main.Author>>;
 
+export function GetSongProjection(arg1:number):Promise<string>;
+
+export function GetSongVerses(arg1:number):Promise<string>;
+
 export function GetSongs(arg1:string,arg2:string):Promise<Array<main.dtoSong>>;
 
 export function GetSongs2(arg1:string,arg2:string):Promise<Array<main.dtoSongHeader>>;

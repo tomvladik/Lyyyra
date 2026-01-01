@@ -38,6 +38,14 @@ export function GetSongs2(arg1, arg2) {
   return window['go']['main']['App']['GetSongs2'](arg1, arg2);
 }
 
+export function GetSongProjection(arg1) {
+  return window['go']['main']['App']['GetSongProjection'](arg1);
+}
+
+export function GetSongVerses(arg1) {
+  return window['go']['main']['App']['GetSongVerses'](arg1);
+}
+
 export function GetStatus() {
   return window['go']['main']['App']['GetStatus']();
 }

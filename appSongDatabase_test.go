@@ -2,6 +2,7 @@ package main
 
 import (
 	"database/sql"
+	"encoding/json"
 	"os"
 	"testing"
 
@@ -322,5 +323,60 @@ func TestFindSongByAuthor(t *testing.T) {
 	// Check if the sample author is in the result
 	if len(authors) != 2 || authors[0].Value != "Sample Author" {
 		t.Errorf("Expected to get 'Sample Author', got %v", authors)
+	}
+}
+
+func TestGetSongProjection(t *testing.T) {
+	app := setupTestDB(t)
+	defer teardownTestDB(app)
+
+	// Insert sample data
+	db, err := sql.Open("sqlite3", app.dbFilePath)
+	if err != nil {
+		t.Fatalf("Failed to open database: %v", err)
+	}
+	defer db.Close()
+
+	_, err = db.Exec(`
+		INSERT INTO songs (title, title_d, verse_order, entry) VALUES ('Proj Song', 'Proj Song', 'c v1 c v2', 1);
+		INSERT INTO verses (song_id, name, lines) VALUES
+			(1, 'v1', 'Line1\nLine2'),
+			(1, 'c', 'Chorus line'),
+			(1, 'v2', 'LineA\nLineB');
+	`)
+	if err != nil {
+		t.Fatalf("Failed to insert sample data: %v", err)
+	}
+
+	raw, err := app.GetSongProjection(1)
+	if err != nil {
+		t.Fatalf("GetSongProjection returned error: %v", err)
+	}
+
+	var payload struct {
+		VerseOrder string `json:"verse_order"`
+		Verses     []struct {
+			Name  string `json:"name"`
+			Lines string `json:"lines"`
+		} `json:"verses"`
+	}
+	if err := json.Unmarshal([]byte(raw), &payload); err != nil {
+		t.Fatalf("failed to unmarshal payload: %v\nraw: %s", err, raw)
+	}
+
+	if payload.VerseOrder != "c v1 c v2" {
+		t.Errorf("unexpected verse_order: got %q", payload.VerseOrder)
+	}
+	if len(payload.Verses) != 3 {
+		t.Fatalf("expected 3 verses, got %d", len(payload.Verses))
+	}
+	if payload.Verses[0].Name != "v1" {
+		t.Errorf("first verse name expected 'v1', got %q", payload.Verses[0].Name)
+	}
+	if payload.Verses[1].Name != "c" {
+		t.Errorf("second verse name expected 'c', got %q", payload.Verses[1].Name)
+	}
+	if payload.Verses[2].Name != "v2" {
+		t.Errorf("third verse name expected 'v2', got %q", payload.Verses[2].Name)
 	}
 }

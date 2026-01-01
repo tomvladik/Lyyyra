@@ -2,9 +2,11 @@ package main
 
 import (
 	"database/sql"
+	"encoding/json"
 	"fmt"
 	"log/slog"
 	"os"
+	"strings"
 
 	_ "github.com/mattn/go-sqlite3"
 )
@@ -295,4 +297,87 @@ func (a *App) GetSongAuthors(songId int) ([]Author, error) {
 		return nil
 	})
 	return result, err
+}
+
+// GetSongVerses returns the concatenated verses (lines) for a given song id.
+// Verses are concatenated using '===' as separator to match frontend expectations.
+func (a *App) GetSongVerses(songId int) (string, error) {
+	var verses []string
+	err := a.withDB(func(db *sql.DB) error {
+		rows, err := db.Query(`SELECT lines FROM verses WHERE song_id = ? ORDER BY id`, songId)
+		if err != nil {
+			slog.Error(fmt.Sprintf("Error querying verses: %s", err))
+			return err
+		}
+		defer rows.Close()
+
+		for rows.Next() {
+			var lines string
+			if err := rows.Scan(&lines); err != nil {
+				slog.Error(fmt.Sprintf("Error scanning verse row: %s", err))
+				return err
+			}
+			verses = append(verses, lines)
+		}
+		return nil
+	})
+	if err != nil {
+		return "", err
+	}
+	return strings.Join(verses, "==="), nil
+}
+
+// GetSongProjection returns JSON containing verse_order and verses (name + lines)
+// Example: { "verse_order": "c v1 c v2", "verses": [{"name":"v1","lines":"..."}, ...] }
+func (a *App) GetSongProjection(songId int) (string, error) {
+	var verseOrder string
+	// read verse_order from songs table
+	err := a.withDB(func(db *sql.DB) error {
+		row := db.QueryRow(`SELECT verse_order FROM songs WHERE id = ?`, songId)
+		if err := row.Scan(&verseOrder); err != nil {
+			if err == sql.ErrNoRows {
+				verseOrder = ""
+				return nil
+			}
+			slog.Error(fmt.Sprintf("Error reading verse_order: %s", err))
+			return err
+		}
+		return nil
+	})
+	if err != nil {
+		return "", err
+	}
+
+	verses := []map[string]string{}
+	err = a.withDB(func(db *sql.DB) error {
+		rows, err := db.Query(`SELECT name, lines FROM verses WHERE song_id = ? ORDER BY id`, songId)
+		if err != nil {
+			slog.Error(fmt.Sprintf("Error querying verses: %s", err))
+			return err
+		}
+		defer rows.Close()
+
+		for rows.Next() {
+			var name, lines string
+			if err := rows.Scan(&name, &lines); err != nil {
+				slog.Error(fmt.Sprintf("Error scanning verse row: %s", err))
+				return err
+			}
+			verses = append(verses, map[string]string{"name": name, "lines": lines})
+		}
+		return nil
+	})
+	if err != nil {
+		return "", err
+	}
+
+	payload := map[string]interface{}{
+		"verse_order": verseOrder,
+		"verses":      verses,
+	}
+	b, err := json.Marshal(payload)
+	if err != nil {
+		return "", err
+	}
+	return string(b), nil
 }

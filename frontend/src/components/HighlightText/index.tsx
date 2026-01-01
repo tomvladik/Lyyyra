@@ -14,7 +14,7 @@ const HighlightText: FC<HighlightTextProps> = ({ text, as = 'p', className }) =>
    const { status } = useContext(DataContext);
    const normalizedPattern = useMemo(() => removeDiacritics(status.SearchPattern || '').toLowerCase(), [status.SearchPattern]);
 
-   const Wrapper = as as keyof JSX.IntrinsicElements;
+   const Wrapper = as as any;
 
    if (!normalizedPattern) {
       return <Wrapper className={className}>{text}</Wrapper>;
