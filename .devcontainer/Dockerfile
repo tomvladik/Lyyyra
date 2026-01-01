@@ -45,7 +45,7 @@ RUN set -eux; \
 RUN set -eux; \
     gosu vscode go install gotest.tools/gotestsum@v1.11.0; \
     gosu vscode go install github.com/golangci/golangci-lint/cmd/golangci-lint@v1.54.2; \
-    gosu vscode go install golang.org/x/tools/gopls@latest
+    gosu vscode go install golang.org/x/tools/gopls@v0.16.2
 
 RUN set -eux; \
     curl -fsSL https://raw.githubusercontent.com/nektos/act/master/install.sh | bash
