@@ -24,4 +24,4 @@
 		}
 	},
 	"postAttachCommand": "bash -lc \"sudo chown -R vscode:vscode /workspaces/Lyyyra/frontend/node_modules || true\"\"
-}
+	"postAttachCommand": "bash -lc \"sudo chown -R vscode:vscode /workspaces/Lyyyra/frontend/node_modules || true\""

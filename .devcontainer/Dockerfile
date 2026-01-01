@@ -23,6 +23,7 @@ RUN set -eux; \
     apt-get install -y mingw-w64
 
 RUN set -eux; \
+    apt-get update; \
     apt-get install -y nsis sqlite3 libsqlite3-dev
 
 RUN set -eux; \
