@@ -15,6 +15,7 @@ export interface dtoSong {
     AuthorMusic: string
     AuthorLyric: string
     KytaraFile: string
+    NotesFile: string
 }
 
 export interface SelectedSong {
@@ -22,6 +23,7 @@ export interface SelectedSong {
     entry: number;
     title: string;
     filename: string;
+    variant: SongPdfVariant;
 }
 
 export interface dtoSongHeader {
@@ -30,6 +32,7 @@ export interface dtoSongHeader {
     Title: string
     TitleD: string
     KytaraFile: string
+    NotesFile: string
 }
 
 export interface Author {
@@ -40,3 +43,5 @@ export interface SelectParams {
     filter: string;
     orderBy: string;
 }
+
+export type SongPdfVariant = "guitar" | "notes";

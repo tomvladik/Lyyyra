@@ -9,6 +9,17 @@ import (
 	"testing"
 )
 
+func supplementalURL(t *testing.T, fileName string) string {
+	t.Helper()
+	for _, pdf := range SupplementalPDFs {
+		if pdf.FileName == fileName {
+			return pdf.URL
+		}
+	}
+	t.Fatalf("Supplemental URL for %s not found; check constants.go", fileName)
+	return ""
+}
+
 func TestSplitPdfByPages(t *testing.T) {
 	if os.Getenv("RUN_REMOTE_INTEGRATION_TESTS") == "" {
 		t.Skip("skipping remote PDF test; set RUN_REMOTE_INTEGRATION_TESTS=1 to enable")
@@ -22,7 +33,7 @@ func TestSplitPdfByPages(t *testing.T) {
 	defer os.RemoveAll(tempDir)
 
 	// Download kytara.pdf
-	kytaraURL := "https://www.evangelickyzpevnik.cz.www.e-cirkev.cz/res/archive/001/000234.pdf"
+	kytaraURL := supplementalURL(t, "kytara.pdf")
 	pdfPath := filepath.Join(tempDir, "kytara.pdf")
 
 	t.Logf("Downloading kytara.pdf from %s...", kytaraURL)
@@ -112,6 +123,7 @@ func TestSplitPdfByPages(t *testing.T) {
 	}
 
 	t.Logf("Results available at: %s", workspaceOutputDir)
+	fmt.Println("PDF split results directory:", workspaceOutputDir)
 }
 
 func TestSplitPdfByPagesWithSkip(t *testing.T) {
@@ -129,7 +141,7 @@ func TestSplitPdfByPagesWithSkip(t *testing.T) {
 	defer os.RemoveAll(tempDir)
 
 	// Download PDF
-	kytaraURL := "https://www.evangelickyzpevnik.cz.www.e-cirkev.cz/res/archive/001/000234.pdf"
+	kytaraURL := supplementalURL(t, "kytara.pdf")
 	pdfPath := filepath.Join(tempDir, "kytara.pdf")
 
 	t.Logf("Downloading PDF...")
@@ -176,6 +188,7 @@ func TestSplitPdfByPagesWithSkip(t *testing.T) {
 			if config.name == "minimal_skip" {
 				workspaceDir := filepath.Join("/workspaces/Lyyyra/build/pdf_split_results")
 				os.MkdirAll(workspaceDir, os.ModePerm)
+				fmt.Println("PDF split results directory (skip test):", workspaceDir)
 				for _, entry := range entries {
 					src := filepath.Join(outputDir, entry.Name())
 					dst := filepath.Join(workspaceDir, entry.Name())
@@ -188,4 +201,68 @@ func TestSplitPdfByPagesWithSkip(t *testing.T) {
 			}
 		})
 	}
+}
+
+// Downloads the "noty" (non-guitar) PDF and verifies we can split it by detected song boundaries
+// without running the full app. Enable with RUN_REMOTE_INTEGRATION_TESTS=1.
+func TestSplitNotyPdfBySongBoundaries(t *testing.T) {
+	if os.Getenv("RUN_REMOTE_INTEGRATION_TESTS") == "" {
+		t.Skip("skipping remote PDF test; set RUN_REMOTE_INTEGRATION_TESTS=1 to enable")
+	}
+
+	tempDir, err := os.MkdirTemp("", "pdf_noty_split_")
+	if err != nil {
+		t.Fatalf("Failed to create temp dir: %v", err)
+	}
+	//defer os.RemoveAll(tempDir)
+
+	notyURL := supplementalURL(t, "noty.pdf")
+	inputPath := filepath.Join(tempDir, "noty.pdf")
+
+	t.Logf("Downloading noty.pdf from %s", notyURL)
+	resp, err := http.Get(notyURL)
+	if err != nil {
+		t.Fatalf("Failed to download noty.pdf: %v", err)
+	}
+	defer resp.Body.Close()
+	if resp.StatusCode != http.StatusOK {
+		t.Fatalf("Download failed with status %d", resp.StatusCode)
+	}
+
+	f, err := os.Create(inputPath)
+	if err != nil {
+		t.Fatalf("Failed to create local noty.pdf: %v", err)
+	}
+	if _, err := io.Copy(f, resp.Body); err != nil {
+		f.Close()
+		t.Fatalf("Failed to save noty.pdf: %v", err)
+	}
+	f.Close()
+
+	outputDir := filepath.Join(tempDir, "out")
+	// Skip first 26 pages (offset/intro) and last 1 page (appendix)
+	songFiles, err := splitPdfBySongBoundaries(inputPath, outputDir, "noty", 26, 1)
+	if err != nil {
+		t.Fatalf("splitPdfBySongBoundaries failed: %v", err)
+	}
+
+	if len(songFiles) == 0 {
+		t.Fatalf("Expected at least one song file, got 0")
+	}
+
+	// Spot-check that generated files exist
+	checked := 0
+	for _, filename := range songFiles {
+		if checked >= 5 {
+			break
+		}
+		path := filepath.Join(outputDir, filename)
+		if _, err := os.Stat(path); err != nil {
+			t.Fatalf("Expected output file missing: %s (%v)", path, err)
+		}
+		checked++
+	}
+
+	t.Logf("Split noty.pdf into %d song files (checked %d exist)", len(songFiles), checked)
+	fmt.Println("PDF split results directory (noty):", outputDir)
 }

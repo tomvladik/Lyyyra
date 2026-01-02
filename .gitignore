@@ -5,3 +5,6 @@ __debug*
 frontend/yarn.lock
 changeme
 status.yaml
+docker-settings-windows.txt
+scripts/find-docker-settings.ps1
+lyyyra

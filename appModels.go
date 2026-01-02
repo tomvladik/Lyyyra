@@ -65,6 +65,7 @@ type dtoSong struct {
 	AuthorMusic string
 	AuthorLyric string
 	KytaraFile  string
+	NotesFile   string
 }
 
 type dtoSongHeader struct {
@@ -73,6 +74,7 @@ type dtoSongHeader struct {
 	Title      string
 	TitleD     string
 	KytaraFile string
+	NotesFile  string
 }
 
 type SortingOption string

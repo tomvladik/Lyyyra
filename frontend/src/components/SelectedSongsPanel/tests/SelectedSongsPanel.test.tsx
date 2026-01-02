@@ -22,6 +22,7 @@ describe('<SelectedSongsPanel />', () => {
     removeSongFromSelection: vi.fn(),
     clearSelection: vi.fn(),
     isSongSelected: () => false,
+    getSelectedSong: () => undefined,
     ...overrides,
   });
 
@@ -43,6 +44,7 @@ describe('<SelectedSongsPanel />', () => {
     entry: 10,
     title: 'Test song',
     filename: 'song.pdf',
+    variant: 'guitar',
   };
 
   beforeEach(() => {

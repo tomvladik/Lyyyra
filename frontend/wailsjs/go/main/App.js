@@ -58,6 +58,10 @@ export function ProcessKytaraPDF() {
   return window['go']['main']['App']['ProcessKytaraPDF']();
 }
 
+export function ProcessNotesPDF() {
+  return window['go']['main']['App']['ProcessNotesPDF']();
+}
+
 export function ResetData() {
   return window['go']['main']['App']['ResetData']();
 }

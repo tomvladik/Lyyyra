@@ -26,7 +26,8 @@ func (a *App) PrepareDatabase() {
             title TEXT,
             title_d TEXT,
             verse_order TEXT,
-            kytara_file TEXT
+				kytara_file TEXT,
+				notes_file TEXT
         ); DELETE FROM songs;`,
 			`CREATE TABLE IF NOT EXISTS authors (
             id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -160,7 +161,8 @@ func (a *App) GetSongs(orderBy string, searchPattern string) ([]dtoSong, error) 
             FROM authors
             WHERE song_id = s.id AND author_type = 'words'
             ORDER BY id LIMIT 1),'') AS authorLyric,
-    COALESCE(kytara_file, '') AS kytara_file
+		COALESCE(kytara_file, '') AS kytara_file,
+		COALESCE(notes_file, '') AS notes_file
   FROM songs s
   JOIN verses v ON s.id = v.song_id
 `
@@ -190,16 +192,16 @@ order by ` + orderColumn + `, v.name`
 
 		for rows.Next() {
 			var (
-				title, allVerses, authorMusic, authorLyric, kytaraFile string
-				id, entry                                              int
+				title, allVerses, authorMusic, authorLyric, kytaraFile, notesFile string
+				id, entry                                                         int
 			)
-			err := rows.Scan(&id, &entry, &title, &allVerses, &authorMusic, &authorLyric, &kytaraFile)
+			err := rows.Scan(&id, &entry, &title, &allVerses, &authorMusic, &authorLyric, &kytaraFile, &notesFile)
 			if err != nil {
 				slog.Error(fmt.Sprintf("Error scanning row: %s", err))
 				return err
 			}
 
-			result = append(result, dtoSong{Id: id, Entry: entry, Title: title, Verses: allVerses, AuthorMusic: authorMusic, AuthorLyric: authorLyric, KytaraFile: kytaraFile})
+			result = append(result, dtoSong{Id: id, Entry: entry, Title: title, Verses: allVerses, AuthorMusic: authorMusic, AuthorLyric: authorLyric, KytaraFile: kytaraFile, NotesFile: notesFile})
 		}
 		return nil
 	})
@@ -219,7 +221,8 @@ SELECT DISTINCT s.id,
        s.title,
        title_d,
        verse_order,
-       kytara_file
+	   kytara_file,
+	   notes_file
   FROM songs s
 --  JOIN verses v ON v.song_id = s.id
 --  JOIN authors a ON a.song_id = s.id
@@ -246,16 +249,16 @@ order by ` + orderColumn
 
 		for rows.Next() {
 			var (
-				title, title_d, verse_order, kytaraFile sql.NullString
-				id, entry                               int
+				title, title_d, verse_order, kytaraFile, notesFile sql.NullString
+				id, entry                                          int
 			)
-			err := rows.Scan(&id, &entry, &title, &title_d, &verse_order, &kytaraFile)
+			err := rows.Scan(&id, &entry, &title, &title_d, &verse_order, &kytaraFile, &notesFile)
 			if err != nil {
 				slog.Error(fmt.Sprintf("Error scanning row: %s", err))
 				return err
 			}
 
-			result = append(result, dtoSongHeader{Id: id, Entry: entry, Title: title.String, TitleD: title_d.String, KytaraFile: kytaraFile.String})
+			result = append(result, dtoSongHeader{Id: id, Entry: entry, Title: title.String, TitleD: title_d.String, KytaraFile: kytaraFile.String, NotesFile: notesFile.String})
 		}
 		return nil
 	})

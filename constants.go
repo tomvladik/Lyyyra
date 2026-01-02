@@ -17,6 +17,10 @@ var SupplementalPDFs = []SupplementalPDF{
 		FileName: "kytara.pdf",
 	},
 	{
+		URL:      "https://www.evangelickyzpevnik.cz.www.e-cirkev.cz/res/archive/001/000163.pdf",
+		FileName: "noty.pdf",
+	},
+	{
 		URL:      "https://www.evangelickyzpevnik.cz.www.e-cirkev.cz/res/archive/001/000208.pdf",
 		FileName: "choralnik.pdf",
 	},

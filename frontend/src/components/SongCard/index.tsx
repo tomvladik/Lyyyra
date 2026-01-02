@@ -1,6 +1,6 @@
 import { useContext, useEffect, useState } from "react";
 import { GetSongAuthors } from "../../../wailsjs/go/main/App";
-import { Author, dtoSong } from "../../models";
+import { Author, dtoSong, SongPdfVariant } from "../../models";
 import { SelectionContext } from "../../selectionContext";
 import HighlightText from "../HighlightText";
 import { PdfModal } from "../PdfModal";
@@ -9,8 +9,8 @@ import styles from "./index.module.less";
 export const SongCard = ({ data }: { data: dtoSong }) => {
     const [authorData, setData] = useState(new Array<Author>());
     const [, setError] = useState(false);
-    const [pdfModalOpen, setPdfModalOpen] = useState(false);
-    const { addSongToSelection, isSongSelected } = useContext(SelectionContext);
+    const [pdfModalVariant, setPdfModalVariant] = useState<SongPdfVariant | null>(null);
+    const { addSongToSelection, getSelectedSong } = useContext(SelectionContext);
 
     const fetchData = async () => {
         try {
@@ -22,16 +22,23 @@ export const SongCard = ({ data }: { data: dtoSong }) => {
         }
     };
 
-    const handleOpenPdf = () => {
-        if (data.KytaraFile) {
-            setPdfModalOpen(true);
+    const getFilenameForVariant = (variant: SongPdfVariant) =>
+        variant === "guitar" ? data.KytaraFile : data.NotesFile;
+
+    const handleOpenPdf = (variant: SongPdfVariant) => {
+        const file = getFilenameForVariant(variant);
+        if (!file) {
+            return;
         }
+        setPdfModalVariant(variant);
     };
 
-    const isSelected = isSongSelected(data.Id);
+    const selectedSong = getSelectedSong(data.Id);
+    const selectedVariant = selectedSong?.variant;
 
-    const handleAddToSelection = () => {
-        if (!data.KytaraFile || isSelected) {
+    const handleAddToSelection = (variant: SongPdfVariant) => {
+        const filename = getFilenameForVariant(variant);
+        if (!filename) {
             return;
         }
 
@@ -39,7 +46,8 @@ export const SongCard = ({ data }: { data: dtoSong }) => {
             id: data.Id,
             entry: data.Entry,
             title: data.Title,
-            filename: data.KytaraFile,
+            filename,
+            variant,
         });
     };
 
@@ -87,34 +95,57 @@ export const SongCard = ({ data }: { data: dtoSong }) => {
                         ));
                     })()}
                 </div>
-                {data.KytaraFile && (
+                {(data.KytaraFile || data.NotesFile) && (
                     <div className={styles.songFooterRow}>
                         <div className={styles.songFooter}>
-                            <span
-                                className={styles.actionIcon}
-                                onClick={handleOpenPdf}
-                                title="Zobrazit noty"
-                            >
-                                🎵
-                            </span>
-                            <span
-                                className={[styles.actionIcon, isSelected ? styles.actionIconDisabled : ""].join(" ").trim()}
-                                onClick={handleAddToSelection}
-                                title={isSelected ? "Skladba už je ve výběru" : "Přidat do výběru"}
-                                aria-disabled={isSelected}
-                            >
-                                📋
-                            </span>
+                            {data.KytaraFile && (
+                                <>
+                                    <span
+                                        className={styles.actionIcon}
+                                        onClick={() => handleOpenPdf("guitar")}
+                                        title="Zobrazit kytarové noty"
+                                    >
+                                        🎸
+                                    </span>
+                                    <span
+                                        className={[styles.actionIcon, selectedVariant === "guitar" ? styles.actionIconDisabled : ""].join(" ").trim()}
+                                        onClick={() => handleAddToSelection("guitar")}
+                                        title={selectedVariant === "guitar" ? "Kytarové noty už jsou ve výběru" : "Přidat kytarové noty do výběru"}
+                                        aria-disabled={selectedVariant === "guitar"}
+                                    >
+                                        📋
+                                    </span>
+                                </>
+                            )}
+                            {data.NotesFile && (
+                                <>
+                                    <span
+                                        className={styles.actionIcon}
+                                        onClick={() => handleOpenPdf("notes")}
+                                        title="Zobrazit noty (bez kytary)"
+                                    >
+                                        🎼
+                                    </span>
+                                    <span
+                                        className={[styles.actionIcon, selectedVariant === "notes" ? styles.actionIconDisabled : ""].join(" ").trim()}
+                                        onClick={() => handleAddToSelection("notes")}
+                                        title={selectedVariant === "notes" ? "Tyto noty už jsou ve výběru" : "Přidat noty (bez kytary) do výběru"}
+                                        aria-disabled={selectedVariant === "notes"}
+                                    >
+                                        📄
+                                    </span>
+                                </>
+                            )}
                         </div>
                     </div>
                 )}
             </div>
             <PdfModal
-                isOpen={pdfModalOpen}
-                filename={data.KytaraFile || undefined}
+                isOpen={!!pdfModalVariant}
+                filename={pdfModalVariant === "guitar" ? data.KytaraFile || undefined : data.NotesFile || undefined}
                 songNumber={data.Entry}
                 songName={data.Title}
-                onClose={() => setPdfModalOpen(false)}
+                onClose={() => setPdfModalVariant(null)}
             />
         </>
     );

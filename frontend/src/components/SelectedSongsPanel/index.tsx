@@ -241,6 +241,7 @@ export const SelectedSongsPanel = () => {
                         <div>
                             <span className={styles.itemNumber}>{song.entry}.</span>
                             <span className={styles.itemTitle}>{song.title}</span>
+                            <span className={styles.itemVariant}>{song.variant === "notes" ? "noty" : "kytara"}</span>
                         </div>
                         <button
                             type="button"

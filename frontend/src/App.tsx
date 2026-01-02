@@ -111,8 +111,11 @@ function App() {
 
     const addSongToSelection = useCallback((song: SelectedSong) => {
         setSelectedSongs(prev => {
-            if (prev.some(existing => existing.id === song.id)) {
-                return prev;
+            const idx = prev.findIndex(existing => existing.id === song.id);
+            if (idx >= 0) {
+                const next = [...prev];
+                next[idx] = song;
+                return next;
             }
             return [...prev, song];
         });
@@ -126,9 +129,11 @@ function App() {
 
     const isSongSelected = useCallback((id: number) => selectedSongs.some(song => song.id === id), [selectedSongs]);
 
+    const getSelectedSong = useCallback((id: number) => selectedSongs.find(song => song.id === id), [selectedSongs]);
+
     return (
         <DataContext.Provider value={{ status: status, updateStatus: updateStatus }}>
-            <SelectionContext.Provider value={{ selectedSongs, addSongToSelection, removeSongFromSelection, clearSelection, isSongSelected }}>
+            <SelectionContext.Provider value={{ selectedSongs, addSongToSelection, removeSongFromSelection, clearSelection, isSongSelected, getSelectedSong }}>
                 <div
                     id="App"
                     className="AppShell"

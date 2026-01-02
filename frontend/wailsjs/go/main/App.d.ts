@@ -30,6 +30,8 @@ export function PrepareDatabase():Promise<void>;
 
 export function ProcessKytaraPDF():Promise<void>;
 
+export function ProcessNotesPDF():Promise<void>;
+
 export function ResetData():Promise<void>;
 
 export function SaveSorting(arg1:main.SortingOption):Promise<void>;

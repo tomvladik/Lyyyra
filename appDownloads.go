@@ -116,9 +116,41 @@ func (a *App) downloadSupplementalPDFs() error {
 	return nil
 }
 
+func (a *App) supplementalFilesMissing() bool {
+	storageDir := a.pdfDir
+	if storageDir == "" {
+		storageDir = filepath.Join(a.appDir, "PdfSources")
+	}
+
+	for _, pdf := range SupplementalPDFs {
+		fileName := pdf.FileName
+		if fileName == "" {
+			fileName = path.Base(pdf.URL)
+		}
+
+		targetPath := filepath.Join(storageDir, fileName)
+		if _, err := os.Stat(targetPath); err != nil {
+			return true
+		}
+	}
+
+	return false
+}
+
 func (a *App) startSupplementalDownload() <-chan error {
-	if a.status.WebResourcesReady || len(SupplementalPDFs) == 0 {
+	if len(SupplementalPDFs) == 0 {
 		return nil
+	}
+
+	missingFiles := a.supplementalFilesMissing()
+	if a.status.WebResourcesReady && !missingFiles {
+		return nil
+	}
+
+	if missingFiles && a.status.WebResourcesReady {
+		slog.Info("Supplemental files missing locally; re-downloading")
+		a.status.WebResourcesReady = false
+		a.saveStatus()
 	}
 
 	a.supplementalMu.Lock()
@@ -241,15 +273,18 @@ func (a *App) DownloadEz() error {
 			a.clearProgress()
 			return err
 		}
-		a.status.WebResourcesReady = true
-		a.saveStatus()
 
-		// Process kytara.pdf after download
+		// Process PDFs after download
 		a.updateProgress("Zpracovávám PDF soubory...", 90)
 		if err := a.ProcessKytaraPDF(); err != nil {
 			slog.Warn("Error processing kytara.pdf", "error", err)
-			// Don't fail the whole process if PDF splitting fails
 		}
+		if err := a.ProcessNotesPDF(); err != nil {
+			slog.Warn("Error processing noty.pdf", "error", err)
+		}
+
+		a.status.WebResourcesReady = true
+		a.saveStatus()
 	}
 
 	// Clear progress flag at the end

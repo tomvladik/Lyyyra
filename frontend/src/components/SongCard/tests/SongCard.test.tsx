@@ -23,6 +23,7 @@ describe('<SongCard />', () => {
     AuthorMusic: '',
     AuthorLyric: '',
     KytaraFile: '',
+    NotesFile: '',
   };
 
   const renderWithContext = async (
@@ -46,6 +47,7 @@ describe('<SongCard />', () => {
       removeSongFromSelection: vi.fn(),
       clearSelection: vi.fn(),
       isSongSelected: () => false,
+      getSelectedSong: () => undefined,
       ...selectionOverrides,
     };
 
@@ -159,13 +161,13 @@ describe('<SongCard />', () => {
     });
   });
 
-  it('adds song to selection when clipboard icon is clicked', async () => {
+  it('adds guitar notes to selection when clipboard icon is clicked', async () => {
     vi.mocked(AppModule.GetSongAuthors).mockResolvedValue([]);
     const songWithPdf: dtoSong = { ...mockSong, KytaraFile: '123.pdf' };
 
     const { selectionContextValue } = await renderWithContext(songWithPdf);
 
-    const clipboardButton = screen.getByTitle('Přidat do výběru');
+    const clipboardButton = screen.getByTitle('Přidat kytarové noty do výběru');
     fireEvent.click(clipboardButton);
 
     expect(selectionContextValue.addSongToSelection).toHaveBeenCalledWith({
@@ -173,6 +175,25 @@ describe('<SongCard />', () => {
       entry: songWithPdf.Entry,
       title: songWithPdf.Title,
       filename: songWithPdf.KytaraFile,
+      variant: 'guitar',
+    });
+  });
+
+  it('adds standard notes to selection when sheet button is clicked', async () => {
+    vi.mocked(AppModule.GetSongAuthors).mockResolvedValue([]);
+    const songWithNotes: dtoSong = { ...mockSong, NotesFile: '789.pdf' };
+
+    const { selectionContextValue } = await renderWithContext(songWithNotes);
+
+    const sheetButton = screen.getByTitle('Přidat noty (bez kytary) do výběru');
+    fireEvent.click(sheetButton);
+
+    expect(selectionContextValue.addSongToSelection).toHaveBeenCalledWith({
+      id: songWithNotes.Id,
+      entry: songWithNotes.Entry,
+      title: songWithNotes.Title,
+      filename: songWithNotes.NotesFile,
+      variant: 'notes',
     });
   });
 
@@ -184,6 +205,7 @@ describe('<SongCard />', () => {
       entry: songWithPdf.Entry,
       title: songWithPdf.Title,
       filename: songWithPdf.KytaraFile!,
+      variant: 'guitar',
     }];
 
     const { selectionContextValue } = await renderWithContext(
@@ -192,10 +214,11 @@ describe('<SongCard />', () => {
       {
         selectedSongs: preselected,
         isSongSelected: (id: number) => preselected.some(song => song.id === id),
+        getSelectedSong: (id: number) => preselected.find(song => song.id === id),
       }
     );
 
-    const clipboardButton = screen.getByTitle('Skladba už je ve výběru');
+    const clipboardButton = screen.getByTitle('Kytarové noty už jsou ve výběru');
     expect(clipboardButton).toHaveAttribute('aria-disabled', 'true');
 
     fireEvent.click(clipboardButton);
