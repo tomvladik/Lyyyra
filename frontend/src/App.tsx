@@ -3,13 +3,13 @@ import * as go from '../wailsjs/go/main/App';
 import './App.less';
 import { AppStatus, isEqualAppStatus, SortingOption } from "./AppStatus";
 import { InfoBox } from './components/InfoBox';
+import { SelectedSongsPanel } from './components/SelectedSongsPanel';
 import StatusPanel from './components/StatusPanel';
 import { INITIAL_LOAD_DELAY, STATUS_POLL_INTERVAL } from './constants';
 import { DataContext } from './main';
 import { SelectedSong } from './models';
-import { SelectionContext } from './selectionContext';
-import { SelectedSongsPanel } from './components/SelectedSongsPanel';
 import { SongList } from './pages/SongList';
+import { SelectionContext } from './selectionContext';
 
 
 const createInitialStatus = (): AppStatus => ({
@@ -33,23 +33,16 @@ function App() {
     const [selectedSongs, setSelectedSongs] = useState<SelectedSong[]>([]);
 
     const loadSongs = () => {
-        const stat = { ...status }
-        stat.IsProgress = true
-        setStatus(stat)
-        
-        // Poll for status updates while in progress
-        const pollInterval = setInterval(() => {
-            fetchStatus();
-        }, STATUS_POLL_INTERVAL);
-        
-        go.DownloadEz().then(() => {
-            clearInterval(pollInterval);
-            fetchStatus()
-        }).catch(error => {
-            clearInterval(pollInterval);
-            console.error("Error during download:", error);
-            fetchStatus()
-        });
+        setStatus(prev => ({ ...prev, IsProgress: true }));
+
+        go.DownloadEz()
+            .then(() => {
+                fetchStatus();
+            })
+            .catch(error => {
+                console.error("Error during download:", error);
+                fetchStatus();
+            });
     }
 
     // const fetchData = async () => {
@@ -62,7 +55,7 @@ function App() {
     //     }
     // };
 
-    const fetchStatus = async () => {
+    const fetchStatus = useCallback(async () => {
         try {
             // Assume fetchData returns a Promise
             const goStatus = await go.GetStatus();
@@ -72,13 +65,11 @@ function App() {
                 ProgressMessage: goStatus.ProgressMessage || '',
                 ProgressPercent: goStatus.ProgressPercent || 0
             };
-            if (!isEqualAppStatus(newStatus, status)) {
-                setStatus(newStatus)
-            }
+            setStatus(prev => (isEqualAppStatus(newStatus, prev) ? prev : newStatus));
         } catch (error) {
             console.log(error)
         }
-    };
+    }, []);
 
     // useEffect(() => {
     //     fetchData()
@@ -92,13 +83,24 @@ function App() {
             fetchStatus();
         }, INITIAL_LOAD_DELAY);
         return () => clearTimeout(timer);
-    }, []);
+    }, [fetchStatus]);
+
+    useEffect(() => {
+        if (!status.IsProgress) {
+            return;
+        }
+        const id = setInterval(fetchStatus, STATUS_POLL_INTERVAL);
+        return () => clearInterval(id);
+    }, [status.IsProgress, fetchStatus]);
 
     const updateStatus = (newStatus: Partial<AppStatus>) => {
-        setStatus(prevStatus => ({ ...prevStatus, ...newStatus }));
-        if (newStatus.Sorting) {
-            go.SaveSorting(newStatus.Sorting);
-        }
+        setStatus(prevStatus => {
+            const merged = { ...prevStatus, ...newStatus };
+            if (newStatus.Sorting && newStatus.Sorting !== prevStatus.Sorting) {
+                go.SaveSorting(newStatus.Sorting);
+            }
+            return merged;
+        });
     };
 
     const handleBackgroundDoubleClick = (_event: MouseEvent<HTMLDivElement>) => {

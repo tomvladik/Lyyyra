@@ -58,6 +58,10 @@ export function ProcessKytaraPDF() {
   return window['go']['main']['App']['ProcessKytaraPDF']();
 }
 
+export function ResetData() {
+  return window['go']['main']['App']['ResetData']();
+}
+
 export function SaveSorting(arg1) {
   return window['go']['main']['App']['SaveSorting'](arg1);
 }

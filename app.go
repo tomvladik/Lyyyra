@@ -197,6 +197,37 @@ func (a *App) GetCombinedPdf(filenames []string) (string, error) {
 	return "data:application/pdf;base64," + encoded, nil
 }
 
+// ResetData deletes all stored app data and re-initializes songs and database.
+func (a *App) ResetData() error {
+	// Show progress in UI
+	a.startProgress("Mažu uložená data...")
+	defer a.clearProgress()
+
+	// Remove application data directory
+	if err := os.RemoveAll(a.appDir); err != nil {
+		return err
+	}
+
+	// Recreate required directories
+	if err := os.MkdirAll(a.appDir, os.ModePerm); err != nil {
+		return err
+	}
+	if err := os.MkdirAll(a.songBookDir, os.ModePerm); err != nil {
+		return err
+	}
+	if err := os.MkdirAll(a.pdfDir, os.ModePerm); err != nil {
+		return err
+	}
+
+	// Reset status
+	a.status = AppStatus{Sorting: Title, BuildVersion: buildVersion}
+	a.saveStatus()
+
+	// Re-run full download and DB preparation
+	a.updateProgress("Znovu stahuji a připravuji data...", 0)
+	return a.DownloadEz()
+}
+
 func (a *App) saveStatus() {
 	a.status.LastSave = time.Now().UTC().Format(time.RFC3339)
 	a.serializeToYaml("status.yaml", &a.status)
