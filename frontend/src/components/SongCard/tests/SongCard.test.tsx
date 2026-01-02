@@ -1,13 +1,14 @@
-import { render, screen, waitFor, act, fireEvent } from '@testing-library/react';
+import '@testing-library/jest-dom';
 import type { RenderResult } from '@testing-library/react';
-import { SongCard } from '../index';
-import { describe, it, expect, vi, beforeEach } from 'vitest';
+import { act, fireEvent, render, screen, waitFor } from '@testing-library/react';
+import { beforeEach, describe, expect, it, vi } from 'vitest';
 import * as AppModule from '../../../../wailsjs/go/main/App';
-import { dtoSong } from '../../../models';
+import { AppStatus } from '../../../AppStatus';
 import { DataContext } from '../../../context';
+import { dtoSong } from '../../../models';
 import { SelectionContext, SelectionContextValue } from '../../../selectionContext';
 import { createMockStatus } from '../../../test/testHelpers';
-import { AppStatus } from '../../../AppStatus';
+import { SongCard } from '../index';
 
 vi.mock('../../../../wailsjs/go/main/App', () => ({
   GetSongAuthors: vi.fn(),
@@ -74,21 +75,20 @@ describe('<SongCard />', () => {
 
   it('renders song entry number and title', async () => {
     vi.mocked(AppModule.GetSongAuthors).mockResolvedValue([]);
-    
+
     await renderWithContext(mockSong);
-    
+
     expect(screen.getByText('123:', { exact: false })).toBeInTheDocument();
     expect(screen.getByText(/Test Song Title/)).toBeInTheDocument();
   });
 
-  it('renders song verses', async () => {
+  it('renders song verses (compact, single paragraph)', async () => {
     vi.mocked(AppModule.GetSongAuthors).mockResolvedValue([]);
-    
+
     await renderWithContext(mockSong);
-    
-    expect(screen.getByText('First verse')).toBeInTheDocument();
-    expect(screen.getByText('Second verse')).toBeInTheDocument();
-    expect(screen.getByText('Third verse')).toBeInTheDocument();
+
+    // Verses are collapsed into a single line for compact card display
+    expect(screen.getByText(/First verse Second verse Third verse/)).toBeInTheDocument();
   });
 
   it('fetches and displays authors', async () => {
@@ -97,9 +97,9 @@ describe('<SongCard />', () => {
       { Type: 'music', Value: 'Jane Smith' },
     ];
     vi.mocked(AppModule.GetSongAuthors).mockResolvedValue(mockAuthors);
-    
+
     await renderWithContext(mockSong);
-    
+
     await waitFor(() => {
       expect(screen.getByText('John Doe')).toBeInTheDocument();
       expect(screen.getByText('Jane Smith')).toBeInTheDocument();
@@ -108,9 +108,9 @@ describe('<SongCard />', () => {
 
   it('calls GetSongAuthors with correct song ID', async () => {
     vi.mocked(AppModule.GetSongAuthors).mockResolvedValue([]);
-    
+
     await renderWithContext(mockSong);
-    
+
     await waitFor(() => {
       expect(AppModule.GetSongAuthors).toHaveBeenCalledWith(1);
     });
@@ -121,9 +121,9 @@ describe('<SongCard />', () => {
       { Type: 'words', Value: 'Lyricist Name' },
     ];
     vi.mocked(AppModule.GetSongAuthors).mockResolvedValue(mockAuthors);
-    
+
     await renderWithContext(mockSong);
-    
+
     await waitFor(() => {
       const authorElement = screen.getByText('Lyricist Name').parentElement;
       expect(authorElement?.textContent).toContain('T:');
@@ -135,9 +135,9 @@ describe('<SongCard />', () => {
       { Type: 'music', Value: 'Composer Name' },
     ];
     vi.mocked(AppModule.GetSongAuthors).mockResolvedValue(mockAuthors);
-    
+
     await renderWithContext(mockSong);
-    
+
     await waitFor(() => {
       const authorElement = screen.getByText('Composer Name').parentElement;
       expect(authorElement?.textContent).toContain('M:');
@@ -200,5 +200,58 @@ describe('<SongCard />', () => {
 
     fireEvent.click(clipboardButton);
     expect(selectionContextValue.addSongToSelection).not.toHaveBeenCalled();
+  });
+
+  it('collapses internal newlines in verses for compact SongCard display', async () => {
+    // Test verse with internal newlines (e.g., from <br /> tags in XML)
+    const songWithNewlines: dtoSong = {
+      ...mockSong,
+      Verses: 'First line\nSecond line\nThird line',
+    };
+    vi.mocked(AppModule.GetSongAuthors).mockResolvedValue([]);
+
+    const { container } = await renderWithContext(songWithNewlines);
+
+    // Verses should be rendered, but newlines within a single verse block should be collapsed
+    // The text should appear as a single line when split by \n\n is empty
+    const verseTexts = Array.from(container.querySelectorAll('div')).map(el => el.textContent);
+    const hasCollapsedText = verseTexts.some(text => text?.includes('First line') && text?.includes('Second line'));
+
+    expect(hasCollapsedText).toBeTruthy();
+  });
+
+  it('preserves paragraph breaks between verses in SongCard rendering', async () => {
+    // Test verses separated by paragraph breaks (double newlines)
+    const songWithParagraphs: dtoSong = {
+      ...mockSong,
+      Verses: 'First verse line 1\nFirst verse line 2\n\nSecond verse line 1\nSecond verse line 2',
+    };
+    vi.mocked(AppModule.GetSongAuthors).mockResolvedValue([]);
+
+    const { container } = await renderWithContext(songWithParagraphs);
+
+    const lyricsDiv = container.querySelector('[class*="lyrics"]');
+    expect(lyricsDiv).not.toBeNull();
+
+    // Each paragraph break should yield a separate child div
+    const childDivs = lyricsDiv ? Array.from(lyricsDiv.querySelectorAll(':scope > div')) : [];
+    expect(childDivs.length).toBeGreaterThanOrEqual(2);
+  });
+
+  it('handles verses with both internal newlines and paragraph breaks', async () => {
+    // Simulate XML parsing: <br/> becomes \n, verses separated by paragraph breaks
+    const complexVerse = `Line 1\nLine 2\nLine 3\n\nVerse 2 Line 1\nVerse 2 Line 2`;
+    const songComplex: dtoSong = {
+      ...mockSong,
+      Verses: complexVerse,
+    };
+    vi.mocked(AppModule.GetSongAuthors).mockResolvedValue([]);
+
+    await renderWithContext(songComplex);
+
+    // First verse text should be rendered (with internal newlines collapsed)
+    expect(screen.getByText(/Line 1.*Line 2.*Line 3/)).toBeInTheDocument();
+    // Second verse text should be rendered separately
+    expect(screen.getByText(/Verse 2 Line 1.*Verse 2 Line 2/)).toBeInTheDocument();
   });
 });

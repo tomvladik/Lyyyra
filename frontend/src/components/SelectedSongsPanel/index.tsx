@@ -67,13 +67,13 @@ export const SelectedSongsPanel = () => {
                         const obj = JSON.parse(payloadRaw);
                         const verses = Array.isArray(obj.verses) ? obj.verses.map((vv: any) => ({ name: vv.name || '', lines: vv.lines || '' })) : [];
                         const verseOrder = typeof obj.verse_order === 'string' ? obj.verse_order : '';
-                        songsData.push({ title: song.title, verseOrder, verses });
+                        songsData.push({ title: `${song.entry}: ${song.title}`, verseOrder, verses });
                     } catch (e) {
                         console.warn('Failed to parse projection payload, falling back', e);
-                        songsData.push({ title: song.title, verseOrder: '', verses: [] });
+                        songsData.push({ title: `${song.entry}: ${song.title}`, verseOrder: '', verses: [] });
                     }
                 } else {
-                    songsData.push({ title: song.title, verseOrder: '', verses: [] });
+                    songsData.push({ title: `${song.entry}: ${song.title}`, verseOrder: '', verses: [] });
                 }
             }
 
@@ -156,7 +156,7 @@ export const SelectedSongsPanel = () => {
     .controls{display:flex;gap:8px;padding:12px;background:rgba(0,0,0,0.2);position:fixed;right:12px;top:12px;z-index:999}
     .btn{background:rgba(255,255,255,0.06);color:#fff;padding:8px 12px;border:1px solid rgba(255,255,255,0.06);border-radius:6px;cursor:pointer}
     .stage{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:40px}
-    .title{font-size:48px;margin:0 0 16px 0;color:#fff;text-align:center}
+    .title{font-size:48px;color:#fff;position:fixed;top:1em;text-align:center;width:100%}
     .verse{font-size:40px;line-height:1.4;margin:6px 0;color:#fff;text-align:center;max-width:1600px}
     .meta{position:fixed;left:12px;top:12px;color:rgba(255,255,255,0.6);font-size:14px}
     @media (min-width:1200px){.title{font-size:64px}.verse{font-size:48px}}
@@ -164,12 +164,12 @@ export const SelectedSongsPanel = () => {
   </head>
   <body>
   <div class="container">
-    <div class="meta">Use ←/→ verses • ↑/↓ songs • F fullscreen</div>
+    <div class="meta">Klávesové zkratky ←/→ verše • ↑/↓ písně • F fullscreen</div>
     <div class="controls">
-    <button class="btn" id="prevSong">◀︎ Song</button>
-    <button class="btn" id="prevVerse">◀︎ Verse</button>
-    <button class="btn" id="nextVerse">Verse ▶︎</button>
-    <button class="btn" id="nextSong">Song ▶︎</button>
+    <button class="btn" id="prevSong">◀︎ Píseň</button>
+    <button class="btn" id="prevVerse">◀︎ Verš</button>
+    <button class="btn" id="nextVerse">Verš ▶︎</button>
+    <button class="btn" id="nextSong">Píseň ▶︎</button>
     <button class="btn" id="fullscreen">Fullscreen</button>
     </div>
     <div class="stage">

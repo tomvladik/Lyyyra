@@ -47,8 +47,8 @@ frontend-build: ## Build frontend for production
 frontend-dev: ## Start frontend development server
 	cd frontend && npm run dev
 
-frontend-test: ## Run frontend tests
-	cd frontend && npm test -- --run
+frontend-test: ## Run frontend tests (non-watch)
+	cd frontend && npm test -- --watch=false
 
 frontend-test-watch: ## Run frontend tests in watch mode
 	cd frontend && npm test

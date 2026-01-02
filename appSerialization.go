@@ -103,15 +103,23 @@ func parseXmlSong(xmlFilePath string) (*Song, error) {
 		return nil, err
 	}
 
-	reWhiteSpaces := regexp.MustCompile(`\s{2,}|<br />|<br/>`)
+	// Only collapse multiple spaces/tabs, but preserve newlines for verse formatting.
+	reWhiteSpaces := regexp.MustCompile(`[ \t]{2,}`)
 	reToRemove := regexp.MustCompile(`<lines>|</lines>`)
 	for i, verse := range song.Lyrics.Verses {
 		// Trim leading and trailing whitespace from each line
 		trimmed := strings.TrimSpace(verse.Lines)
 
-		// Replace multiple whitespaces with a single space
-		trimmed = reWhiteSpaces.ReplaceAllString(trimmed, " ")
+		// Replace <br /> and <br/> with actual newlines to preserve line breaks
+		trimmed = strings.ReplaceAll(trimmed, "<br />", "\n")
+		trimmed = strings.ReplaceAll(trimmed, "<br/>", "\n")
+
+		// Remove the lines tags
 		trimmed = reToRemove.ReplaceAllString(trimmed, "")
+
+		// Replace multiple spaces/tabs with a single space (newlines are preserved)
+		trimmed = reWhiteSpaces.ReplaceAllString(trimmed, " ")
+
 		song.Lyrics.Verses[i].Lines = trimmed
 	}
 	return &song, nil

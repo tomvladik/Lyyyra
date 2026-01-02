@@ -151,7 +151,7 @@ func (a *App) GetSongs(orderBy string, searchPattern string) ([]dtoSong, error) 
     SELECT s.id,
         entry,
         title,
-    REPLACE(GROUP_CONCAT(lines, char(10)), '<br />', '===') AS all_verses,
+	GROUP_CONCAT(lines, char(10,10)) AS all_verses,
     COALESCE((SELECT author_value
             FROM authors
             WHERE song_id = s.id AND author_type = 'music'

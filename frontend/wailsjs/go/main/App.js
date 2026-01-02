@@ -30,20 +30,20 @@ export function GetSongAuthors(arg1) {
   return window['go']['main']['App']['GetSongAuthors'](arg1);
 }
 
-export function GetSongs(arg1, arg2) {
-  return window['go']['main']['App']['GetSongs'](arg1, arg2);
-}
-
-export function GetSongs2(arg1, arg2) {
-  return window['go']['main']['App']['GetSongs2'](arg1, arg2);
-}
-
 export function GetSongProjection(arg1) {
   return window['go']['main']['App']['GetSongProjection'](arg1);
 }
 
 export function GetSongVerses(arg1) {
   return window['go']['main']['App']['GetSongVerses'](arg1);
+}
+
+export function GetSongs(arg1, arg2) {
+  return window['go']['main']['App']['GetSongs'](arg1, arg2);
+}
+
+export function GetSongs2(arg1, arg2) {
+  return window['go']['main']['App']['GetSongs2'](arg1, arg2);
 }
 
 export function GetStatus() {
