@@ -1,8 +1,13 @@
 # Show help for all tasks
 .PHONY: help
 help:
+ifeq ($(OS),Windows_NT)
+	@echo "Available tasks:"
+	@powershell -NoProfile -Command "$$re='^[a-zA-Z_-]+:.*?## '; Get-Content Makefile | Where-Object { $$_ -match $$re } | ForEach-Object { if ($$_ -match '^(?<name>[a-zA-Z_-]+):.*?## (?<desc>.*)') { $$name=$$Matches['name']; $$desc=$$Matches['desc']; $$pad=20; $$cyan=[char]27 + '[36m'; $$reset=[char]27 + '[0m'; $$fmt='  {0,-' + $$pad + '} {1}'; Write-Output ($$fmt -f ($$cyan + $$name + $$reset), $$desc) } }"
+else
 	@echo "Available tasks:"
 	@grep -E '^[a-zA-Z_-]+:.*?## ' Makefile | awk 'BEGIN {FS = ":.*?## "}; {printf "  \033[36m%-20s\033[0m %s\n", $$1, $$2}'
+endif
 
 # Build tags
 # Devcontainer ships with WebKitGTK 4.1 libraries, so default to that.
