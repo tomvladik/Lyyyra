@@ -1,10 +1,10 @@
 import { useContext, useEffect, useMemo, useRef, useState } from "react";
 import { GetCombinedPdf, GetSongProjection, GetSongVerses } from "../../../wailsjs/go/app/App";
+import logoImage from "../../assets/images/logo-universal.png";
 import { SelectionContext } from "../../selectionContext";
 import { PdfModal } from "../PdfModal";
 import styles from "./index.module.less";
 import projectionTemplate from "./projection-template.html?raw";
-import logoImage from "../../assets/images/logo-universal.png";
 
 export const SelectedSongsPanel = () => {
     const { selectedSongs, removeSongFromSelection, clearSelection } = useContext(SelectionContext);
