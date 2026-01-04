@@ -56,14 +56,19 @@ describe('<SelectedSongsPanel />', () => {
         close: vi.fn(),
       },
       addEventListener: vi.fn(),
+      closed: false,
     } as any);
+
+    // Mock URL.createObjectURL and revokeObjectURL
+    global.URL.createObjectURL = vi.fn(() => 'blob:mock-url');
+    global.URL.revokeObjectURL = vi.fn();
   });
 
   it('does not render when there are no selections', () => {
     const value = defaultSelectionValue();
     const { container } = renderWithSelection(value);
 
-    expect(container).toBeEmptyDOMElement();
+    expect(container.firstChild).toBeNull();
   });
 
   it('calls remove handler when clicking remove button', () => {
@@ -101,7 +106,7 @@ describe('<SelectedSongsPanel />', () => {
       expect(AppModule.GetCombinedPdf).toHaveBeenCalledWith([sampleSong.filename]);
     });
 
-    expect(await screen.findByTestId('pdf-modal')).toBeInTheDocument();
+    expect(await screen.findByTestId('pdf-modal')).toBeTruthy();
   });
 
   it('renders projection button and opens projection window', async () => {
@@ -121,7 +126,7 @@ describe('<SelectedSongsPanel />', () => {
     });
 
     const projectButton = screen.getByRole('button', { name: /Promítat texty/ });
-    expect(projectButton).toBeInTheDocument();
+    expect(projectButton).toBeTruthy();
 
     await act(async () => {
       fireEvent.click(projectButton);
@@ -154,6 +159,69 @@ describe('<SelectedSongsPanel />', () => {
 
     await waitFor(() => {
       expect(AppModule.GetSongProjection).toHaveBeenCalled();
+    });
+  });
+
+  describe('Projection Window Management', () => {
+    it('displays control panel when projection opens', async () => {
+      const mockProjectionData = JSON.stringify({
+        verse_order: 'v1',
+        verses: [{ name: 'v1', lines: 'Test verse' }],
+      });
+
+      vi.mocked(AppModule.GetSongProjection).mockResolvedValue(mockProjectionData);
+
+      const value = defaultSelectionValue({ selectedSongs: [sampleSong] });
+      await act(async () => {
+        renderWithSelection(value);
+      });
+
+      const projectButton = screen.getByRole('button', { name: /Promítat texty/ });
+
+      await act(async () => {
+        fireEvent.click(projectButton);
+      });
+
+      await waitFor(() => {
+        // Control panel buttons should appear
+        expect(screen.getByTitle('Předchozí píseň')).toBeTruthy();
+      }, { timeout: 2000 });
+    });
+
+    it('prevents opening multiple projection windows', async () => {
+      const mockProjectionData = JSON.stringify({
+        verse_order: 'v1',
+        verses: [{ name: 'v1', lines: 'Test verse' }],
+      });
+
+      vi.mocked(AppModule.GetSongProjection).mockResolvedValue(mockProjectionData);
+
+      const value = defaultSelectionValue({ selectedSongs: [sampleSong] });
+      await act(async () => {
+        renderWithSelection(value);
+      });
+
+      const projectButton = screen.getByRole('button', { name: /Promítat texty/ }) as HTMLButtonElement;
+
+      // First click
+      await act(async () => {
+        fireEvent.click(projectButton);
+      });
+
+      await waitFor(() => {
+        expect(AppModule.GetSongProjection).toHaveBeenCalledTimes(1);
+      }, { timeout: 2000 });
+
+      // Button should be disabled
+      expect(projectButton.disabled).toBe(true);
+
+      // Second click - should be prevented
+      await act(async () => {
+        fireEvent.click(projectButton);
+      });
+
+      // GetSongProjection should still only be called once (not twice)
+      expect(AppModule.GetSongProjection).toHaveBeenCalledTimes(1);
     });
   });
 });

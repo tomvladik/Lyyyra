@@ -78,25 +78,24 @@ install-tools: ## Install Go test, lint tools, and act for CI testing
 
 # Wails tasks
 .PHONY: wails-dev wails-build wails-build-windows wails-install
-DEVTOOLS ?= true
 
 wails-dev: ## Start Wails development server (with devtools enabled)
 ifeq ($(OS),Windows_NT)
-	wails dev -tags "$(GO_DEV_TAGS)" $(if $(filter true,$(DEVTOOLS)),-devtools)
+	wails dev -tags "$(GO_DEV_TAGS)" -devtools
 else
 	@if [ -z "$$DISPLAY" ] && command -v xvfb-run >/dev/null 2>&1; then \
 		echo "[wails-dev] DISPLAY not set, starting via xvfb-run"; \
-		xvfb-run -a wails dev -tags "$(GO_DEV_TAGS)" $(if $(filter true,$(DEVTOOLS)),-devtools); \
+		xvfb-run -a wails dev -tags "$(GO_DEV_TAGS)" -devtools; \
 	else \
-		wails dev -tags "$(GO_DEV_TAGS)" $(if $(filter true,$(DEVTOOLS)),-devtools); \
+		wails dev -tags "$(GO_DEV_TAGS)" -devtools; \
 	fi
 endif
 
 wails-build: ## Build Wails application for production
-	wails build -tags "$(GO_PROD_TAGS)" $(if $(filter true,$(DEVTOOLS)),-devtools)
+	wails build -tags "$(GO_PROD_TAGS)"-devtools
 
 wails-build-windows-skip-frontend: ## Build Windows app (skip frontend rebuild, devcontainer cross-compile)
-	CGO_ENABLED=1 CC=x86_64-w64-mingw32-gcc CXX=x86_64-w64-mingw32-g++ wails build -platform windows/amd64 -tags "$(GO_PROD_TAGS)" $(if $(filter true,$(DEVTOOLS)),-devtools) -skipbindings -s
+	CGO_ENABLED=1 CC=x86_64-w64-mingw32-gcc CXX=x86_64-w64-mingw32-g++ wails build -platform windows/amd64 -tags "$(GO_PROD_TAGS)" -devtools -skipbindings -s
 
 wails-build-windows: frontend-build wails-build-windows-skip-frontend ## Build Wails for Windows (cross-compile in devcontainer)
 

@@ -1,4 +1,4 @@
-import { useContext, useMemo, useRef, useState } from "react";
+import { useContext, useEffect, useMemo, useRef, useState } from "react";
 import { GetCombinedPdf, GetSongProjection, GetSongVerses } from "../../../wailsjs/go/main/App";
 import { SelectionContext } from "../../selectionContext";
 import { PdfModal } from "../PdfModal";
@@ -11,6 +11,31 @@ export const SelectedSongsPanel = () => {
     const [combinedPdf, setCombinedPdf] = useState("");
     const [isModalOpen, setIsModalOpen] = useState(false);
     const [error, setError] = useState("");
+    const [isProjectionOpen, setIsProjectionOpen] = useState(false);
+
+    // Monitor projection window status periodically
+    useEffect(() => {
+        if (!isProjectionOpen) return;
+
+        console.log('[Projection] Window monitoring started');
+
+        const checkInterval = setInterval(() => {
+            if (projectionWindowRef.current) {
+                const isClosed = projectionWindowRef.current.closed;
+                console.log('[Projection] Window check - closed:', isClosed);
+                if (isClosed) {
+                    console.log('[Projection] Window detected as closed, updating state');
+                    setIsProjectionOpen(false);
+                    projectionWindowRef.current = null;
+                }
+            }
+        }, 500); // Check every 500ms
+
+        return () => {
+            console.log('[Projection] Window monitoring stopped');
+            clearInterval(checkInterval);
+        };
+    }, [isProjectionOpen]);
 
     const sendProjectionCommand = (command: 'nextVerse' | 'prevVerse' | 'nextSong' | 'prevSong') => {
         if (projectionWindowRef.current && !projectionWindowRef.current.closed) {
@@ -45,16 +70,35 @@ export const SelectedSongsPanel = () => {
 
     const handleProjectClick = async () => {
         if (!selectedSongs.length) return;
+
+        console.log('[Projection] handleProjectClick called');
+
+        // Prevent opening multiple projection windows
+        if (projectionWindowRef.current && !projectionWindowRef.current.closed) {
+            console.log('[Projection] Window already open, preventing multiple opens');
+            setError('Projekční okno je již otevřeno.');
+            return;
+        }
+
         // Open the window synchronously to avoid popup blockers.
         const w = window.open('', '_blank');
         if (!w) {
+            console.error('[Projection] Failed to open window - popups blocked?');
             setError('Nelze otevřít projekční okno. Zkontrolujte blokování vyskakovacích oken.');
             return;
         }
 
+        console.log('[Projection] Window opened successfully');
+
         try {
             // Store the window reference for control
             projectionWindowRef.current = w;
+
+            // Set projection as open - triggers re-render for control panel
+            console.log('[Projection] Setting isProjectionOpen = true');
+            setIsProjectionOpen(true);
+            setError("");
+
             const getProj = typeof GetSongProjection === 'function' ? GetSongProjection : undefined;
             const getVerses = typeof GetSongVerses === 'function' ? GetSongVerses : undefined;
             const songsData: Array<{ title: string; verseOrder: string; verses: Array<{ name: string; lines: string }> }> = [];
@@ -98,71 +142,97 @@ export const SelectedSongsPanel = () => {
 
             // Build the inline JavaScript code with properly escaped backslashes for template literal
             const inlineScript = `
-    const songs = JSON.parse(decodeURIComponent('${safeSongsJson}'));
-    let songIdx = 0;
-    let verseIdx = 0;
+    console.log('[Projection Window] Script starting');
+    
+    try {
+      const songs = JSON.parse(decodeURIComponent('${safeSongsJson}'));
+      console.log('[Projection Window] Loaded', songs.length, 'songs');
+      
+      let songIdx = 0;
+      let verseIdx = 0;
 
-    function parseOrder(orderStr, verses) {
-    if (!orderStr || !orderStr.trim()) return verses.map(v=>v.name);
-    return orderStr.split(/\\s+/).filter(Boolean);
-    }
-
-    function currentSequence() {
-    const s = songs[songIdx];
-    return parseOrder(s.verseOrder, s.verses);
-    }
-
-    function show() {
-    const s = songs[songIdx];
-    const seq = currentSequence();
-    const name = seq[verseIdx] || '';
-    const verseObj = s.verses.find(v=>v.name===name) || s.verses[verseIdx] || {lines: ''};
-    const linesHtml = (verseObj.lines || '').split('\\n').map(function(l){ return '<div class="verse">' + l.replace(/</g,'&lt;') + '</div>'; }).join('');
-    document.getElementById('title').textContent = s.title || '';
-    document.getElementById('verseContainer').innerHTML = linesHtml;
-    }
-
-    function clampVerse() {
-    const seq = currentSequence();
-    if (verseIdx < 0) verseIdx = 0;
-    if (verseIdx >= seq.length) verseIdx = seq.length - 1;
-    }
-
-    function prevVerse(){ verseIdx--; clampVerse(); show(); }
-    function nextVerse(){ verseIdx++; clampVerse(); show(); }
-    function prevSong(){ songIdx = Math.max(0, songIdx-1); verseIdx = 0; show(); }
-    function nextSong(){ songIdx = Math.min(songs.length-1, songIdx+1); verseIdx = 0; show(); }
-
-    // Listen for control commands from the main window
-    window.addEventListener('message', (event) => {
-      if (event.data && event.data.type === 'projection-control') {
-        switch(event.data.command) {
-          case 'nextVerse': nextVerse(); break;
-          case 'prevVerse': prevVerse(); break;
-          case 'nextSong': nextSong(); break;
-          case 'prevSong': prevSong(); break;
-        }
+      function parseOrder(orderStr, verses) {
+        if (!orderStr || !orderStr.trim()) return verses.map(v=>v.name);
+        return orderStr.split(/\\s+/).filter(Boolean);
       }
-    });
 
-    document.getElementById('prevVerse').addEventListener('click', prevVerse);
-    document.getElementById('nextVerse').addEventListener('click', nextVerse);
-    document.getElementById('prevSong').addEventListener('click', prevSong);
-    document.getElementById('nextSong').addEventListener('click', nextSong);
-    document.getElementById('fullscreen').addEventListener('click', ()=>{
-    const el = document.documentElement;
-    if (!document.fullscreenElement) el.requestFullscreen && el.requestFullscreen(); else document.exitFullscreen && document.exitFullscreen();
-    });
+      function currentSequence() {
+        const s = songs[songIdx];
+        return parseOrder(s.verseOrder, s.verses);
+      }
 
-    document.addEventListener('keydown', (e)=>{
-    if (e.key === 'ArrowLeft') prevVerse();
-    if (e.key === 'ArrowRight') nextVerse();
-    if (e.key === 'ArrowUp') prevSong();
-    if (e.key === 'ArrowDown') nextSong();
-    if (e.key === 'f' || e.key === 'F') document.documentElement.requestFullscreen && document.documentElement.requestFullscreen();
-    });
+      function show() {
+        console.log('[Projection Window] show() called - songIdx:', songIdx, 'verseIdx:', verseIdx);
+        const s = songs[songIdx];
+        const seq = currentSequence();
+        const name = seq[verseIdx] || '';
+        const verseObj = s.verses.find(v=>v.name===name) || s.verses[verseIdx] || {lines: ''};
+        const linesHtml = (verseObj.lines || '').split('\\n').map(function(l){ return '<div class="verse">' + l.replace(/</g,'&lt;') + '</div>'; }).join('');
+        
+        const titleEl = document.getElementById('title');
+        const verseEl = document.getElementById('verseContainer');
+        
+        if (titleEl) titleEl.textContent = s.title || '';
+        if (verseEl) verseEl.innerHTML = linesHtml;
+        
+        console.log('[Projection Window] Content updated - title:', s.title, 'lines:', verseObj.lines ? verseObj.lines.substring(0, 50) : 'empty');
+      }
 
-    show();
+      function clampVerse() {
+        const seq = currentSequence();
+        if (verseIdx < 0) verseIdx = 0;
+        if (verseIdx >= seq.length) verseIdx = seq.length - 1;
+      }
+
+      function prevVerse(){ console.log('[Projection Window] prevVerse'); verseIdx--; clampVerse(); show(); }
+      function nextVerse(){ console.log('[Projection Window] nextVerse'); verseIdx++; clampVerse(); show(); }
+      function prevSong(){ console.log('[Projection Window] prevSong'); songIdx = Math.max(0, songIdx-1); verseIdx = 0; show(); }
+      function nextSong(){ console.log('[Projection Window] nextSong'); songIdx = Math.min(songs.length-1, songIdx+1); verseIdx = 0; show(); }
+
+      // Listen for control commands from the main window
+      window.addEventListener('message', (event) => {
+        if (event.data && event.data.type === 'projection-control') {
+          console.log('[Projection Window] Received command:', event.data.command);
+          switch(event.data.command) {
+            case 'nextVerse': nextVerse(); break;
+            case 'prevVerse': prevVerse(); break;
+            case 'nextSong': nextSong(); break;
+            case 'prevSong': prevSong(); break;
+          }
+        }
+      });
+
+      console.log('[Projection Window] Setting up event listeners');
+      document.getElementById('prevVerse').addEventListener('click', prevVerse);
+      document.getElementById('nextVerse').addEventListener('click', nextVerse);
+      document.getElementById('prevSong').addEventListener('click', prevSong);
+      document.getElementById('nextSong').addEventListener('click', nextSong);
+      document.getElementById('fullscreen').addEventListener('click', ()=>{
+        const el = document.documentElement;
+        if (!document.fullscreenElement) el.requestFullscreen && el.requestFullscreen(); else document.exitFullscreen && document.exitFullscreen();
+      });
+
+      document.addEventListener('keydown', (e)=>{
+        console.log('[Projection Window] Key pressed:', e.key);
+        if (e.key === 'ArrowLeft') prevVerse();
+        if (e.key === 'ArrowRight') nextVerse();
+        if (e.key === 'ArrowUp') prevSong();
+        if (e.key === 'ArrowDown') nextSong();
+        if (e.key === 'f' || e.key === 'F') document.documentElement.requestFullscreen && document.documentElement.requestFullscreen();
+      });
+
+      // Wait for DOM to be ready before initial show()
+      console.log('[Projection Window] Checking DOM ready state:', document.readyState);
+      if (document.readyState === 'loading') {
+        console.log('[Projection Window] Waiting for DOMContentLoaded');
+        document.addEventListener('DOMContentLoaded', show);
+      } else {
+        console.log('[Projection Window] DOM already ready, calling show()');
+        show();
+      }
+    } catch (err) {
+      console.error('[Projection Window] Error in script:', err);
+    }
   `;
 
             const html = `<!doctype html>
@@ -185,11 +255,11 @@ export const SelectedSongsPanel = () => {
   </head>
   <body>
   <div class="container">
-    <div class="meta">Klávesové zkratky ←/→ verše • ↑/↓ písně • F fullscreen</div>
+    <div class="meta">Klávesové zkratky ←/→ sloky • ↑/↓ písně • F fullscreen</div>
     <div class="controls">
     <button class="btn" id="prevSong">◀︎ Píseň</button>
-    <button class="btn" id="prevVerse">◀︎ Verš</button>
-    <button class="btn" id="nextVerse">Verš ▶︎</button>
+    <button class="btn" id="prevVerse">◀︎ Sloka</button>
+    <button class="btn" id="nextVerse">Sloka ▶︎</button>
     <button class="btn" id="nextSong">Píseň ▶︎</button>
     <button class="btn" id="fullscreen">Fullscreen</button>
     </div>
@@ -208,22 +278,37 @@ export const SelectedSongsPanel = () => {
             const url = URL.createObjectURL(blob);
             try {
                 w.location.href = url;
-                // Revoke when the window unloads to free memory.
-                w.addEventListener && w.addEventListener('beforeunload', () => URL.revokeObjectURL(url));
+                // Add listener for window close AFTER navigation to avoid premature triggering
+                w.addEventListener('beforeunload', () => {
+                    console.log('[Projection] Window closing - beforeunload triggered');
+                    URL.revokeObjectURL(url);
+                    setIsProjectionOpen(false);
+                    projectionWindowRef.current = null;
+                });
+                console.log('[Projection] Navigation complete, beforeunload listener added');
             } catch (e) {
                 // Fallback: some environments may block navigation; try document.write as before.
                 try {
                     w.document.open();
                     w.document.write(html);
                     w.document.close();
+                    // Add listener in fallback path too
+                    w.addEventListener('beforeunload', () => {
+                        console.log('[Projection] Window closing - beforeunload triggered (fallback)');
+                        setIsProjectionOpen(false);
+                        projectionWindowRef.current = null;
+                    });
                 } catch (e2) {
                     URL.revokeObjectURL(url);
                     throw e2;
                 }
             }
         } catch (err) {
-            console.error('Projection failed', err);
+            console.error('[Projection] Projection failed:', err);
             setError('Nepodařilo se otevřít projekční okno.');
+            console.log('[Projection] Setting isProjectionOpen = false due to error');
+            setIsProjectionOpen(false);
+            projectionWindowRef.current = null;
         }
     };
 
@@ -288,12 +373,13 @@ export const SelectedSongsPanel = () => {
                     type="button"
                     className={styles.actionButton}
                     onClick={handleProjectClick}
-                    disabled={!selectedSongs.length || isCombining}
+                    disabled={!selectedSongs.length || isCombining || isProjectionOpen}
+                    title={isProjectionOpen ? "Projekční okno je již otevřeno" : ""}
                 >
                     Promítat texty
                 </button>
 
-                {projectionWindowRef.current && !projectionWindowRef.current.closed && (
+                {isProjectionOpen && (
                     <div className={styles.projectionControls}>
                         <div style={{ marginTop: '12px', paddingTop: '12px', borderTop: '1px solid rgba(0,0,0,0.1)' }}>
                             <p style={{ fontSize: '12px', color: '#666', margin: '0 0 8px 0', fontWeight: 'bold' }}>Řízení projekce:</p>
@@ -302,19 +388,10 @@ export const SelectedSongsPanel = () => {
                                     type="button"
                                     className={styles.actionButton}
                                     style={{ fontSize: '12px', padding: '6px 10px', flex: '1 1 calc(50% - 4px)' }}
-                                    onClick={() => sendProjectionCommand('prevSong')}
-                                    title="Předchozí píseň"
-                                >
-                                    ◀︎ Píseň
-                                </button>
-                                <button
-                                    type="button"
-                                    className={styles.actionButton}
-                                    style={{ fontSize: '12px', padding: '6px 10px', flex: '1 1 calc(50% - 4px)' }}
                                     onClick={() => sendProjectionCommand('prevVerse')}
                                     title="Předchozí verš"
                                 >
-                                    ◀︎ Verš
+                                    ◀︎ Sloka
                                 </button>
                                 <button
                                     type="button"
@@ -323,7 +400,16 @@ export const SelectedSongsPanel = () => {
                                     onClick={() => sendProjectionCommand('nextVerse')}
                                     title="Další verš"
                                 >
-                                    Verš ▶︎
+                                    Sloka ▶︎
+                                </button>
+                                <button
+                                    type="button"
+                                    className={styles.actionButton}
+                                    style={{ fontSize: '12px', padding: '6px 10px', flex: '1 1 calc(50% - 4px)' }}
+                                    onClick={() => sendProjectionCommand('prevSong')}
+                                    title="Předchozí píseň"
+                                >
+                                    ◀︎ Píseň
                                 </button>
                                 <button
                                     type="button"
