@@ -1,0 +1,192 @@
+<!doctype html>
+<html>
+
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Projektor</title>
+    <style>
+        html,
+        body {
+            height: 100%;
+            margin: 0;
+            background: #000;
+            color: #fff;
+            font-family: Arial, Helvetica, sans-serif
+        }
+
+        .container {
+            display: flex;
+            flex-direction: column;
+            align-items: stretch;
+            height: 100%
+        }
+
+        .controls {
+            display: none
+        }
+
+        .btn {
+            background: rgba(255, 255, 255, 0.06);
+            color: #fff;
+            padding: 8px 12px;
+            border: 1px solid rgba(255, 255, 255, 0.06);
+            border-radius: 6px;
+            cursor: pointer
+        }
+
+        .stage {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            padding: 40px
+        }
+
+        .title {
+            font-size: 33px;
+            color: #eedc8dee;
+            position: fixed;
+            top: 1em;
+            text-align: center;
+            width: 100%
+        }
+
+        .verse {
+            font-size: 40px;
+            line-height: 1.4;
+            margin: 6px 0;
+            color: #fff;
+            text-align: center;
+            max-width: 1600px
+        }
+
+        .meta {
+            position: fixed;
+            left: 12px;
+            top: 12px;
+            color: rgba(255, 255, 255, 0.6);
+            font-size: 14px
+        }
+
+        @media (min-width:1200px) {
+            .title {
+                font-size: 33px
+            }
+
+            .verse {
+                font-size: 48px
+            }
+        }
+    </style>
+</head>
+
+<body>
+    <div class="container">
+        <div class="meta">Klávesové zkratky ←/→ sloky • ↑/↓ písně • F fullscreen</div>
+        <div class="controls">
+            <button class="btn" id="prevSong">◀︎ Píseň</button>
+            <button class="btn" id="prevVerse">◀︎ Sloka</button>
+            <button class="btn" id="nextVerse">Sloka ▶︎</button>
+            <button class="btn" id="nextSong">Píseň ▶︎</button>
+            <button class="btn" id="fullscreen">Fullscreen</button>
+        </div>
+        <div class="stage">
+            <h1 class="title" id="title"></h1>
+            <div id="verseContainer"></div>
+        </div>
+    </div>
+    <script>
+        console.log('[Projection Window] Script starting');
+
+        try {
+            const songs = JSON.parse(decodeURIComponent('{{SONGS_DATA}}'));
+            console.log('[Projection Window] Loaded', songs.length, 'songs');
+
+            let songIdx = 0;
+            let verseIdx = 0;
+
+            function parseOrder(orderStr, verses) {
+                if (!orderStr || !orderStr.trim()) return verses.map(v => v.name);
+                return orderStr.split(/\s+/).filter(Boolean);
+            }
+
+            function currentSequence() {
+                const s = songs[songIdx];
+                return parseOrder(s.verseOrder, s.verses);
+            }
+
+            function show() {
+                console.log('[Projection Window] show() called - songIdx:', songIdx, 'verseIdx:', verseIdx);
+                const s = songs[songIdx];
+                const seq = currentSequence();
+                const name = seq[verseIdx] || '';
+                const verseObj = s.verses.find(v => v.name === name) || s.verses[verseIdx] || { lines: '' };
+                const linesHtml = (verseObj.lines || '').split('\n').map(function (l) { return '<div class="verse">' + l.replace(/</g, '&lt;') + '</div>'; }).join('');
+
+                const titleEl = document.getElementById('title');
+                const verseEl = document.getElementById('verseContainer');
+
+                if (titleEl) titleEl.textContent = s.title || '';
+                if (verseEl) verseEl.innerHTML = linesHtml;
+
+                console.log('[Projection Window] Content updated - title:', s.title, 'lines:', verseObj.lines ? verseObj.lines.substring(0, 50) : 'empty');
+
+                // Send state update to parent window
+                if (window.opener && !window.opener.closed) {
+                    window.opener.postMessage({ type: 'projection-state', songIdx: songIdx, verseIdx: verseIdx }, '*');
+                }
+            }
+
+            function clampVerse() {
+                const seq = currentSequence();
+                if (verseIdx < 0) verseIdx = 0;
+                if (verseIdx >= seq.length) verseIdx = seq.length - 1;
+            }
+
+            function prevVerse() { console.log('[Projection Window] prevVerse'); verseIdx--; clampVerse(); show(); }
+            function nextVerse() { console.log('[Projection Window] nextVerse'); verseIdx++; clampVerse(); show(); }
+            function prevSong() { console.log('[Projection Window] prevSong'); songIdx = Math.max(0, songIdx - 1); verseIdx = 0; show(); }
+            function nextSong() { console.log('[Projection Window] nextSong'); songIdx = Math.min(songs.length - 1, songIdx + 1); verseIdx = 0; show(); }
+
+            // Listen for control commands from the main window
+            window.addEventListener('message', (event) => {
+                if (event.data && event.data.type === 'projection-control') {
+                    console.log('[Projection Window] Received command:', event.data.command);
+                    switch (event.data.command) {
+                        case 'nextVerse': nextVerse(); break;
+                        case 'prevVerse': prevVerse(); break;
+                        case 'nextSong': nextSong(); break;
+                        case 'prevSong': prevSong(); break;
+                    }
+                }
+            });
+
+            console.log('[Projection Window] Setting up event listeners');
+
+            document.addEventListener('keydown', (e) => {
+                console.log('[Projection Window] Key pressed:', e.key);
+                if (e.key === 'ArrowLeft') prevVerse();
+                if (e.key === 'ArrowRight') nextVerse();
+                if (e.key === 'ArrowUp') prevSong();
+                if (e.key === 'ArrowDown') nextSong();
+                if (e.key === 'f' || e.key === 'F') document.documentElement.requestFullscreen && document.documentElement.requestFullscreen();
+            });
+
+            // Wait for DOM to be ready before initial show()
+            console.log('[Projection Window] Checking DOM ready state:', document.readyState);
+            if (document.readyState === 'loading') {
+                console.log('[Projection Window] Waiting for DOMContentLoaded');
+                document.addEventListener('DOMContentLoaded', show);
+            } else {
+                console.log('[Projection Window] DOM already ready, calling show()');
+                show();
+            }
+        } catch (err) {
+            console.error('[Projection Window] Error in script:', err);
+        }
+    </script>
+</body>
+
+</html>

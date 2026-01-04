@@ -3,6 +3,7 @@ import { GetCombinedPdf, GetSongProjection, GetSongVerses } from "../../../wails
 import { SelectionContext } from "../../selectionContext";
 import { PdfModal } from "../PdfModal";
 import styles from "./index.module.less";
+import projectionTemplate from "./projection-template.html?raw";
 
 export const SelectedSongsPanel = () => {
     const { selectedSongs, removeSongFromSelection, clearSelection } = useContext(SelectionContext);
@@ -12,6 +13,9 @@ export const SelectedSongsPanel = () => {
     const [isModalOpen, setIsModalOpen] = useState(false);
     const [error, setError] = useState("");
     const [isProjectionOpen, setIsProjectionOpen] = useState(false);
+    const [projectionSongsData, setProjectionSongsData] = useState<Array<{ title: string; verseOrder: string; verses: Array<{ name: string; lines: string }> }>>([]);
+    const [currentSongIdx, setCurrentSongIdx] = useState(0);
+    const [currentVerseIdx, setCurrentVerseIdx] = useState(0);
 
     // Monitor projection window status periodically
     useEffect(() => {
@@ -41,6 +45,14 @@ export const SelectedSongsPanel = () => {
         if (projectionWindowRef.current && !projectionWindowRef.current.closed) {
             projectionWindowRef.current.postMessage({ type: 'projection-control', command }, '*');
         }
+    };
+
+    const closeProjection = () => {
+        if (projectionWindowRef.current && !projectionWindowRef.current.closed) {
+            projectionWindowRef.current.close();
+        }
+        setIsProjectionOpen(false);
+        projectionWindowRef.current = null;
     };
 
     const panelTitle = useMemo(() => {
@@ -98,6 +110,8 @@ export const SelectedSongsPanel = () => {
             console.log('[Projection] Setting isProjectionOpen = true');
             setIsProjectionOpen(true);
             setError("");
+            setCurrentSongIdx(0);
+            setCurrentVerseIdx(0);
 
             const getProj = typeof GetSongProjection === 'function' ? GetSongProjection : undefined;
             const getVerses = typeof GetSongVerses === 'function' ? GetSongVerses : undefined;
@@ -130,6 +144,17 @@ export const SelectedSongsPanel = () => {
                 }
             }
 
+            // Store songs data for preview display
+            setProjectionSongsData(songsData);
+
+            // Listen for projection window state updates
+            window.addEventListener('message', (event) => {
+                if (event.data && event.data.type === 'projection-state') {
+                    setCurrentSongIdx(event.data.songIdx || 0);
+                    setCurrentVerseIdx(event.data.verseIdx || 0);
+                }
+            });
+
             // Safely serialize songs data for embedding inside a <script>.
             // Escape problematic characters: newlines, line/paragraph separators, and </script> tags.
             const safeSongsJson = encodeURIComponent(JSON.stringify(songsData)
@@ -140,137 +165,7 @@ export const SelectedSongsPanel = () => {
                 .replace(/<\/script>/g, '<\\/script>')
             );
 
-            // Build the inline JavaScript code with properly escaped backslashes for template literal
-            const inlineScript = `
-    console.log('[Projection Window] Script starting');
-    
-    try {
-      const songs = JSON.parse(decodeURIComponent('${safeSongsJson}'));
-      console.log('[Projection Window] Loaded', songs.length, 'songs');
-      
-      let songIdx = 0;
-      let verseIdx = 0;
-
-      function parseOrder(orderStr, verses) {
-        if (!orderStr || !orderStr.trim()) return verses.map(v=>v.name);
-        return orderStr.split(/\\s+/).filter(Boolean);
-      }
-
-      function currentSequence() {
-        const s = songs[songIdx];
-        return parseOrder(s.verseOrder, s.verses);
-      }
-
-      function show() {
-        console.log('[Projection Window] show() called - songIdx:', songIdx, 'verseIdx:', verseIdx);
-        const s = songs[songIdx];
-        const seq = currentSequence();
-        const name = seq[verseIdx] || '';
-        const verseObj = s.verses.find(v=>v.name===name) || s.verses[verseIdx] || {lines: ''};
-        const linesHtml = (verseObj.lines || '').split('\\n').map(function(l){ return '<div class="verse">' + l.replace(/</g,'&lt;') + '</div>'; }).join('');
-        
-        const titleEl = document.getElementById('title');
-        const verseEl = document.getElementById('verseContainer');
-        
-        if (titleEl) titleEl.textContent = s.title || '';
-        if (verseEl) verseEl.innerHTML = linesHtml;
-        
-        console.log('[Projection Window] Content updated - title:', s.title, 'lines:', verseObj.lines ? verseObj.lines.substring(0, 50) : 'empty');
-      }
-
-      function clampVerse() {
-        const seq = currentSequence();
-        if (verseIdx < 0) verseIdx = 0;
-        if (verseIdx >= seq.length) verseIdx = seq.length - 1;
-      }
-
-      function prevVerse(){ console.log('[Projection Window] prevVerse'); verseIdx--; clampVerse(); show(); }
-      function nextVerse(){ console.log('[Projection Window] nextVerse'); verseIdx++; clampVerse(); show(); }
-      function prevSong(){ console.log('[Projection Window] prevSong'); songIdx = Math.max(0, songIdx-1); verseIdx = 0; show(); }
-      function nextSong(){ console.log('[Projection Window] nextSong'); songIdx = Math.min(songs.length-1, songIdx+1); verseIdx = 0; show(); }
-
-      // Listen for control commands from the main window
-      window.addEventListener('message', (event) => {
-        if (event.data && event.data.type === 'projection-control') {
-          console.log('[Projection Window] Received command:', event.data.command);
-          switch(event.data.command) {
-            case 'nextVerse': nextVerse(); break;
-            case 'prevVerse': prevVerse(); break;
-            case 'nextSong': nextSong(); break;
-            case 'prevSong': prevSong(); break;
-          }
-        }
-      });
-
-      console.log('[Projection Window] Setting up event listeners');
-      document.getElementById('prevVerse').addEventListener('click', prevVerse);
-      document.getElementById('nextVerse').addEventListener('click', nextVerse);
-      document.getElementById('prevSong').addEventListener('click', prevSong);
-      document.getElementById('nextSong').addEventListener('click', nextSong);
-      document.getElementById('fullscreen').addEventListener('click', ()=>{
-        const el = document.documentElement;
-        if (!document.fullscreenElement) el.requestFullscreen && el.requestFullscreen(); else document.exitFullscreen && document.exitFullscreen();
-      });
-
-      document.addEventListener('keydown', (e)=>{
-        console.log('[Projection Window] Key pressed:', e.key);
-        if (e.key === 'ArrowLeft') prevVerse();
-        if (e.key === 'ArrowRight') nextVerse();
-        if (e.key === 'ArrowUp') prevSong();
-        if (e.key === 'ArrowDown') nextSong();
-        if (e.key === 'f' || e.key === 'F') document.documentElement.requestFullscreen && document.documentElement.requestFullscreen();
-      });
-
-      // Wait for DOM to be ready before initial show()
-      console.log('[Projection Window] Checking DOM ready state:', document.readyState);
-      if (document.readyState === 'loading') {
-        console.log('[Projection Window] Waiting for DOMContentLoaded');
-        document.addEventListener('DOMContentLoaded', show);
-      } else {
-        console.log('[Projection Window] DOM already ready, calling show()');
-        show();
-      }
-    } catch (err) {
-      console.error('[Projection Window] Error in script:', err);
-    }
-  `;
-
-            const html = `<!doctype html>
-<html>
-  <head>
-  <meta charset="utf-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>Projection</title>
-  <style>
-    html,body{height:100%;margin:0;background:#000;color:#fff;font-family:Arial, Helvetica, sans-serif}
-    .container{display:flex;flex-direction:column;align-items:stretch;height:100%}
-    .controls{display:flex;gap:8px;padding:12px;background:rgba(0,0,0,0.2);position:fixed;right:12px;top:12px;z-index:999}
-    .btn{background:rgba(255,255,255,0.06);color:#fff;padding:8px 12px;border:1px solid rgba(255,255,255,0.06);border-radius:6px;cursor:pointer}
-    .stage{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:40px}
-    .title{font-size:48px;color:#fff;position:fixed;top:1em;text-align:center;width:100%}
-    .verse{font-size:40px;line-height:1.4;margin:6px 0;color:#fff;text-align:center;max-width:1600px}
-    .meta{position:fixed;left:12px;top:12px;color:rgba(255,255,255,0.6);font-size:14px}
-    @media (min-width:1200px){.title{font-size:64px}.verse{font-size:48px}}
-  </style>
-  </head>
-  <body>
-  <div class="container">
-    <div class="meta">Klávesové zkratky ←/→ sloky • ↑/↓ písně • F fullscreen</div>
-    <div class="controls">
-    <button class="btn" id="prevSong">◀︎ Píseň</button>
-    <button class="btn" id="prevVerse">◀︎ Sloka</button>
-    <button class="btn" id="nextVerse">Sloka ▶︎</button>
-    <button class="btn" id="nextSong">Píseň ▶︎</button>
-    <button class="btn" id="fullscreen">Fullscreen</button>
-    </div>
-    <div class="stage">
-    <h1 class="title" id="title"></h1>
-    <div id="verseContainer"></div>
-    </div>
-  </div>
-  <script>${inlineScript}</script>
-  </body>
-</html>`;
+            const html = projectionTemplate.replace('{{SONGS_DATA}}', safeSongsJson);
 
             // Use a Blob URL to navigate the newly opened window to the generated HTML.
             // This avoids issues with unescaped characters when calling document.write.
@@ -383,6 +278,50 @@ export const SelectedSongsPanel = () => {
                     <div className={styles.projectionControls}>
                         <div style={{ marginTop: '12px', paddingTop: '12px', borderTop: '1px solid rgba(0,0,0,0.1)' }}>
                             <p style={{ fontSize: '12px', color: '#666', margin: '0 0 8px 0', fontWeight: 'bold' }}>Řízení projekce:</p>
+
+                            {projectionSongsData.length > 0 && (
+                                <div style={{ marginBottom: '12px', maxHeight: '200px', overflowY: 'auto', border: '1px solid rgba(0,0,0,0.1)', borderRadius: '4px', background: '#f9f9f9' }}>
+                                    {projectionSongsData.map((song, songIdx) => {
+                                        const sequence = song.verseOrder && song.verseOrder.trim()
+                                            ? song.verseOrder.split(/\s+/).filter(Boolean)
+                                            : song.verses.map(v => v.name);
+
+                                        return (
+                                            <div key={songIdx} style={{ borderBottom: songIdx < projectionSongsData.length - 1 ? '1px solid rgba(0,0,0,0.1)' : 'none', padding: '8px' }}>
+                                                <div style={{ fontSize: '11px', fontWeight: 'bold', marginBottom: '4px', color: '#333' }}>{song.title}</div>
+                                                <div style={{ display: 'flex', flexWrap: 'wrap', gap: '4px' }}>
+                                                    {sequence.map((verseName, verseIdx) => {
+                                                        const verseObj = song.verses.find(v => v.name === verseName) || song.verses[verseIdx];
+                                                        if (!verseObj) return null;
+
+                                                        const firstLine = (verseObj.lines || '').split('\n')[0] || '';
+                                                        const isActive = songIdx === currentSongIdx && verseIdx === currentVerseIdx;
+
+                                                        return (
+                                                            <div
+                                                                key={verseIdx}
+                                                                style={{
+                                                                    fontSize: '10px',
+                                                                    padding: '4px 6px',
+                                                                    background: isActive ? '#4CAF50' : '#fff',
+                                                                    color: isActive ? '#fff' : '#666',
+                                                                    border: '1px solid rgba(0,0,0,0.1)',
+                                                                    borderRadius: '3px',
+                                                                    flex: '1 1 100%',
+                                                                    maxWidth: '100%',
+                                                                    fontWeight: isActive ? 'bold' : 'normal'
+                                                                }}
+                                                            >
+                                                                <strong>{verseName}:</strong> {firstLine.substring(0, 40)}{firstLine.length > 40 ? '...' : ''}
+                                                            </div>
+                                                        );
+                                                    })}
+                                                </div>
+                                            </div>
+                                        );
+                                    })}
+                                </div>
+                            )}
                             <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap' }}>
                                 <button
                                     type="button"
@@ -419,6 +358,15 @@ export const SelectedSongsPanel = () => {
                                     title="Další píseň"
                                 >
                                     Píseň ▶︎
+                                </button>
+                                <button
+                                    type="button"
+                                    className={styles.actionButton}
+                                    style={{ fontSize: '12px', padding: '6px 10px', flex: '1 1 100%', background: '#f44336', color: '#fff' }}
+                                    onClick={closeProjection}
+                                    title="Zavřít projekční okno"
+                                >
+                                    ✕ Zavřít projektor
                                 </button>
                             </div>
                         </div>
