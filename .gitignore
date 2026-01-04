@@ -1,7 +1,29 @@
+# Build outputs
 build/bin
-node_modules
 frontend/dist
+lyyyra
+
+# Dependencies
+node_modules
+
+# Debug/temporary
 __debug*
-frontend/yarn.lock
-changeme
+
+# Local state/config
 status.yaml
+docker-settings-windows.txt
+scripts/find-docker-settings.ps1
+changeme
+
+# Editor
+.vscode/settings.json
+
+# Docs in progress
+*.md
+
+# OS noise
+.DS_Store
+Thumbs.db
+
+# Logs
+*.log
