@@ -8,7 +8,6 @@ interface Props {
   // status: AppStatus
   // isProgress: boolean
   loadSongs: () => void
-  setFilter: (filter: string) => void
 }
 
 export function InfoBox(props: Props) {
@@ -49,12 +48,11 @@ export function InfoBox(props: Props) {
       return;
     }
     const timer = setTimeout(() => {
-      props.setFilter(searchValue);
       updateStatus({ SearchPattern: searchValue });
     }, DEBOUNCE_DELAY);
 
     return () => clearTimeout(timer);
-  }, [searchValue, status.SearchPattern, props.setFilter, updateStatus]);
+  }, [searchValue, status.SearchPattern, updateStatus]);
 
   // maintain backwards compatibility with previous delayed logging for debugging
   useEffect(() => {

@@ -4,6 +4,8 @@
 <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <link rel="icon" type="image/png"
+        href="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNk+M9QDwADhgGAWjR9awAAAABJRU5ErkJggg==" />
     <title>Projektor</title>
     <style>
         html,
@@ -41,7 +43,8 @@
             flex-direction: column;
             align-items: center;
             justify-content: center;
-            padding: 40px
+            padding: 40px;
+            padding-top: 133px
         }
 
         .title {
@@ -62,12 +65,63 @@
             max-width: 1600px
         }
 
+        .verse .yellow {
+            color: #f5e60c
+        }
+
+        .verse .red {
+            color: #ff6b6b
+        }
+
+        .verse .blue {
+            color: #4dabf7
+        }
+
+        .verse .green {
+            color: #51cf66
+        }
+
+        #verseContainer {
+            max-height: calc(100vh - 140px);
+            overflow-y: auto;
+            width: 100%;
+            display: flex;
+            flex-direction: column;
+            align-items: center
+        }
+
         .meta {
             position: fixed;
             left: 12px;
+            right: 12px;
             top: 12px;
             color: rgba(255, 255, 255, 0.6);
-            font-size: 14px
+            font-size: 14px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 16px
+        }
+
+        .verse-indicators {
+            display: flex;
+            gap: 8px;
+            align-items: center
+        }
+
+        .verse-indicator {
+            padding: 4px 8px;
+            border-radius: 4px;
+            font-size: 13px;
+            background: rgba(255, 255, 255, 0.1);
+            color: rgba(255, 255, 255, 0.6);
+            transition: all 0.2s
+        }
+
+        .verse-indicator.active {
+            background: #eedc8d;
+            color: #000;
+            font-weight: bold
         }
 
         @media (min-width:1200px) {
@@ -84,7 +138,10 @@
 
 <body>
     <div class="container">
-        <div class="meta">Klávesové zkratky ←/→ sloky • ↑/↓ písně • F fullscreen</div>
+        <div class="meta">
+            <span>Klávesové zkratky ←/→ sloky • ↑/↓ písně • F fullscreen</span>
+            <div class="verse-indicators" id="verseIndicators"></div>
+        </div>
         <div class="controls">
             <button class="btn" id="prevSong">◀︎ Píseň</button>
             <button class="btn" id="prevVerse">◀︎ Sloka</button>
@@ -112,6 +169,14 @@
                 return orderStr.split(/\s+/).filter(Boolean);
             }
 
+            function parseColorMarkup(text) {
+                return text
+                    .replace(/\{y\}(.*?)\{\/y\}/g, '<span class="yellow">$1</span>')
+                    .replace(/\{r\}(.*?)\{\/r\}/g, '<span class="red">$1</span>')
+                    .replace(/\{b\}(.*?)\{\/b\}/g, '<span class="blue">$1</span>')
+                    .replace(/\{g\}(.*?)\{\/g\}/g, '<span class="green">$1</span>');
+            }
+
             function currentSequence() {
                 const s = songs[songIdx];
                 return parseOrder(s.verseOrder, s.verses);
@@ -123,13 +188,28 @@
                 const seq = currentSequence();
                 const name = seq[verseIdx] || '';
                 const verseObj = s.verses.find(v => v.name === name) || s.verses[verseIdx] || { lines: '' };
-                const linesHtml = (verseObj.lines || '').split('\n').map(function (l) { return '<div class="verse">' + l.replace(/</g, '&lt;') + '</div>'; }).join('');
+                const linesHtml = (verseObj.lines || '').split('\n').map(function (l) {
+                    const escaped = l.replace(/</g, '&lt;').replace(/>/g, '&gt;');
+                    const colored = parseColorMarkup(escaped);
+                    return '<div class="verse">' + colored + '</div>';
+                }).join('');
 
                 const titleEl = document.getElementById('title');
                 const verseEl = document.getElementById('verseContainer');
+                const indicatorsEl = document.getElementById('verseIndicators');
 
                 if (titleEl) titleEl.textContent = s.title || '';
                 if (verseEl) verseEl.innerHTML = linesHtml;
+
+                // Update verse indicators
+                if (indicatorsEl) {
+                    const indicatorsHtml = seq.map(function (vName, idx) {
+                        const isActive = idx === verseIdx;
+                        const displayName = vName.replace(/^v/, '').replace(/^c$/i, 'Ref').replace(/^c(\d+)$/i, 'Ref$1');
+                        return '<div class="verse-indicator' + (isActive ? ' active' : '') + '">' + displayName + '</div>';
+                    }).join('');
+                    indicatorsEl.innerHTML = indicatorsHtml;
+                }
 
                 console.log('[Projection Window] Content updated - title:', s.title, 'lines:', verseObj.lines ? verseObj.lines.substring(0, 50) : 'empty');
 
@@ -160,6 +240,12 @@
                         case 'nextSong': nextSong(); break;
                         case 'prevSong': prevSong(); break;
                     }
+                } else if (event.data && event.data.type === 'projection-jump') {
+                    console.log('[Projection Window] Jump to:', event.data.songIdx, event.data.verseIdx);
+                    songIdx = event.data.songIdx || 0;
+                    verseIdx = event.data.verseIdx || 0;
+                    clampVerse();
+                    show();
                 }
             });
 

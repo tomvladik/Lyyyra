@@ -213,13 +213,10 @@ describe('<SelectedSongsPanel />', () => {
         expect(AppModule.GetSongProjection).toHaveBeenCalledTimes(1);
       }, { timeout: 2000 });
 
-      // Button should be disabled
-      expect(projectButton.disabled).toBe(true);
-
-      // Second click - should be prevented
-      await act(async () => {
-        fireEvent.click(projectButton);
-      });
+      // Button is hidden once projection is open to avoid duplicate launches
+      await waitFor(() => {
+        expect(screen.queryByRole('button', { name: /Promítat texty/ })).toBeNull();
+      }, { timeout: 2000 });
 
       // GetSongProjection should still only be called once (not twice)
       expect(AppModule.GetSongProjection).toHaveBeenCalledTimes(1);
