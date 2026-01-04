@@ -145,7 +145,9 @@ func TestSplitPdfByPagesWithSkip(t *testing.T) {
 	}
 	defer pdfFile.Close()
 
-	io.Copy(pdfFile, resp.Body)
+	if _, err := io.Copy(pdfFile, resp.Body); err != nil {
+		t.Fatalf("Failed to write PDF file: %v", err)
+	}
 
 	// Try different skip configurations
 	skipConfigs := []struct {
@@ -175,7 +177,9 @@ func TestSplitPdfByPagesWithSkip(t *testing.T) {
 			// Copy best result to workspace
 			if config.name == "minimal_skip" {
 				workspaceDir := filepath.Join("/workspaces/Lyyyra/build/pdf_split_results")
-				os.MkdirAll(workspaceDir, os.ModePerm)
+				if err := os.MkdirAll(workspaceDir, os.ModePerm); err != nil {
+					t.Fatalf("Failed to create workspace dir: %v", err)
+				}
 				for _, entry := range entries {
 					src := filepath.Join(outputDir, entry.Name())
 					dst := filepath.Join(workspaceDir, entry.Name())
@@ -183,7 +187,7 @@ func TestSplitPdfByPagesWithSkip(t *testing.T) {
 					defer srcFile.Close()
 					dstFile, _ := os.Create(dst)
 					defer dstFile.Close()
-					io.Copy(dstFile, srcFile)
+					_, _ = io.Copy(dstFile, srcFile)
 				}
 			}
 		})

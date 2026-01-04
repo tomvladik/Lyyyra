@@ -3,7 +3,6 @@ package app
 import (
 	"archive/zip"
 	"bytes"
-	"io/ioutil"
 	"net/http"
 	"net/http/httptest"
 	"os"
@@ -13,7 +12,7 @@ import (
 
 func setupTestApp(t *testing.T) *App {
 	// Create a temporary directory for the app
-	appDir, err := ioutil.TempDir("", "testapp_")
+	appDir, err := os.MkdirTemp("", "testapp_")
 	if err != nil {
 		t.Fatalf("Failed to create temp app directory: %v", err)
 	}
@@ -40,7 +39,7 @@ func TestDownloadFile(t *testing.T) {
 
 	// Create a test server to serve a test file
 	ts := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		w.Write([]byte("test content"))
+		_, _ = w.Write([]byte("test content"))
 	}))
 	defer ts.Close()
 
@@ -54,7 +53,7 @@ func TestDownloadFile(t *testing.T) {
 	}
 
 	// Check if the file was downloaded correctly
-	content, err := ioutil.ReadFile(downloadedFilePath)
+	content, err := os.ReadFile(downloadedFilePath)
 	if err != nil {
 		t.Fatalf("Failed to read downloaded file: %v", err)
 	}
@@ -90,7 +89,7 @@ func TestDownloadSongBase(t *testing.T) {
 	// Create a test server to serve a test zip file
 	ts := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		w.Header().Set("Content-Type", "application/zip")
-		w.Write(createZipFromFiles(map[string][]byte{"empty.txt": []byte("")}))
+		_, _ = w.Write(createZipFromFiles(map[string][]byte{"empty.txt": []byte("")}))
 	}))
 	defer ts.Close()
 
@@ -122,7 +121,7 @@ func TestDownloadEz(t *testing.T) {
 	zipBytes := createZipFromFiles(map[string][]byte{"song-1.xml": content})
 	ts := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		w.Header().Set("Content-Type", "application/zip")
-		w.Write(zipBytes)
+		_, _ = w.Write(zipBytes)
 	}))
 	defer ts.Close()
 	app.xmlUrl = ts.URL
@@ -184,7 +183,7 @@ func TestDownloadSupplementalPDFs(t *testing.T) {
 	app.status.WebResourcesReady = false
 
 	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		w.Write([]byte("pdf"))
+		_, _ = w.Write([]byte("pdf"))
 	}))
 	defer server.Close()
 
@@ -214,7 +213,7 @@ func TestDownloadEzTriggersSupplementalDownloads(t *testing.T) {
 	app.status.DatabaseReady = true
 
 	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		w.Write([]byte("pdf"))
+		_, _ = w.Write([]byte("pdf"))
 	}))
 	defer server.Close()
 

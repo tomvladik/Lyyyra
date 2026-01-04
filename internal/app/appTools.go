@@ -19,7 +19,9 @@ func unzip(zipFile, destination string) error {
 
 		// If the entry is a directory, create it
 		if file.FileInfo().IsDir() {
-			os.MkdirAll(filePath, os.ModePerm)
+			if err := os.MkdirAll(filePath, os.ModePerm); err != nil {
+				return err
+			}
 			continue
 		}
 

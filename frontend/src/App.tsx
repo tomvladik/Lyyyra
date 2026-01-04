@@ -28,7 +28,6 @@ const createInitialStatus = (): AppStatus => ({
 function App() {
     const [status, setStatus] = useState<AppStatus>(() => createInitialStatus());
 
-    const [filterValue, setFilterValue] = useState("");
     const [isStatusPanelVisible, setIsStatusPanelVisible] = useState(false);
     const [selectedSongs, setSelectedSongs] = useState<SelectedSong[]>([]);
 
@@ -135,7 +134,7 @@ function App() {
                     onDoubleClick={handleBackgroundDoubleClick}
                 >
                     <header className="header" style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-                        <InfoBox loadSongs={loadSongs} setFilter={setFilterValue} />
+                            <InfoBox loadSongs={loadSongs} />
                     </header>
                     <main className={selectedSongs.length ? "ContentShell ContentShell--withPanel" : "ContentShell"}>
                         <div className="SongScrollArea">

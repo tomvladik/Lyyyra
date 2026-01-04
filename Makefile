@@ -37,7 +37,14 @@ fmt: ## Format Go code
 	go fmt ./internal/...
 
 lint: ## Lint Go code (requires golangci-lint)
-	golangci-lint run ./internal/...
+	@echo "Linting Go code in ./internal/..."
+	golangci-lint run ./internal/... -v
+	@echo "Linting TypeScript in frontend/src..."
+ifeq ($(OS),Windows_NT)
+	cd frontend && npx eslint src/ --format node_modules/eslint-formatter-pretty/index.js
+else
+	cd frontend && npx eslint src/ --format node_modules/eslint-formatter-pretty/index.js
+endif
 
 # Node.js/Frontend tasks
 .PHONY: frontend-install frontend-build frontend-dev frontend-test

@@ -130,14 +130,14 @@ export const SelectedSongsPanel = () => {
                     const v = await getVerses(song.id);
                     const parts = (v || '').split('===').map((s: string) => s.trim()).filter(Boolean);
                     const verses = parts.map((lines: string, idx: number) => ({ name: `v${idx + 1}`, lines }));
-                    songsData.push({ title: song.title, verseOrder: verses.map((_: any, i: number) => `v${i + 1}`).join(' '), verses });
+                    songsData.push({ title: song.title, verseOrder: verses.map((_: unknown, i: number) => `v${i + 1}`).join(' '), verses });
                     continue;
                 }
 
                 if (payloadRaw) {
                     try {
                         const obj = JSON.parse(payloadRaw);
-                        const verses = Array.isArray(obj.verses) ? obj.verses.map((vv: any) => ({ name: vv.name || '', lines: vv.lines || '' })) : [];
+                        const verses = Array.isArray(obj.verses) ? obj.verses.map((vv: unknown) => ({ name: (vv as {name?: string}).name || '', lines: (vv as {lines?: string}).lines || '' })) : [];
                         const verseOrder = typeof obj.verse_order === 'string' ? obj.verse_order : '';
                         songsData.push({ title: `${song.entry}: ${song.title}`, verseOrder, verses });
                     } catch (e) {

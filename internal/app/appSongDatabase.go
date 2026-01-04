@@ -14,7 +14,7 @@ import (
 func (a *App) PrepareDatabase() {
 	slog.Info(fmt.Sprintf("PrepareDatabase: %s", a.dbFilePath))
 
-	a.withDB(func(db *sql.DB) error {
+	_ = a.withDB(func(db *sql.DB) error {
 		// Create tables if they don't exist
 		tableScripts := []string{
 			`DROP TABLE IF EXISTS authors;`,
@@ -80,7 +80,7 @@ func (a *App) FillDatabase() {
 	totalFiles := len(xmlFiles)
 	a.updateProgress("Plním databázi...", 0)
 
-	a.withDB(func(db *sql.DB) error {
+	_ = a.withDB(func(db *sql.DB) error {
 		// Process each XML file
 		for i, xmlFile := range xmlFiles {
 			// Update progress every 10 files or at the end

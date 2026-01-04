@@ -58,7 +58,7 @@ describe('<SelectedSongsPanel />', () => {
       },
       addEventListener: vi.fn(),
       closed: false,
-    } as any);
+    } as unknown as Window);
 
     // Mock URL.createObjectURL and revokeObjectURL
     global.URL.createObjectURL = vi.fn(() => 'blob:mock-url');

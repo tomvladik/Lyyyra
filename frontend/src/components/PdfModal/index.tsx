@@ -70,7 +70,7 @@ export const PdfModal = ({ isOpen, filename, dataUrl, songNumber, songName, onCl
             .then((remoteDataUrl: string) => {
                 setPdfPath(remoteDataUrl);
             })
-            .catch((err: any) => {
+            .catch((err: Error) => {
                 console.error("Failed to get PDF path:", err);
                 setError(`Failed to load PDF: ${err}`);
             });

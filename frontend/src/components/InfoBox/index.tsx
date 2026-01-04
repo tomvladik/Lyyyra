@@ -1,5 +1,5 @@
 import React, { ChangeEvent, useContext, useEffect, useMemo, useState } from 'react';
-import { AppStatus, SortingOption } from '../../AppStatus';
+import { SortingOption } from '../../AppStatus';
 import { DEBOUNCE_DELAY, FETCH_STATUS_DELAY } from '../../constants';
 import { DataContext } from '../../context';
 import styles from "./index.module.less";
@@ -91,10 +91,10 @@ export function InfoBox(props: Props) {
         <div style={{ marginBottom: '12px' }}>{status.ProgressMessage || 'Připravuji data, vyčkejte ....'}</div>
         {status.ProgressPercent > 0 && (
           <div>
-            <div style={{ 
-              width: '100%', 
-              backgroundColor: '#e0e0e0', 
-              borderRadius: '4px', 
+            <div style={{
+              width: '100%',
+              backgroundColor: '#e0e0e0',
+              borderRadius: '4px',
               height: '20px',
               overflow: 'hidden'
             }}>
@@ -123,15 +123,15 @@ export function InfoBox(props: Props) {
         <div style={{ display: 'flex', gap: '20px', flexWrap: 'wrap' }}>
           <div style={{ flex: '1', minWidth: '250px' }}>
             <label htmlFor="search-box" style={{ display: 'block', marginBottom: '6px', fontSize: '15px', fontWeight: '500', textAlign: 'left' }}>Hledat v textu</label>
-            <input 
-              id="search-box" 
-              className={styles.sorting} 
-              type="text" 
+            <input
+              id="search-box"
+              className={styles.sorting}
+              type="text"
               value={searchValue}
               onChange={(e: React.ChangeEvent<HTMLInputElement>) => {
                 setSearchValue(e.target.value);
               }}
-              placeholder="Hledat text ..." 
+              placeholder="Hledat text ..."
             />
           </div>
           <div style={{ flex: '1', minWidth: '200px' }}>
