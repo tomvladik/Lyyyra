@@ -58,8 +58,6 @@ frontend-test: ## Run frontend tests (non-watch)
 frontend-test-watch: ## Run frontend tests in watch mode
 	cd frontend && npm test
 
-frontend-test-ui: ## Run frontend tests with UI
-	cd frontend && npm run test:ui
 
 clean: ## Clean Go and frontend build artifacts
 	go clean
@@ -71,7 +69,6 @@ clean-data: ## Delete local app data (database, songs, status, logs)
 	@echo "App data deleted. Next run will start fresh."
 
 test-all: test frontend-test ## Run all tests (Go + frontend)
-	cd frontend && npm test || true
 
 install-tools: ## Install Go test, lint tools, and act for CI testing
 	go install gotest.tools/gotestsum@v1.11.0
@@ -81,33 +78,30 @@ install-tools: ## Install Go test, lint tools, and act for CI testing
 
 # Wails tasks
 .PHONY: wails-dev wails-build wails-build-windows wails-install
-wails-dev: ## Start Wails development server
+DEVTOOLS ?= true
+
+wails-dev: ## Start Wails development server (with devtools enabled)
 ifeq ($(OS),Windows_NT)
-	wails dev -tags "$(GO_DEV_TAGS)"
+	wails dev -tags "$(GO_DEV_TAGS)" $(if $(filter true,$(DEVTOOLS)),-devtools)
 else
 	@if [ -z "$$DISPLAY" ] && command -v xvfb-run >/dev/null 2>&1; then \
 		echo "[wails-dev] DISPLAY not set, starting via xvfb-run"; \
-		xvfb-run -a wails dev -tags "$(GO_DEV_TAGS)"; \
+		xvfb-run -a wails dev -tags "$(GO_DEV_TAGS)" $(if $(filter true,$(DEVTOOLS)),-devtools); \
 	else \
-		wails dev -tags "$(GO_DEV_TAGS)"; \
+		wails dev -tags "$(GO_DEV_TAGS)" $(if $(filter true,$(DEVTOOLS)),-devtools); \
 	fi
 endif
 
 wails-build: ## Build Wails application for production
-	wails build -tags "$(GO_PROD_TAGS)"
-wails-build-windows: ## Build Wails for Windows (cross-compile in devcontainer)
-	CGO_ENABLED=1 CC=x86_64-w64-mingw32-gcc CXX=x86_64-w64-mingw32-g++ wails build -platform windows/amd64 -tags "$(GO_PROD_TAGS)"
+	wails build -tags "$(GO_PROD_TAGS)" $(if $(filter true,$(DEVTOOLS)),-devtools)
 
 wails-build-windows-skip-frontend: ## Build Windows app (skip frontend rebuild, devcontainer cross-compile)
-	CGO_ENABLED=1 CC=x86_64-w64-mingw32-gcc CXX=x86_64-w64-mingw32-g++ wails build -platform windows/amd64 -tags "$(GO_PROD_TAGS)" -skipbindings -s
+	CGO_ENABLED=1 CC=x86_64-w64-mingw32-gcc CXX=x86_64-w64-mingw32-g++ wails build -platform windows/amd64 -tags "$(GO_PROD_TAGS)" $(if $(filter true,$(DEVTOOLS)),-devtools) -skipbindings -s
 
-wails-build-windows-fast: frontend-build wails-build-windows-skip-frontend ## Fast Windows build in devcontainer (pre-build frontend)
+wails-build-windows: frontend-build wails-build-windows-skip-frontend ## Build Wails for Windows (cross-compile in devcontainer)
 
-wails-build-native-windows: ## Build Wails for Windows (native build on Windows)
-	wails build -platform windows/amd64 -tags "$(GO_PROD_TAGS)"
 
-wails-build-native-windows-skip-frontend: ## Build Windows app native (skip frontend rebuild)
-	wails build -platform windows/amd64 -tags "$(GO_PROD_TAGS)" -skipbindings -s
+
 wails-install: ## Install Wails CLI
 	go install github.com/wailsapp/wails/v2/cmd/wails@latest
 
