@@ -134,7 +134,7 @@ function App() {
                     onDoubleClick={handleBackgroundDoubleClick}
                 >
                     <header className="header" style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-                            <InfoBox loadSongs={loadSongs} />
+                        <InfoBox loadSongs={loadSongs} />
                     </header>
                     <main className={selectedSongs.length ? "ContentShell ContentShell--withPanel" : "ContentShell"}>
                         <div className="SongScrollArea">

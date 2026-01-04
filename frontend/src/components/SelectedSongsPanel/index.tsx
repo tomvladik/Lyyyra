@@ -137,7 +137,7 @@ export const SelectedSongsPanel = () => {
                 if (payloadRaw) {
                     try {
                         const obj = JSON.parse(payloadRaw);
-                        const verses = Array.isArray(obj.verses) ? obj.verses.map((vv: unknown) => ({ name: (vv as {name?: string}).name || '', lines: (vv as {lines?: string}).lines || '' })) : [];
+                        const verses = Array.isArray(obj.verses) ? obj.verses.map((vv: unknown) => ({ name: (vv as { name?: string }).name || '', lines: (vv as { lines?: string }).lines || '' })) : [];
                         const verseOrder = typeof obj.verse_order === 'string' ? obj.verse_order : '';
                         songsData.push({ title: `${song.entry}: ${song.title}`, verseOrder, verses });
                     } catch (e) {
