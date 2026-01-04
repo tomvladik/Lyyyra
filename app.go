@@ -15,6 +15,7 @@ import (
 
 	"github.com/oliverpool/unipdf/v3/creator"
 	"github.com/oliverpool/unipdf/v3/model"
+	"github.com/wailsapp/wails/v2/pkg/runtime"
 )
 
 // App struct
@@ -248,4 +249,29 @@ func (a *App) SaveSorting(sorting SortingOption) {
 func (a *App) GetStatus() AppStatus {
 	a.status.BuildVersion = buildVersion
 	return a.status
+}
+
+// Projection control methods that emit events
+func (a *App) ProjectionNextVerse() {
+	if a.ctx != nil {
+		runtime.EventsEmit(a.ctx, "projection:nextVerse")
+	}
+}
+
+func (a *App) ProjectionPrevVerse() {
+	if a.ctx != nil {
+		runtime.EventsEmit(a.ctx, "projection:prevVerse")
+	}
+}
+
+func (a *App) ProjectionNextSong() {
+	if a.ctx != nil {
+		runtime.EventsEmit(a.ctx, "projection:nextSong")
+	}
+}
+
+func (a *App) ProjectionPrevSong() {
+	if a.ctx != nil {
+		runtime.EventsEmit(a.ctx, "projection:prevSong")
+	}
 }

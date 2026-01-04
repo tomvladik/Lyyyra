@@ -31,7 +31,10 @@ export const SongCard = ({ data }: { data: dtoSong }) => {
     const isSelected = isSongSelected(data.Id);
 
     const handleAddToSelection = () => {
-        if (!data.KytaraFile || isSelected) {
+        if (isSelected) {
+            return;
+        }
+        if (!data.KytaraFile) {
             return;
         }
 

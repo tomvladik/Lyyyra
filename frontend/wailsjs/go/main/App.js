@@ -50,12 +50,32 @@ export function GetStatus() {
   return window['go']['main']['App']['GetStatus']();
 }
 
+export function OpenProjectionWindow() {
+  return window['go']['main']['App']['OpenProjectionWindow']();
+}
+
 export function PrepareDatabase() {
   return window['go']['main']['App']['PrepareDatabase']();
 }
 
 export function ProcessKytaraPDF() {
   return window['go']['main']['App']['ProcessKytaraPDF']();
+}
+
+export function ProjectionNextSong() {
+  return window['go']['main']['App']['ProjectionNextSong']();
+}
+
+export function ProjectionNextVerse() {
+  return window['go']['main']['App']['ProjectionNextVerse']();
+}
+
+export function ProjectionPrevSong() {
+  return window['go']['main']['App']['ProjectionPrevSong']();
+}
+
+export function ProjectionPrevVerse() {
+  return window['go']['main']['App']['ProjectionPrevVerse']();
 }
 
 export function ResetData() {

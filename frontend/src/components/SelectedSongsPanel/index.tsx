@@ -1,4 +1,4 @@
-import { useContext, useMemo, useState } from "react";
+import { useContext, useMemo, useRef, useState } from "react";
 import { GetCombinedPdf, GetSongProjection, GetSongVerses } from "../../../wailsjs/go/main/App";
 import { SelectionContext } from "../../selectionContext";
 import { PdfModal } from "../PdfModal";
@@ -6,10 +6,17 @@ import styles from "./index.module.less";
 
 export const SelectedSongsPanel = () => {
     const { selectedSongs, removeSongFromSelection, clearSelection } = useContext(SelectionContext);
+    const projectionWindowRef = useRef<Window | null>(null);
     const [isCombining, setIsCombining] = useState(false);
     const [combinedPdf, setCombinedPdf] = useState("");
     const [isModalOpen, setIsModalOpen] = useState(false);
     const [error, setError] = useState("");
+
+    const sendProjectionCommand = (command: 'nextVerse' | 'prevVerse' | 'nextSong' | 'prevSong') => {
+        if (projectionWindowRef.current && !projectionWindowRef.current.closed) {
+            projectionWindowRef.current.postMessage({ type: 'projection-control', command }, '*');
+        }
+    };
 
     const panelTitle = useMemo(() => {
         if (!selectedSongs.length) return "Výběr je prázdný";
@@ -46,6 +53,8 @@ export const SelectedSongsPanel = () => {
         }
 
         try {
+            // Store the window reference for control
+            projectionWindowRef.current = w;
             const getProj = typeof GetSongProjection === 'function' ? GetSongProjection : undefined;
             const getVerses = typeof GetSongVerses === 'function' ? GetSongVerses : undefined;
             const songsData: Array<{ title: string; verseOrder: string; verses: Array<{ name: string; lines: string }> }> = [];
@@ -123,6 +132,18 @@ export const SelectedSongsPanel = () => {
     function nextVerse(){ verseIdx++; clampVerse(); show(); }
     function prevSong(){ songIdx = Math.max(0, songIdx-1); verseIdx = 0; show(); }
     function nextSong(){ songIdx = Math.min(songs.length-1, songIdx+1); verseIdx = 0; show(); }
+
+    // Listen for control commands from the main window
+    window.addEventListener('message', (event) => {
+      if (event.data && event.data.type === 'projection-control') {
+        switch(event.data.command) {
+          case 'nextVerse': nextVerse(); break;
+          case 'prevVerse': prevVerse(); break;
+          case 'nextSong': nextSong(); break;
+          case 'prevSong': prevSong(); break;
+        }
+      }
+    });
 
     document.getElementById('prevVerse').addEventListener('click', prevVerse);
     document.getElementById('nextVerse').addEventListener('click', nextVerse);
@@ -271,6 +292,53 @@ export const SelectedSongsPanel = () => {
                 >
                     Promítat texty
                 </button>
+
+                {projectionWindowRef.current && !projectionWindowRef.current.closed && (
+                    <div className={styles.projectionControls}>
+                        <div style={{ marginTop: '12px', paddingTop: '12px', borderTop: '1px solid rgba(0,0,0,0.1)' }}>
+                            <p style={{ fontSize: '12px', color: '#666', margin: '0 0 8px 0', fontWeight: 'bold' }}>Řízení projekce:</p>
+                            <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap' }}>
+                                <button
+                                    type="button"
+                                    className={styles.actionButton}
+                                    style={{ fontSize: '12px', padding: '6px 10px', flex: '1 1 calc(50% - 4px)' }}
+                                    onClick={() => sendProjectionCommand('prevSong')}
+                                    title="Předchozí píseň"
+                                >
+                                    ◀︎ Píseň
+                                </button>
+                                <button
+                                    type="button"
+                                    className={styles.actionButton}
+                                    style={{ fontSize: '12px', padding: '6px 10px', flex: '1 1 calc(50% - 4px)' }}
+                                    onClick={() => sendProjectionCommand('prevVerse')}
+                                    title="Předchozí verš"
+                                >
+                                    ◀︎ Verš
+                                </button>
+                                <button
+                                    type="button"
+                                    className={styles.actionButton}
+                                    style={{ fontSize: '12px', padding: '6px 10px', flex: '1 1 calc(50% - 4px)' }}
+                                    onClick={() => sendProjectionCommand('nextVerse')}
+                                    title="Další verš"
+                                >
+                                    Verš ▶︎
+                                </button>
+                                <button
+                                    type="button"
+                                    className={styles.actionButton}
+                                    style={{ fontSize: '12px', padding: '6px 10px', flex: '1 1 calc(50% - 4px)' }}
+                                    onClick={() => sendProjectionCommand('nextSong')}
+                                    title="Další píseň"
+                                >
+                                    Píseň ▶︎
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                )}
+
                 {error && <p className={styles.errorText}>{error}</p>}
             </div>
 

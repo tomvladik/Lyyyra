@@ -26,9 +26,19 @@ export function GetSongs2(arg1:string,arg2:string):Promise<Array<main.dtoSongHea
 
 export function GetStatus():Promise<main.AppStatus>;
 
+export function OpenProjectionWindow():Promise<void>;
+
 export function PrepareDatabase():Promise<void>;
 
 export function ProcessKytaraPDF():Promise<void>;
+
+export function ProjectionNextSong():Promise<void>;
+
+export function ProjectionNextVerse():Promise<void>;
+
+export function ProjectionPrevSong():Promise<void>;
+
+export function ProjectionPrevVerse():Promise<void>;
 
 export function ResetData():Promise<void>;
 
