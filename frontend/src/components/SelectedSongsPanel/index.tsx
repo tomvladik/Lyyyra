@@ -65,10 +65,15 @@ export const SelectedSongsPanel = () => {
 
     const handleCombineClick = async () => {
         if (!selectedSongs.length) return;
+        const songsWithNotes = selectedSongs.filter(s => s.hasNotes);
+        if (!songsWithNotes.length) {
+            setError("Žádná z písní ve výběru nemá dostupné noty.");
+            return;
+        }
         setIsCombining(true);
         setError("");
         try {
-            const filenames = selectedSongs.map(song => song.filename);
+            const filenames = songsWithNotes.map(song => song.filename).filter(Boolean) as string[];
             const dataUrl = await GetCombinedPdf(filenames);
             setCombinedPdf(dataUrl);
             setIsModalOpen(true);
@@ -242,6 +247,11 @@ export const SelectedSongsPanel = () => {
                         <div>
                             <span className={styles.itemNumber}>{song.entry}.</span>
                             <span className={styles.itemTitle}>{song.title}</span>
+                            {!song.hasNotes && (
+                                <span style={{ marginLeft: '8px', fontSize: '12px', color: '#999' }}>
+                                    (bez not)
+                                </span>
+                            )}
                         </div>
                         <button
                             type="button"
@@ -260,7 +270,8 @@ export const SelectedSongsPanel = () => {
                     type="button"
                     className={styles.actionButton}
                     onClick={handleCombineClick}
-                    disabled={!selectedSongs.length || isCombining}
+                    disabled={!selectedSongs.length || !selectedSongs.some(s => s.hasNotes) || isCombining}
+                    title={!selectedSongs.some(s => s.hasNotes) && selectedSongs.length ? "Vámi vybrané skladby nemají dostupné noty" : ""}
                 >
                     {isCombining ? "Vytvářím PDF…" : "Zobrazit připravené noty"}
                 </button>

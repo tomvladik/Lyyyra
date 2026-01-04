@@ -43,6 +43,7 @@ describe('<SelectedSongsPanel />', () => {
     entry: 10,
     title: 'Test song',
     filename: 'song.pdf',
+    hasNotes: true,
   };
 
   beforeEach(() => {

@@ -34,15 +34,13 @@ export const SongCard = ({ data }: { data: dtoSong }) => {
         if (isSelected) {
             return;
         }
-        if (!data.KytaraFile) {
-            return;
-        }
 
         addSongToSelection({
             id: data.Id,
             entry: data.Entry,
             title: data.Title,
-            filename: data.KytaraFile,
+            filename: data.KytaraFile || undefined,
+            hasNotes: !!data.KytaraFile,
         });
     };
 
@@ -90,9 +88,9 @@ export const SongCard = ({ data }: { data: dtoSong }) => {
                         ));
                     })()}
                 </div>
-                {data.KytaraFile && (
-                    <div className={styles.songFooterRow}>
-                        <div className={styles.songFooter}>
+                <div className={styles.songFooterRow}>
+                    <div className={styles.songFooter}>
+                        {data.KytaraFile && (
                             <span
                                 className={styles.actionIcon}
                                 onClick={handleOpenPdf}
@@ -100,17 +98,26 @@ export const SongCard = ({ data }: { data: dtoSong }) => {
                             >
                                 🎵
                             </span>
+                        )}
+                        {!data.KytaraFile && (
                             <span
-                                className={[styles.actionIcon, isSelected ? styles.actionIconDisabled : ""].join(" ").trim()}
-                                onClick={handleAddToSelection}
-                                title={isSelected ? "Skladba už je ve výběru" : "Přidat do výběru"}
-                                aria-disabled={isSelected}
+                                className={[styles.actionIcon, styles.actionIconDisabled].join(" ")}
+                                title="Noty nejsou dostupné"
+                                aria-disabled="true"
                             >
-                                📋
+                                🎵
                             </span>
-                        </div>
+                        )}
+                        <span
+                            className={[styles.actionIcon, isSelected ? styles.actionIconDisabled : ""].join(" ").trim()}
+                            onClick={handleAddToSelection}
+                            title={isSelected ? "Skladba už je ve výběru" : "Přidat do výběru"}
+                            aria-disabled={isSelected}
+                        >
+                            📋
+                        </span>
                     </div>
-                )}
+                </div>
             </div>
             <PdfModal
                 isOpen={pdfModalOpen}

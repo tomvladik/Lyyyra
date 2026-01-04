@@ -173,6 +173,7 @@ describe('<SongCard />', () => {
       entry: songWithPdf.Entry,
       title: songWithPdf.Title,
       filename: songWithPdf.KytaraFile,
+      hasNotes: true,
     });
   });
 

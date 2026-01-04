@@ -21,7 +21,8 @@ export interface SelectedSong {
     id: number;
     entry: number;
     title: string;
-    filename: string;
+    filename?: string;
+    hasNotes: boolean;
 }
 
 export interface dtoSongHeader {
