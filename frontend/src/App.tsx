@@ -1,5 +1,5 @@
 import { MouseEvent, useCallback, useEffect, useState } from 'react';
-import * as go from '../wailsjs/go/main/App';
+import * as go from '../wailsjs/go/app/App';
 import './App.less';
 import { AppStatus, isEqualAppStatus, SortingOption } from "./AppStatus";
 import { InfoBox } from './components/InfoBox';

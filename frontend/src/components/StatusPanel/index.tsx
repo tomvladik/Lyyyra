@@ -1,7 +1,7 @@
 import React, { useContext, useState } from "react";
 import styles from "./index.module.less";
 
-import { GetStatus, ResetData } from "../../../wailsjs/go/main/App";
+import { GetStatus, ResetData } from "../../../wailsjs/go/app/App";
 import { AppStatus, SortingOption } from "../../AppStatus";
 import { DataContext } from "../../context";
 

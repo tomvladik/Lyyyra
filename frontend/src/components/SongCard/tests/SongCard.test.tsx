@@ -2,7 +2,7 @@ import '@testing-library/jest-dom';
 import type { RenderResult } from '@testing-library/react';
 import { act, fireEvent, render, screen, waitFor } from '@testing-library/react';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
-import * as AppModule from '../../../../wailsjs/go/main/App';
+import * as AppModule from '../../../../wailsjs/go/app/App';
 import { AppStatus } from '../../../AppStatus';
 import { DataContext } from '../../../context';
 import { dtoSong } from '../../../models';
@@ -10,7 +10,7 @@ import { SelectionContext, SelectionContextValue } from '../../../selectionConte
 import { createMockStatus } from '../../../test/testHelpers';
 import { SongCard } from '../index';
 
-vi.mock('../../../../wailsjs/go/main/App', () => ({
+vi.mock('../../../../wailsjs/go/app/App', () => ({
   GetSongAuthors: vi.fn(),
 }));
 

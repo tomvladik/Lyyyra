@@ -1,5 +1,5 @@
 import { useContext, useEffect, useState } from "react";
-import { GetSongAuthors } from "../../../wailsjs/go/main/App";
+import { GetSongAuthors } from "../../../wailsjs/go/app/App";
 import { Author, dtoSong } from "../../models";
 import { SelectionContext } from "../../selectionContext";
 import HighlightText from "../HighlightText";

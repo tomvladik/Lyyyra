@@ -1,5 +1,5 @@
 import { useContext, useEffect, useMemo, useRef, useState } from "react";
-import { GetCombinedPdf, GetSongProjection, GetSongVerses } from "../../../wailsjs/go/main/App";
+import { GetCombinedPdf, GetSongProjection, GetSongVerses } from "../../../wailsjs/go/app/App";
 import { SelectionContext } from "../../selectionContext";
 import { PdfModal } from "../PdfModal";
 import styles from "./index.module.less";

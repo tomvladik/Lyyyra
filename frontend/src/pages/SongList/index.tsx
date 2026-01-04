@@ -1,5 +1,5 @@
 import { useContext, useEffect, useState } from 'react';
-import * as go from '../../../wailsjs/go/main/App';
+import * as go from '../../../wailsjs/go/app/App';
 
 import { SongCard } from "../../components/SongCard";
 import { INITIAL_LOAD_DELAY, SONG_POLL_INTERVAL } from '../../constants';

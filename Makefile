@@ -28,17 +28,16 @@ build-prod: ## Build production binary with optimizations
 
 test: ## Run Go tests
 	@echo "Running Go tests..."
-	gotestsum --format testname -- -tags "$(GO_PROD_TAGS)" .
+	gotestsum --format testname -- -tags "$(GO_PROD_TAGS)" ./internal/...
 
 test-verbose: ## Run Go tests with full output
 	@echo "Running Go tests (verbose)..."
-	gotestsum --format standard-verbose -- -tags "$(GO_PROD_TAGS)" .
-
+	gotestsum --format standard-verbose -- -tags "$(GO_PROD_TAGS)" ./internal/...
 fmt: ## Format Go code
-	go fmt ./...
+	go fmt ./internal/...
 
 lint: ## Lint Go code (requires golangci-lint)
-	golangci-lint run
+	golangci-lint run ./internal/...
 
 # Node.js/Frontend tasks
 .PHONY: frontend-install frontend-build frontend-dev frontend-test

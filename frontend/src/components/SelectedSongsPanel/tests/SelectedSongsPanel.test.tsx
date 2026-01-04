@@ -1,11 +1,11 @@
 import { act, fireEvent, render, screen, waitFor } from '@testing-library/react';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
-import * as AppModule from '../../../../wailsjs/go/main/App';
+import * as AppModule from '../../../../wailsjs/go/app/App';
 import { SelectedSong } from '../../../models';
 import { SelectionContext, SelectionContextValue } from '../../../selectionContext';
 import { SelectedSongsPanel } from '../index';
 
-vi.mock('../../../../wailsjs/go/main/App', () => ({
+vi.mock('../../../../wailsjs/go/app/App', () => ({
   GetCombinedPdf: vi.fn(),
   GetSongProjection: vi.fn(),
   GetSongVerses: vi.fn(),
