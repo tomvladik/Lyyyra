@@ -318,85 +318,86 @@ export const SelectedSongsPanel = () => {
                 >Zrušit</button>
             </header>
 
-            {!isProjectionOpen && (
-                <div className={styles.list} role="list">
-                    {selectedSongs.map(song => (
-                        <div key={song.id} className={styles.listItem} role="listitem">
-                            <div>
-                                <span className={styles.itemNumber}>{song.entry}.</span>
-                                <span className={styles.itemTitle}>{song.title}</span>
-                                {!song.hasNotes && (
-                                    <span style={{ marginLeft: "8px", fontSize: "12px", color: "#999" }}>
-                                        (bez not)
-                                    </span>
-                                )}
+            <div className={styles.panelContent}>
+                {!isProjectionOpen && (
+                    <div className={styles.list} role="list">
+                        {selectedSongs.map(song => (
+                            <div key={song.id} className={styles.listItem} role="listitem">
+                                <div>
+                                    <span className={styles.itemNumber}>{song.entry}.</span>
+                                    <span className={styles.itemTitle}>{song.title}</span>
+                                    {!song.hasNotes && (
+                                        <span style={{ marginLeft: "8px", fontSize: "12px", color: "#999" }}>
+                                            (bez not)
+                                        </span>
+                                    )}
+                                </div>
+                                <button
+                                    type="button"
+                                    className={styles.removeButton}
+                                    onClick={() => handleRemove(song.id)}
+                                    title="Odebrat ze seznamu"
+                                >
+                                    ✕
+                                </button>
                             </div>
-                            <button
-                                type="button"
-                                className={styles.removeButton}
-                                onClick={() => handleRemove(song.id)}
-                                title="Odebrat ze seznamu"
-                            >
-                                ✕
-                            </button>
-                        </div>
-                    ))}
-                </div>
-            )}
-
-            {showScreenSelector && (
-                <div style={{ padding: "12px", background: "rgba(0,0,0,0.05)", borderRadius: "8px" }}>
-                    <p style={{ margin: "0 0 8px 0", fontWeight: "bold", fontSize: "13px" }}>Vyberte displej pro projekci:</p>
-                    {availableScreens.map((screen, idx) => (
-                        <button
-                            key={idx}
-                            type="button"
-                            className={styles.actionButton}
-                            style={{ marginBottom: "8px", fontSize: "12px" }}
-                            onClick={() => {
-                                setSelectedScreenIndex(idx);
-                                openProjectionWindow(idx);
-                            }}
-                        >
-                            {screen.label} {screen.isPrimary ? "(Primární)" : ""} - {screen.width}×{screen.height}
-                        </button>
-                    ))}
-                    <button
-                        type="button"
-                        className={styles.clearButton}
-                        style={{ width: "100%", marginTop: "4px" }}
-                        onClick={() => setShowScreenSelector(false)}
-                    >
-                        Zrušit
-                    </button>
-                </div>
-            )}
-
-            <div className={styles.actions}>
-                {!isProjectionOpen && !showScreenSelector && (
-                    <>
-                        <button
-                            type="button"
-                            className={styles.actionButton}
-                            onClick={handleCombineClick}
-                            disabled={!selectedSongs.length || !selectedSongs.some(s => s.hasNotes) || isCombining}
-                            title={!selectedSongs.some(s => s.hasNotes) && selectedSongs.length ? "Vámi vybrané skladby nemají dostupné noty" : ""}
-                        >
-                            {isCombining ? "Vytvářím PDF…" : "Zobrazit připravené noty"}
-                        </button>
-                        <button
-                            type="button"
-                            className={styles.actionButton}
-                            onClick={handleProjectClick}
-                            disabled={!selectedSongs.length || isCombining || isProjectionOpen}
-                            title={isProjectionOpen ? "Projekční okno je již otevřeno" : ""}
-                        >
-                            Promítat texty
-                        </button>
-                    </>
+                        ))}
+                    </div>
                 )}
 
-                {isProjectionOpen && (
+                {showScreenSelector && (
+                    <div style={{ padding: "12px", background: "rgba(0,0,0,0.05)", borderRadius: "8px" }}>
+                        <p style={{ margin: "0 0 8px 0", fontWeight: "bold", fontSize: "13px" }}>Vyberte displej pro projekci:</p>
+                        {availableScreens.map((screen, idx) => (
+                            <button
+                                key={idx}
+                                type="button"
+                                className={styles.actionButton}
+                                style={{ marginBottom: "8px", fontSize: "12px" }}
+                                onClick={() => {
+                                    setSelectedScreenIndex(idx);
+                                    openProjectionWindow(idx);
+                                }}
+                            >
+                                {screen.label} {screen.isPrimary ? "(Primární)" : ""} - {screen.width}×{screen.height}
+                            </button>
+                        ))}
+                        <button
+                            type="button"
+                            className={styles.clearButton}
+                            style={{ width: "100%", marginTop: "4px" }}
+                            onClick={() => setShowScreenSelector(false)}
+                        >
+                            Zrušit
+                        </button>
+                    </div>
+                )}
+
+                <div className={styles.actions}>
+                    {!isProjectionOpen && !showScreenSelector && (
+                        <>
+                            <button
+                                type="button"
+                                className={styles.actionButton}
+                                onClick={handleCombineClick}
+                                disabled={!selectedSongs.length || !selectedSongs.some(s => s.hasNotes) || isCombining}
+                                title={!selectedSongs.some(s => s.hasNotes) && selectedSongs.length ? "Vámi vybrané skladby nemají dostupné noty" : ""}
+                            >
+                                {isCombining ? "Vytvářím PDF…" : "Zobrazit připravené noty"}
+                            </button>
+                            <button
+                                type="button"
+                                className={styles.actionButton}
+                                onClick={handleProjectClick}
+                                disabled={!selectedSongs.length || isCombining || isProjectionOpen}
+                                title={isProjectionOpen ? "Projekční okno je již otevřeno" : ""}
+                            >
+                                Promítat texty
+                            </button>
+                        </>
+                    )}
+
+                    {isProjectionOpen && (
                     <div className={styles.projectionControls}>
                         <div style={{ marginTop: "12px", paddingTop: "12px", borderTop: "1px solid rgba(0,0,0,0.1)" }}>
                             <p style={{ fontSize: "12px", color: "#666", margin: "0 0 8px 0", fontWeight: "bold" }}>Řízení projekce:</p>
@@ -501,7 +502,8 @@ export const SelectedSongsPanel = () => {
                     </div>
                 )}
 
-                {error && <p className={styles.errorText}>{error}</p>}
+                    {error && <p className={styles.errorText}>{error}</p>}
+                </div>
             </div>
 
             <PdfModal

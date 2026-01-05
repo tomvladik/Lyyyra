@@ -140,7 +140,10 @@ function App() {
                         <div className="SongScrollArea">
                             <SongList />
                         </div>
-                        {selectedSongs.length > 0 && <SelectedSongsPanel />}
+                        {selectedSongs.length > 0 && <div className="SongScrollArea">
+                            <SelectedSongsPanel />
+                        </div>
+                        }
                     </main>
                     {isStatusPanelVisible && (
                         <footer className="footer">
