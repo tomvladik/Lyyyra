@@ -346,26 +346,26 @@ export const SelectedSongsPanel = () => {
                 )}
 
                 {showScreenSelector && (
-                    <div style={{ padding: "12px", background: "rgba(0,0,0,0.05)", borderRadius: "8px" }}>
-                        <p style={{ margin: "0 0 8px 0", fontWeight: "bold", fontSize: "13px" }}>Vyberte displej pro projekci:</p>
+                    <div style={{ padding: "12px", background: "rgba(0,0,0,0.05)", borderRadius: "8px", display: "flex", flexDirection: "column", gap: "8px" }}>
+                        <p style={{ margin: 0, fontWeight: "bold", fontSize: "13px" }}>Vyberte displej pro projekci:</p>
                         {availableScreens.map((screen, idx) => (
                             <button
                                 key={idx}
                                 type="button"
                                 className={styles.actionButton}
-                                style={{ marginBottom: "8px", fontSize: "12px" }}
+                                style={{ width: "100%", fontSize: "12px", height: "44px", justifyContent: "center" }}
                                 onClick={() => {
                                     setSelectedScreenIndex(idx);
                                     openProjectionWindow(idx);
                                 }}
                             >
-                                {screen.label} {screen.isPrimary ? "(Primární)" : ""} - {screen.width}×{screen.height}
+                                {screen.label} {screen.isPrimary ? "(Primární)" : ""} – {screen.width}×{screen.height}
                             </button>
                         ))}
                         <button
                             type="button"
                             className={styles.clearButton}
-                            style={{ width: "100%", marginTop: "4px" }}
+                            style={{ width: "100%", marginTop: "4px", padding: "10px 14px", textAlign: "center" }}
                             onClick={() => setShowScreenSelector(false)}
                         >
                             Zrušit
