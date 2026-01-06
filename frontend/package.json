@@ -8,8 +8,10 @@
     "build": "tsc && vite build",
     "preview": "vite preview",
     "test": "vitest",
+    "test:run": "vitest --run",
     "test:ui": "vitest --ui",
-    "test:coverage": "vitest --coverage"
+    "test:coverage": "vitest --coverage",
+    "lint": "eslint src/ --format node_modules/eslint-formatter-pretty/index.js"
   },
   "dependencies": {
     "@syncfusion/ej2-react-dropdowns": "^24.1.45",

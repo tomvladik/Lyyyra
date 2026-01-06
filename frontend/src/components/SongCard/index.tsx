@@ -2,8 +2,10 @@ import { useContext, useEffect, useState } from "react";
 import { GetSongAuthors } from "../../../wailsjs/go/app/App";
 import { Author, dtoSong } from "../../models";
 import { SelectionContext } from "../../selectionContext";
+import { parseVerses } from "../../utils/verseUtils";
 import HighlightText from "../HighlightText";
 import { PdfModal } from "../PdfModal";
+import { AuthorList } from "./AuthorList";
 import styles from "./index.module.less";
 
 export const SongCard = ({ data }: { data: dtoSong }) => {
@@ -56,36 +58,15 @@ export const SongCard = ({ data }: { data: dtoSong }) => {
                         <span className={styles.songNumber}>{data.Entry}:</span>{' '}
                         <HighlightText as="span" text={data.Title} />
                     </div>
-                    {authorData?.filter((el) => el.Type === "words")
-                        .map((auth) => {
-                            return (
-                                <div key={"T-" + auth.Value} className={styles.author}>
-                                    <b>T:</b> <HighlightText as="span" text={auth.Value} />
-                                </div>
-                            );
-                        })}
-                    {authorData?.filter((el) => el.Type === "music")
-                        .map((auth) => {
-                            return (
-                                <div key={"M-" + auth.Value} className={styles.author}>
-                                    <b>M:</b> <HighlightText as="span" text={auth.Value} />
-                                </div>
-                            );
-                        })}
-
+                    <AuthorList authors={authorData} type="words" />
+                    <AuthorList authors={authorData} type="music" />
                 </div>
-                <div className={styles.lyrics} style={{ marginBottom: '1px' }}>
-                    {(() => {
-                        const verses = (data.Verses || '')
-                            .split(/\n\n+/)
-                            .map(v => v.replace(/\r?\n+/g, ' ').replace(/\s+/g, ' ').trim())
-                            .filter(Boolean);
-                        return verses.map((verse, idx) => (
-                            <div key={idx}>
-                                <HighlightText text={verse} />
-                            </div>
-                        ));
-                    })()}
+                <div className={styles.lyrics}>
+                    {parseVerses(data.Verses).map((verse, idx) => (
+                        <div key={idx}>
+                            <HighlightText text={verse} />
+                        </div>
+                    ))}
                 </div>
                 <div className={styles.songFooterRow}>
                     <div className={styles.songFooter}>

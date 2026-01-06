@@ -1,6 +1,7 @@
 import { useContext, useEffect, useMemo, useRef, useState } from "react";
 import { GetCombinedPdf, GetSongProjection, GetSongVerses } from "../../../wailsjs/go/app/App";
 import logoImage from "../../assets/images/logo-universal.png";
+import { useScreenDetection } from "../../hooks/useScreenDetection";
 import { SelectionContext } from "../../selectionContext";
 import { PdfModal } from "../PdfModal";
 import styles from "./index.module.less";
@@ -20,90 +21,10 @@ export const SelectedSongsPanel = () => {
     const [projectionSongsData, setProjectionSongsData] = useState<Array<{ title: string; verseOrder: string; verses: Array<{ name: string; lines: string }> }>>([]);
     const [currentSongIdx, setCurrentSongIdx] = useState(0);
     const [currentVerseIdx, setCurrentVerseIdx] = useState(0);
-    const [availableScreens, setAvailableScreens] = useState<ScreenDetailed[]>([]);
     const [showScreenSelector, setShowScreenSelector] = useState(false);
 
-    type ScreenDetailed = {
-        left: number;
-        top: number;
-        width: number;
-        height: number;
-        isPrimary: boolean;
-        label: string;
-    };
-
-    interface ScreenDetails {
-        screens: Array<{
-            left: number;
-            top: number;
-            width: number;
-            height: number;
-            isPrimary: boolean;
-            label?: string;
-        }>;
-    }
-
-    interface ExtendedScreen {
-        width: number;
-        height: number;
-        isExtended?: boolean;
-    }
-
-    // Detect available screens on mount
-    useEffect(() => {
-        const detectScreens = async () => {
-            try {
-                // Try modern Screen Detection API
-                if ('getScreenDetails' in window) {
-                    const screenDetails = await (window as Window & { getScreenDetails: () => Promise<ScreenDetails> }).getScreenDetails();
-                    const screens: ScreenDetailed[] = screenDetails.screens.map((s, idx: number) => ({
-                        left: s.left,
-                        top: s.top,
-                        width: s.width,
-                        height: s.height,
-                        isPrimary: s.isPrimary,
-                        label: s.label || `Display ${idx + 1}`
-                    }));
-                    setAvailableScreens(screens);
-                } else {
-                    // Fallback: use window.screen
-                    const primaryScreen: ScreenDetailed = {
-                        left: 0,
-                        top: 0,
-                        width: window.screen.width,
-                        height: window.screen.height,
-                        isPrimary: true,
-                        label: 'Primary Display'
-                    };
-                    // Check if extended display might exist
-                    if ((window.screen as ExtendedScreen).isExtended) {
-                        const secondaryScreen: ScreenDetailed = {
-                            left: window.screen.width,
-                            top: 0,
-                            width: window.screen.width,
-                            height: window.screen.height,
-                            isPrimary: false,
-                            label: 'Secondary Display'
-                        };
-                        setAvailableScreens([primaryScreen, secondaryScreen]);
-                    } else {
-                        setAvailableScreens([primaryScreen]);
-                    }
-                }
-            } catch (err) {
-                // Screen detection not available or denied - default to single screen
-                setAvailableScreens([{
-                    left: 0,
-                    top: 0,
-                    width: window.screen.width,
-                    height: window.screen.height,
-                    isPrimary: true,
-                    label: 'Display 1'
-                }]);
-            }
-        };
-        detectScreens();
-    }, []);
+    // Use custom hook for screen detection
+    const availableScreens = useScreenDetection();
 
     // Monitor projection window status periodically
     useEffect(() => {
@@ -342,7 +263,7 @@ export const SelectedSongsPanel = () => {
                                     <span className={styles.itemNumber}>{song.entry}.</span>
                                     <span className={styles.itemTitle}>{song.title}</span>
                                     {!song.hasNotes && (
-                                        <span style={{ marginLeft: "8px", fontSize: "12px", color: "#999" }}>
+                                        <span className={styles.songNoteInfo}>
                                             (bez not)
                                         </span>
                                     )}
@@ -361,14 +282,13 @@ export const SelectedSongsPanel = () => {
                 )}
 
                 {showScreenSelector && (
-                    <div style={{ padding: "12px", background: "rgba(0,0,0,0.05)", borderRadius: "8px", display: "flex", flexDirection: "column", gap: "8px" }}>
-                        <p style={{ margin: 0, fontWeight: "bold", fontSize: "13px" }}>Vyberte displej pro projekci:</p>
+                    <div className={styles.screenSelector}>
+                        <p className={styles.screenSelectorTitle}>Vyberte displej pro projekci:</p>
                         {availableScreens.map((screen, idx) => (
                             <button
                                 key={idx}
                                 type="button"
-                                className={styles.actionButton}
-                                style={{ width: "100%", fontSize: "12px", height: "44px", justifyContent: "center" }}
+                                className={`${styles.actionButton} ${styles.screenButton}`}
                                 onClick={() => {
                                     openProjectionWindow(idx);
                                 }}
@@ -378,8 +298,7 @@ export const SelectedSongsPanel = () => {
                         ))}
                         <button
                             type="button"
-                            className={styles.clearButton}
-                            style={{ width: "100%", marginTop: "4px", padding: "10px 14px", textAlign: "center" }}
+                            className={`${styles.clearButton} ${styles.cancelButton}`}
                             onClick={() => setShowScreenSelector(false)}
                         >
                             Zrušit
@@ -413,105 +332,84 @@ export const SelectedSongsPanel = () => {
 
                     {isProjectionOpen && (
                         <div className={styles.projectionControls}>
-                            <div style={{ marginTop: "12px", paddingTop: "12px", borderTop: "1px solid rgba(0,0,0,0.1)" }}>
-                                <p style={{ fontSize: "12px", color: "#666", margin: "0 0 8px 0", fontWeight: "bold" }}>Řízení projekce:</p>
+                            <p className={styles.projectionTitle}>Řízení projekce:</p>
 
-                                {projectionSongsData.length > 0 && (
-                                    <div
-                                        ref={projectionListRef}
-                                        style={{ marginBottom: "12px", maxHeight: "200px", overflowY: "auto", border: "1px solid rgba(0,0,0,0.1)", borderRadius: "4px", background: "#f9f9f9" }}
-                                    >
-                                        {projectionSongsData.map((song, songIdx) => {
-                                            const sequence = song.verseOrder && song.verseOrder.trim()
-                                                ? song.verseOrder.split(/\s+/).filter(Boolean)
-                                                : song.verses.map(v => v.name);
+                            {projectionSongsData.length > 0 && (
+                                <div ref={projectionListRef} className={styles.projectionList}>
+                                    {projectionSongsData.map((song, songIdx) => {
+                                        const sequence = song.verseOrder && song.verseOrder.trim()
+                                            ? song.verseOrder.split(/\s+/).filter(Boolean)
+                                            : song.verses.map(v => v.name);
 
-                                            return (
-                                                <div key={songIdx} style={{ borderBottom: songIdx < projectionSongsData.length - 1 ? "1px solid rgba(0,0,0,0.1)" : "none", padding: "8px" }}>
-                                                    <div style={{ fontSize: "11px", fontWeight: "bold", marginBottom: "4px", color: "#333" }}>{song.title}</div>
-                                                    <div style={{ display: "flex", flexWrap: "wrap", gap: "4px" }}>
-                                                        {sequence.map((verseName, verseIdx) => {
-                                                            const verseObj = song.verses.find(v => v.name === verseName) || song.verses[verseIdx];
-                                                            if (!verseObj) return null;
+                                        return (
+                                            <div key={songIdx} className={styles.projectionSongItem}>
+                                                <div className={styles.projectionSongTitle}>{song.title}</div>
+                                                <div className={styles.projectionVerseList}>
+                                                    {sequence.map((verseName, verseIdx) => {
+                                                        const verseObj = song.verses.find(v => v.name === verseName) || song.verses[verseIdx];
+                                                        if (!verseObj) return null;
 
-                                                            const firstLine = (verseObj.lines || "").split("\n")[0] || "";
-                                                            const isActive = songIdx === currentSongIdx && verseIdx === currentVerseIdx;
+                                                        const firstLine = (verseObj.lines || "").split("\n")[0] || "";
+                                                        const isActive = songIdx === currentSongIdx && verseIdx === currentVerseIdx;
 
-                                                            return (
-                                                                <div
-                                                                    key={verseIdx}
-                                                                    ref={isActive ? (el) => { activeVerseRef.current = el; } : undefined}
-                                                                    onClick={() => jumpToVerse(songIdx, verseIdx)}
-                                                                    style={{
-                                                                        fontSize: "10px",
-                                                                        padding: "4px 6px",
-                                                                        background: isActive ? "#4CAF50" : "#fff",
-                                                                        color: isActive ? "#fff" : "#666",
-                                                                        border: "1px solid rgba(0,0,0,0.1)",
-                                                                        borderRadius: "3px",
-                                                                        flex: "1 1 100%",
-                                                                        maxWidth: "100%",
-                                                                        fontWeight: isActive ? "bold" : "normal",
-                                                                        cursor: "pointer"
-                                                                    }}
-                                                                >
-                                                                    <strong>{verseName}:</strong> {firstLine.substring(0, 40)}{firstLine.length > 40 ? "..." : ""}
-                                                                </div>
-                                                            );
-                                                        })}
-                                                    </div>
+                                                        return (
+                                                            <div
+                                                                key={verseIdx}
+                                                                ref={isActive ? (el) => { activeVerseRef.current = el; } : undefined}
+                                                                onClick={() => jumpToVerse(songIdx, verseIdx)}
+                                                                className={`${styles.projectionVerseItem} ${isActive ? styles.active : ''}`}
+                                                            >
+                                                                <strong>{verseName}:</strong> {firstLine.substring(0, 40)}{firstLine.length > 40 ? "..." : ""}
+                                                            </div>
+                                                        );
+                                                    })}
                                                 </div>
-                                            );
-                                        })}
-                                    </div>
-                                )}
-                                <div style={{ display: "flex", gap: "8px", flexWrap: "wrap" }}>
-                                    <button
-                                        type="button"
-                                        className={styles.actionButton}
-                                        style={{ fontSize: "12px", padding: "6px 10px", flex: "1 1 calc(50% - 4px)" }}
-                                        onClick={() => sendProjectionCommand("prevVerse")}
-                                        title="Předchozí verš"
-                                    >
-                                        ◀︎ Sloka
-                                    </button>
-                                    <button
-                                        type="button"
-                                        className={styles.actionButton}
-                                        style={{ fontSize: "12px", padding: "6px 10px", flex: "1 1 calc(50% - 4px)" }}
-                                        onClick={() => sendProjectionCommand("nextVerse")}
-                                        title="Další verš"
-                                    >
-                                        Sloka ▶︎
-                                    </button>
-                                    <button
-                                        type="button"
-                                        className={styles.actionButton}
-                                        style={{ fontSize: "12px", padding: "6px 10px", flex: "1 1 calc(50% - 4px)" }}
-                                        onClick={() => sendProjectionCommand("prevSong")}
-                                        title="Předchozí píseň"
-                                    >
-                                        ◀︎ Píseň
-                                    </button>
-                                    <button
-                                        type="button"
-                                        className={styles.actionButton}
-                                        style={{ fontSize: "12px", padding: "6px 10px", flex: "1 1 calc(50% - 4px)" }}
-                                        onClick={() => sendProjectionCommand("nextSong")}
-                                        title="Další píseň"
-                                    >
-                                        Píseň ▶︎
-                                    </button>
-                                    <button
-                                        type="button"
-                                        className={styles.actionButton}
-                                        style={{ fontSize: "12px", padding: "6px 10px", flex: "1 1 100%", background: "#f44336", color: "#fff" }}
-                                        onClick={closeProjection}
-                                        title="Zavřít projekční okno"
-                                    >
-                                        ✕ Zavřít projektor
-                                    </button>
+                                            </div>
+                                        );
+                                    })}
                                 </div>
+                            )}
+                            <div className={styles.projectionButtonGrid}>
+                                <button
+                                    type="button"
+                                    className={`${styles.actionButton} ${styles.projectionButton}`}
+                                    onClick={() => sendProjectionCommand("prevVerse")}
+                                    title="Předchozí verš"
+                                >
+                                    ◀︎ Sloka
+                                </button>
+                                <button
+                                    type="button"
+                                    className={`${styles.actionButton} ${styles.projectionButton}`}
+                                    onClick={() => sendProjectionCommand("nextVerse")}
+                                    title="Další verš"
+                                >
+                                    Sloka ▶︎
+                                </button>
+                                <button
+                                    type="button"
+                                    className={`${styles.actionButton} ${styles.projectionButton}`}
+                                    onClick={() => sendProjectionCommand("prevSong")}
+                                    title="Předchozí píseň"
+                                >
+                                    ◀︎ Píseň
+                                </button>
+                                <button
+                                    type="button"
+                                    className={`${styles.actionButton} ${styles.projectionButton}`}
+                                    onClick={() => sendProjectionCommand("nextSong")}
+                                    title="Další píseň"
+                                >
+                                    Píseň ▶︎
+                                </button>
+                                <button
+                                    type="button"
+                                    className={`${styles.actionButton} ${styles.projectionButton} ${styles.projectionButtonFull} ${styles.closeProjectionButton}`}
+                                    onClick={closeProjection}
+                                    title="Zavřít projekční okno"
+                                >
+                                    ✕ Zavřít projektor
+                                </button>
                             </div>
                         </div>
                     )}

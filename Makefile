@@ -40,11 +40,7 @@ lint: ## Lint Go code (requires golangci-lint)
 	@echo "Linting Go code in ./internal/..."
 	golangci-lint run ./internal/... -v
 	@echo "Linting TypeScript in frontend/src..."
-ifeq ($(OS),Windows_NT)
-	cd frontend && npx eslint src/ --format node_modules/eslint-formatter-pretty/index.js
-else
-	cd frontend && npx eslint src/ --format node_modules/eslint-formatter-pretty/index.js
-endif
+	cd frontend && npm run lint
 
 # Node.js/Frontend tasks
 .PHONY: frontend-install frontend-build frontend-dev frontend-test
@@ -59,7 +55,7 @@ frontend-dev: ## Start frontend development server
 	cd frontend && npm run dev
 
 frontend-test: ## Run frontend tests (non-watch)
-	cd frontend && npm test -- --watch=false
+	cd frontend && npm run test:run
 
 frontend-test-watch: ## Run frontend tests in watch mode
 	cd frontend && npm test
@@ -87,13 +83,13 @@ install-tools: ## Install Go test, lint tools, and act for CI testing
 
 wails-dev: ## Start Wails development server (with devtools enabled)
 ifeq ($(OS),Windows_NT)
-	wails dev -tags "$(GO_DEV_TAGS)" -devtools
+	wails dev -tags "$(GO_DEV_TAGS)"
 else
 	@if [ -z "$$DISPLAY" ] && command -v xvfb-run >/dev/null 2>&1; then \
 		echo "[wails-dev] DISPLAY not set, starting via xvfb-run"; \
 		xvfb-run -a wails dev -tags "$(GO_DEV_TAGS)" -devtools; \
 	else \
-		wails dev -tags "$(GO_DEV_TAGS)" -devtools; \
+		wails dev -tags "$(GO_DEV_TAGS)"; \
 	fi
 endif
 

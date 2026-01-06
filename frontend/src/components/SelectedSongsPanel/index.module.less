@@ -197,6 +197,127 @@
     }
 }
 
+// Screen selector styles
+.screenSelector {
+    padding: 12px;
+    background: rgba(0, 0, 0, 0.05);
+    border-radius: 8px;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+
+.screenSelectorTitle {
+    margin: 0;
+    font-weight: bold;
+    font-size: 13px;
+}
+
+.screenButton {
+    width: 100%;
+    font-size: 12px;
+    height: 44px;
+    justify-content: center;
+}
+
+.cancelButton {
+    width: 100%;
+    margin-top: 4px;
+    padding: 10px 14px;
+    text-align: center;
+}
+
+// Projection controls styles
+.projectionControls {
+    margin-top: 12px;
+    padding-top: 12px;
+    border-top: 1px solid rgba(0, 0, 0, 0.1);
+}
+
+.projectionTitle {
+    font-size: 12px;
+    color: #666;
+    margin: 0 0 8px 0;
+    font-weight: bold;
+}
+
+.projectionList {
+    margin-bottom: 12px;
+    max-height: 200px;
+    overflow-y: auto;
+    border: 1px solid rgba(0, 0, 0, 0.1);
+    border-radius: 4px;
+    background: #f9f9f9;
+}
+
+.projectionSongItem {
+    border-bottom: 1px solid rgba(0, 0, 0, 0.1);
+    padding: 8px;
+
+    &:last-child {
+        border-bottom: none;
+    }
+}
+
+.projectionSongTitle {
+    font-size: 11px;
+    font-weight: bold;
+    margin-bottom: 4px;
+    color: #333;
+}
+
+.projectionVerseList {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 4px;
+}
+
+.projectionVerseItem {
+    font-size: 10px;
+    padding: 4px 6px;
+    background: #fff;
+    color: #666;
+    border: 1px solid rgba(0, 0, 0, 0.1);
+    border-radius: 3px;
+    flex: 1 1 100%;
+    max-width: 100%;
+    font-weight: normal;
+    cursor: pointer;
+
+    &.active {
+        background: #4CAF50;
+        color: #fff;
+        font-weight: bold;
+    }
+}
+
+.projectionButtonGrid {
+    display: flex;
+    gap: 8px;
+    flex-wrap: wrap;
+}
+
+.projectionButton {
+    font-size: 12px;
+    padding: 6px 10px;
+    flex: 1 1 calc(50% - 4px);
+}
+
+.projectionButtonFull {
+    flex: 1 1 100%;
+}
+
+.closeProjectionButton {
+    background: #f44336;
+    color: #fff;
+}
+
+.songNoteInfo {
+    margin-left: 8px;
+    font-size: 12px;
+    color: #999;
+}
+
 @media (max-width: 960px) {
     .panel {
         position: static;
