@@ -34,7 +34,6 @@ func teardownTestDB(app *App) {
 	os.Remove(app.dbFilePath)
 }
 
-
 func TestFillDatabase(t *testing.T) {
 	app := setupTestDB(t)
 	defer teardownTestDB(app)

@@ -1,8 +1,8 @@
-import { render, screen } from '@testing-library/react';
-import { describe, it, expect, vi } from 'vitest';
 import '@testing-library/jest-dom/vitest';
-import HighlightText from '../index';
+import { render, screen } from '@testing-library/react';
+import { describe, expect, it, vi } from 'vitest';
 import { DataContext } from '../../../context';
+import HighlightText from '../index';
 
 describe('<HighlightText />', () => {
   const renderWithContext = (text: string, searchPattern: string, as?: 'p' | 'span' | 'div') => {
