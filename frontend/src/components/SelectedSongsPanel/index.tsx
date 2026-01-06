@@ -412,109 +412,109 @@ export const SelectedSongsPanel = () => {
                     )}
 
                     {isProjectionOpen && (
-                    <div className={styles.projectionControls}>
-                        <div style={{ marginTop: "12px", paddingTop: "12px", borderTop: "1px solid rgba(0,0,0,0.1)" }}>
-                            <p style={{ fontSize: "12px", color: "#666", margin: "0 0 8px 0", fontWeight: "bold" }}>Řízení projekce:</p>
+                        <div className={styles.projectionControls}>
+                            <div style={{ marginTop: "12px", paddingTop: "12px", borderTop: "1px solid rgba(0,0,0,0.1)" }}>
+                                <p style={{ fontSize: "12px", color: "#666", margin: "0 0 8px 0", fontWeight: "bold" }}>Řízení projekce:</p>
 
-                            {projectionSongsData.length > 0 && (
-                                <div
-                                    ref={projectionListRef}
-                                    style={{ marginBottom: "12px", maxHeight: "200px", overflowY: "auto", border: "1px solid rgba(0,0,0,0.1)", borderRadius: "4px", background: "#f9f9f9" }}
-                                >
-                                    {projectionSongsData.map((song, songIdx) => {
-                                        const sequence = song.verseOrder && song.verseOrder.trim()
-                                            ? song.verseOrder.split(/\s+/).filter(Boolean)
-                                            : song.verses.map(v => v.name);
+                                {projectionSongsData.length > 0 && (
+                                    <div
+                                        ref={projectionListRef}
+                                        style={{ marginBottom: "12px", maxHeight: "200px", overflowY: "auto", border: "1px solid rgba(0,0,0,0.1)", borderRadius: "4px", background: "#f9f9f9" }}
+                                    >
+                                        {projectionSongsData.map((song, songIdx) => {
+                                            const sequence = song.verseOrder && song.verseOrder.trim()
+                                                ? song.verseOrder.split(/\s+/).filter(Boolean)
+                                                : song.verses.map(v => v.name);
 
-                                        return (
-                                            <div key={songIdx} style={{ borderBottom: songIdx < projectionSongsData.length - 1 ? "1px solid rgba(0,0,0,0.1)" : "none", padding: "8px" }}>
-                                                <div style={{ fontSize: "11px", fontWeight: "bold", marginBottom: "4px", color: "#333" }}>{song.title}</div>
-                                                <div style={{ display: "flex", flexWrap: "wrap", gap: "4px" }}>
-                                                    {sequence.map((verseName, verseIdx) => {
-                                                        const verseObj = song.verses.find(v => v.name === verseName) || song.verses[verseIdx];
-                                                        if (!verseObj) return null;
+                                            return (
+                                                <div key={songIdx} style={{ borderBottom: songIdx < projectionSongsData.length - 1 ? "1px solid rgba(0,0,0,0.1)" : "none", padding: "8px" }}>
+                                                    <div style={{ fontSize: "11px", fontWeight: "bold", marginBottom: "4px", color: "#333" }}>{song.title}</div>
+                                                    <div style={{ display: "flex", flexWrap: "wrap", gap: "4px" }}>
+                                                        {sequence.map((verseName, verseIdx) => {
+                                                            const verseObj = song.verses.find(v => v.name === verseName) || song.verses[verseIdx];
+                                                            if (!verseObj) return null;
 
-                                                        const firstLine = (verseObj.lines || "").split("\n")[0] || "";
-                                                        const isActive = songIdx === currentSongIdx && verseIdx === currentVerseIdx;
+                                                            const firstLine = (verseObj.lines || "").split("\n")[0] || "";
+                                                            const isActive = songIdx === currentSongIdx && verseIdx === currentVerseIdx;
 
-                                                        return (
-                                                            <div
-                                                                key={verseIdx}
-                                                                ref={isActive ? (el) => { activeVerseRef.current = el; } : undefined}
-                                                                onClick={() => jumpToVerse(songIdx, verseIdx)}
-                                                                style={{
-                                                                    fontSize: "10px",
-                                                                    padding: "4px 6px",
-                                                                    background: isActive ? "#4CAF50" : "#fff",
-                                                                    color: isActive ? "#fff" : "#666",
-                                                                    border: "1px solid rgba(0,0,0,0.1)",
-                                                                    borderRadius: "3px",
-                                                                    flex: "1 1 100%",
-                                                                    maxWidth: "100%",
-                                                                    fontWeight: isActive ? "bold" : "normal",
-                                                                    cursor: "pointer"
-                                                                }}
-                                                            >
-                                                                <strong>{verseName}:</strong> {firstLine.substring(0, 40)}{firstLine.length > 40 ? "..." : ""}
-                                                            </div>
-                                                        );
-                                                    })}
+                                                            return (
+                                                                <div
+                                                                    key={verseIdx}
+                                                                    ref={isActive ? (el) => { activeVerseRef.current = el; } : undefined}
+                                                                    onClick={() => jumpToVerse(songIdx, verseIdx)}
+                                                                    style={{
+                                                                        fontSize: "10px",
+                                                                        padding: "4px 6px",
+                                                                        background: isActive ? "#4CAF50" : "#fff",
+                                                                        color: isActive ? "#fff" : "#666",
+                                                                        border: "1px solid rgba(0,0,0,0.1)",
+                                                                        borderRadius: "3px",
+                                                                        flex: "1 1 100%",
+                                                                        maxWidth: "100%",
+                                                                        fontWeight: isActive ? "bold" : "normal",
+                                                                        cursor: "pointer"
+                                                                    }}
+                                                                >
+                                                                    <strong>{verseName}:</strong> {firstLine.substring(0, 40)}{firstLine.length > 40 ? "..." : ""}
+                                                                </div>
+                                                            );
+                                                        })}
+                                                    </div>
                                                 </div>
-                                            </div>
-                                        );
-                                    })}
+                                            );
+                                        })}
+                                    </div>
+                                )}
+                                <div style={{ display: "flex", gap: "8px", flexWrap: "wrap" }}>
+                                    <button
+                                        type="button"
+                                        className={styles.actionButton}
+                                        style={{ fontSize: "12px", padding: "6px 10px", flex: "1 1 calc(50% - 4px)" }}
+                                        onClick={() => sendProjectionCommand("prevVerse")}
+                                        title="Předchozí verš"
+                                    >
+                                        ◀︎ Sloka
+                                    </button>
+                                    <button
+                                        type="button"
+                                        className={styles.actionButton}
+                                        style={{ fontSize: "12px", padding: "6px 10px", flex: "1 1 calc(50% - 4px)" }}
+                                        onClick={() => sendProjectionCommand("nextVerse")}
+                                        title="Další verš"
+                                    >
+                                        Sloka ▶︎
+                                    </button>
+                                    <button
+                                        type="button"
+                                        className={styles.actionButton}
+                                        style={{ fontSize: "12px", padding: "6px 10px", flex: "1 1 calc(50% - 4px)" }}
+                                        onClick={() => sendProjectionCommand("prevSong")}
+                                        title="Předchozí píseň"
+                                    >
+                                        ◀︎ Píseň
+                                    </button>
+                                    <button
+                                        type="button"
+                                        className={styles.actionButton}
+                                        style={{ fontSize: "12px", padding: "6px 10px", flex: "1 1 calc(50% - 4px)" }}
+                                        onClick={() => sendProjectionCommand("nextSong")}
+                                        title="Další píseň"
+                                    >
+                                        Píseň ▶︎
+                                    </button>
+                                    <button
+                                        type="button"
+                                        className={styles.actionButton}
+                                        style={{ fontSize: "12px", padding: "6px 10px", flex: "1 1 100%", background: "#f44336", color: "#fff" }}
+                                        onClick={closeProjection}
+                                        title="Zavřít projekční okno"
+                                    >
+                                        ✕ Zavřít projektor
+                                    </button>
                                 </div>
-                            )}
-                            <div style={{ display: "flex", gap: "8px", flexWrap: "wrap" }}>
-                                <button
-                                    type="button"
-                                    className={styles.actionButton}
-                                    style={{ fontSize: "12px", padding: "6px 10px", flex: "1 1 calc(50% - 4px)" }}
-                                    onClick={() => sendProjectionCommand("prevVerse")}
-                                    title="Předchozí verš"
-                                >
-                                    ◀︎ Sloka
-                                </button>
-                                <button
-                                    type="button"
-                                    className={styles.actionButton}
-                                    style={{ fontSize: "12px", padding: "6px 10px", flex: "1 1 calc(50% - 4px)" }}
-                                    onClick={() => sendProjectionCommand("nextVerse")}
-                                    title="Další verš"
-                                >
-                                    Sloka ▶︎
-                                </button>
-                                <button
-                                    type="button"
-                                    className={styles.actionButton}
-                                    style={{ fontSize: "12px", padding: "6px 10px", flex: "1 1 calc(50% - 4px)" }}
-                                    onClick={() => sendProjectionCommand("prevSong")}
-                                    title="Předchozí píseň"
-                                >
-                                    ◀︎ Píseň
-                                </button>
-                                <button
-                                    type="button"
-                                    className={styles.actionButton}
-                                    style={{ fontSize: "12px", padding: "6px 10px", flex: "1 1 calc(50% - 4px)" }}
-                                    onClick={() => sendProjectionCommand("nextSong")}
-                                    title="Další píseň"
-                                >
-                                    Píseň ▶︎
-                                </button>
-                                <button
-                                    type="button"
-                                    className={styles.actionButton}
-                                    style={{ fontSize: "12px", padding: "6px 10px", flex: "1 1 100%", background: "#f44336", color: "#fff" }}
-                                    onClick={closeProjection}
-                                    title="Zavřít projekční okno"
-                                >
-                                    ✕ Zavřít projektor
-                                </button>
                             </div>
                         </div>
-                    </div>
-                )}
+                    )}
 
                     {error && <p className={styles.errorText}>{error}</p>}
                 </div>

@@ -25,11 +25,11 @@ export const SongList = () => {
     useEffect(() => {
         fetchData()
     }, [status.SearchPattern, status.Sorting]);
-    
+
     // Poll for new songs while database is being filled
     const shouldPoll = status.IsProgress && !status.DatabaseReady && status.SongsReady;
     usePolling(fetchData, SONG_POLL_INTERVAL, shouldPoll);
-    
+
     // Delay action after page render
     useDelayedEffect(() => {
         fetchData();
