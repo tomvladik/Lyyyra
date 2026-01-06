@@ -19,7 +19,7 @@ export const SongList = () => {
             const songs = await go.GetSongs(status.Sorting, status.SearchPattern);
             setSongs(songs);
         } catch (error) {
-            console.log(error)
+            console.error("Failed to fetch songs:", error);
         }
     };
     useEffect(() => {
@@ -32,7 +32,6 @@ export const SongList = () => {
     
     // Delay action after page render
     useDelayedEffect(() => {
-        console.log('Initial song list load');
         fetchData();
     }, INITIAL_LOAD_DELAY, []);
 
@@ -45,10 +44,7 @@ export const SongList = () => {
                     return removeDiacritics(el.Title).toLowerCase().includes(normalizedFilter)
                         || removeDiacritics(el.Verses).toLowerCase().includes(normalizedFilter)
                         || removeDiacritics(el.AuthorMusic).toLowerCase().includes(normalizedFilter)
-                        || removeDiacritics(el.AuthorLyric).toLowerCase().includes(normalizedFilter)
-                        ;
-
-    ;
+                        || removeDiacritics(el.AuthorLyric).toLowerCase().includes(normalizedFilter);
                 })
                 .map((song) => {
                     return <SongCard key={song.Id} data={song} />;

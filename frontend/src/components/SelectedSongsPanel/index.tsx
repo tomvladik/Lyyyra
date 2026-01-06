@@ -8,7 +8,7 @@ import projectionTemplate from "./projection-template.html?raw";
 
 export const SelectedSongsPanel = () => {
     const { selectedSongs, removeSongFromSelection, clearSelection } = useContext(SelectionContext);
-    const panelRef = useRef<HTMLElement | null>(null);
+    const panelRef = useRef<HTMLDivElement | null>(null);
     const projectionWindowRef = useRef<Window | null>(null);
     const projectionListRef = useRef<HTMLDivElement | null>(null);
     const activeVerseRef = useRef<HTMLDivElement | null>(null);
@@ -22,7 +22,6 @@ export const SelectedSongsPanel = () => {
     const [currentVerseIdx, setCurrentVerseIdx] = useState(0);
     const [availableScreens, setAvailableScreens] = useState<ScreenDetailed[]>([]);
     const [showScreenSelector, setShowScreenSelector] = useState(false);
-    const [selectedScreenIndex, setSelectedScreenIndex] = useState(0);
 
     type ScreenDetailed = {
         left: number;
@@ -33,14 +32,31 @@ export const SelectedSongsPanel = () => {
         label: string;
     };
 
+    interface ScreenDetails {
+        screens: Array<{
+            left: number;
+            top: number;
+            width: number;
+            height: number;
+            isPrimary: boolean;
+            label?: string;
+        }>;
+    }
+
+    interface ExtendedScreen {
+        width: number;
+        height: number;
+        isExtended?: boolean;
+    }
+
     // Detect available screens on mount
     useEffect(() => {
         const detectScreens = async () => {
             try {
                 // Try modern Screen Detection API
                 if ('getScreenDetails' in window) {
-                    const screenDetails = await (window as any).getScreenDetails();
-                    const screens: ScreenDetailed[] = screenDetails.screens.map((s: any, idx: number) => ({
+                    const screenDetails = await (window as Window & { getScreenDetails: () => Promise<ScreenDetails> }).getScreenDetails();
+                    const screens: ScreenDetailed[] = screenDetails.screens.map((s, idx: number) => ({
                         left: s.left,
                         top: s.top,
                         width: s.width,
@@ -60,7 +76,7 @@ export const SelectedSongsPanel = () => {
                         label: 'Primary Display'
                     };
                     // Check if extended display might exist
-                    if ((window.screen as any).isExtended) {
+                    if ((window.screen as ExtendedScreen).isExtended) {
                         const secondaryScreen: ScreenDetailed = {
                             left: window.screen.width,
                             top: 0,
@@ -75,8 +91,7 @@ export const SelectedSongsPanel = () => {
                     }
                 }
             } catch (err) {
-                console.log('Screen detection not available or denied');
-                // Default to single screen
+                // Screen detection not available or denied - default to single screen
                 setAvailableScreens([{
                     left: 0,
                     top: 0,
@@ -355,7 +370,6 @@ export const SelectedSongsPanel = () => {
                                 className={styles.actionButton}
                                 style={{ width: "100%", fontSize: "12px", height: "44px", justifyContent: "center" }}
                                 onClick={() => {
-                                    setSelectedScreenIndex(idx);
                                     openProjectionWindow(idx);
                                 }}
                             >

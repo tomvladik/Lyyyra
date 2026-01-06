@@ -1,6 +1,6 @@
 import React, { ChangeEvent, useContext, useEffect, useMemo, useState } from 'react';
 import { SortingOption } from '../../AppStatus';
-import { DEBOUNCE_DELAY, FETCH_STATUS_DELAY } from '../../constants';
+import { DEBOUNCE_DELAY } from '../../constants';
 import { DataContext } from '../../context';
 import styles from "./index.module.less";
 
@@ -16,26 +16,21 @@ export function InfoBox(props: Props) {
   const [resultText, setResultText] = useState("Zpěvník není inicializován");
   const [buttonText, setButtonText] = useState("Stáhnout data z internetu");
   const [searchValue, setSearchValue] = useState(status.SearchPattern || '');
-  const [, setError] = useState(false);
 
   const isButtonVisible = useMemo(() => {
     return !(status.DatabaseReady && status.SongsReady);
   }, [status.DatabaseReady, status.SongsReady]);
 
   useEffect(() => {
-    try {
-      if (status.DatabaseReady) {
-        setResultText("Data jsou připravena");
-        setButtonText("Stáhnout data z internetu");
-      } else if (status.SongsReady) {
-        setResultText("Data jsou stažena, ale nejsou naimportována do interní databáze");
-        setButtonText("Importovat data");
-      } else {
-        setResultText("Zpěvník není inicializován");
-        setButtonText("Stáhnout data z internetu");
-      }
-    } catch (error) {
-      setError(true);
+    if (status.DatabaseReady) {
+      setResultText("Data jsou připravena");
+      setButtonText("Stáhnout data z internetu");
+    } else if (status.SongsReady) {
+      setResultText("Data jsou stažena, ale nejsou naimportována do interní databáze");
+      setButtonText("Importovat data");
+    } else {
+      setResultText("Zpěvník není inicializován");
+      setButtonText("Stáhnout data z internetu");
     }
   }, [status.DatabaseReady, status.SongsReady]);
 
@@ -54,13 +49,7 @@ export function InfoBox(props: Props) {
     return () => clearTimeout(timer);
   }, [searchValue, status.SearchPattern, updateStatus]);
 
-  // maintain backwards compatibility with previous delayed logging for debugging
-  useEffect(() => {
-    const timer = setTimeout(() => {
-      console.log('Status check after delay');
-    }, FETCH_STATUS_DELAY);
-    return () => clearTimeout(timer);
-  }, []);
+  // Initial status check delay removed - no longer needed
 
   const sorting = [
     { value: 'entry' as SortingOption, label: 'čísla' },

@@ -66,7 +66,7 @@ function App() {
             };
             setStatus(prev => (isEqualAppStatus(newStatus, prev) ? prev : newStatus));
         } catch (error) {
-            console.log(error)
+            console.error("Failed to fetch status:", error);
         }
     }, []);
 
@@ -78,7 +78,6 @@ function App() {
     useEffect(() => {
         fetchStatus();
         const timer = setTimeout(() => {
-            console.log('Initial load after delay');
             fetchStatus();
         }, INITIAL_LOAD_DELAY);
         return () => clearTimeout(timer);

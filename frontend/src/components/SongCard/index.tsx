@@ -8,7 +8,6 @@ import styles from "./index.module.less";
 
 export const SongCard = ({ data }: { data: dtoSong }) => {
     const [authorData, setData] = useState(new Array<Author>());
-    const [, setError] = useState(false);
     const [pdfModalOpen, setPdfModalOpen] = useState(false);
     const { addSongToSelection, isSongSelected } = useContext(SelectionContext);
 
@@ -18,7 +17,7 @@ export const SongCard = ({ data }: { data: dtoSong }) => {
             const result = await GetSongAuthors(data.Id);
             setData(result);
         } catch (error) {
-            setError(true);
+            console.error("Failed to fetch song authors:", error);
         }
     };
 
@@ -47,7 +46,7 @@ export const SongCard = ({ data }: { data: dtoSong }) => {
     // useEffect with an empty dependency array runs once when the component mounts
     useEffect(() => {
         fetchData();
-    }, []); // Empty dependency array means it runs once when the component mounts
+    }, []); // fetchData recreated on every render, but we only want to call it once on mount
 
     return (
         <>
