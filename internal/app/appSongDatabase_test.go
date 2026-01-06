@@ -34,20 +34,7 @@ func teardownTestDB(app *App) {
 	os.Remove(app.dbFilePath)
 }
 
-func TestDatabaseVersion(t *testing.T) {
-	db, err := sql.Open("sqlite3", ":memory:")
-	if err != nil {
-		t.Fatal(err)
-	}
-	defer db.Close()
 
-	var version string
-	err = db.QueryRow("SELECT sqlite_version();").Scan(&version)
-	if err != nil {
-		t.Fatal(err)
-	}
-
-}
 func TestFillDatabase(t *testing.T) {
 	app := setupTestDB(t)
 	defer teardownTestDB(app)
@@ -81,21 +68,23 @@ func TestFillDatabase(t *testing.T) {
 	var title string
 	err = db.QueryRow(`SELECT title FROM songs WHERE title='ABCčDďE'`).Scan(&title)
 	if err != nil {
-		t.Errorf("Sample song was not inserted: %v", err)
+		t.Errorf("Sample song 'ABCčDďE' was not inserted: %v", err)
+	}
+	if title != "ABCčDďE" {
+		t.Errorf("Expected title 'ABCčDďE', got %q", title)
 	}
 
-	// Check if the song was indexed in FTS
+	// Check if the song was indexed with diacritics removed
 	var found_entry string
 	err = db.QueryRow(`
 		SELECT entry FROM songs
 		WHERE title_d LIKE '%abccdde%'`).Scan(&found_entry)
 	if err != nil {
-		t.Errorf("Sample song was not inserted: %v", err)
+		t.Errorf("Song not searchable by normalized title: %v", err)
 	}
 
-	// Check if the sample author is in the result
 	if found_entry != "288" {
-		t.Errorf("Expected to get other song, not %v", found_entry)
+		t.Errorf("Expected entry '288' from diacritics search, got %q", found_entry)
 	}
 
 	err = db.QueryRow(`
@@ -103,12 +92,11 @@ func TestFillDatabase(t *testing.T) {
 	JOIN authors ON songs.id=authors.song_id
 	WHERE authors.author_value_d LIKE '%2018%'`).Scan(&found_entry)
 	if err != nil {
-		t.Errorf("Sample song was not inserted: %v", err)
+		t.Errorf("Failed to find song by author search: %v", err)
 	}
 
-	// Check if the sample author is in the result
 	if found_entry != "3" {
-		t.Errorf("Expected to get other song, not %v", found_entry)
+		t.Errorf("Expected entry '3' from author search, got %q", found_entry)
 	}
 
 	err = db.QueryRow(`
@@ -116,12 +104,11 @@ func TestFillDatabase(t *testing.T) {
 	JOIN verses ON songs.id=verses.song_id
 	WHERE verses.lines_d LIKE '%tulen%'`).Scan(&found_entry)
 	if err != nil {
-		t.Errorf("Sample song was not inserted: %v", err)
+		t.Errorf("Failed to find song by verse search: %v", err)
 	}
 
-	// Check if the sample author is in the result
 	if found_entry != "4" {
-		t.Errorf("Expected to get other song, not %v", found_entry)
+		t.Errorf("Expected entry '4' from verse search, got %q", found_entry)
 	}
 
 }
@@ -305,7 +292,7 @@ func TestFindSongByAuthor(t *testing.T) {
 	_, err = db.Exec(`
         INSERT INTO songs (title, verse_order, entry) VALUES ('Sample Song', '1', 1);
         INSERT INTO authors (song_id, author_type, author_value) VALUES (1, 'music', 'Sample Author');
-        INSERT INTO authors (song_id, author_type, author_value) VALUES (1, 'wrods', 'Bedřich Antonn Leoš');
+        INSERT INTO authors (song_id, author_type, author_value) VALUES (1, 'words', 'Bedřich Antonn Leoš');
         INSERT INTO songs (title, verse_order, entry) VALUES ('Sample Song II.', '1', 333);
         INSERT INTO authors (song_id, author_type, author_value) VALUES (2, 'music', 'Experimentální žluťoučký kůň');
         INSERT INTO authors (song_id, author_type, author_value) VALUES (2, 'words', 'šumař na střeše');

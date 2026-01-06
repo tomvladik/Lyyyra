@@ -83,4 +83,30 @@ describe('<HighlightText />', () => {
     const element = screen.getByText('Inline text');
     expect(element.tagName).toBe('SPAN');
   });
+
+  it('handles empty text gracefully', () => {
+    const { container } = renderWithContext('', 'search');
+    expect(container.textContent).toBe('');
+  });
+
+  it('handles special regex characters in search pattern', () => {
+    const { container } = renderWithContext('Test (with) [brackets]', '(with)');
+    const mark = container.querySelector('mark');
+    expect(mark).toBeInTheDocument();
+    expect(mark?.textContent).toBe('(with)');
+  });
+
+  it('handles very long search patterns', () => {
+    const longText = 'a'.repeat(1000);
+    const { container } = renderWithContext(longText, 'aaa');
+    const marks = container.querySelectorAll('mark');
+    expect(marks.length).toBeGreaterThan(0);
+  });
+
+  it('handles newlines in text', () => {
+    const textWithNewlines = 'Line 1\nLine 2\nLine 3';
+    renderWithContext(textWithNewlines, 'Line');
+    const marks = screen.getAllByText(/Line/i);
+    expect(marks.length).toBeGreaterThan(0);
+  });
 });

@@ -144,6 +144,33 @@ describe('<SongCard />', () => {
     });
   });
 
+  it('handles API errors gracefully when fetching authors', async () => {
+    vi.mocked(AppModule.GetSongAuthors).mockRejectedValue(new Error('API Error'));
+
+    await renderWithContext(mockSong);
+
+    // Component should still render even if author fetch fails
+    expect(screen.getByText('123:', { exact: false })).toBeInTheDocument();
+    expect(screen.getByText(/Test Song Title/)).toBeInTheDocument();
+  });
+
+  it('handles empty verses', async () => {
+    vi.mocked(AppModule.GetSongAuthors).mockResolvedValue([]);
+    const songWithEmptyVerses = { ...mockSong, Verses: '' };
+
+    await renderWithContext(songWithEmptyVerses);
+
+    expect(screen.getByText('123:', { exact: false })).toBeInTheDocument();
+  });
+
+  it('handles null or undefined authors response', async () => {
+    vi.mocked(AppModule.GetSongAuthors).mockResolvedValue(null as any);
+
+    await renderWithContext(mockSong);
+
+    expect(screen.getByText('123:', { exact: false })).toBeInTheDocument();
+  });
+
   it('highlights matches in title and authors when searching', async () => {
     const mockAuthors = [
       { Type: 'words', Value: 'Test Lyricist' },

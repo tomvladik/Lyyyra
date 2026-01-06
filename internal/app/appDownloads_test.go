@@ -34,33 +34,64 @@ func teardownTestApp(app *App) {
 }
 
 func TestDownloadFile(t *testing.T) {
-	app := setupTestApp(t)
-	defer teardownTestApp(app)
-
-	// Create a test server to serve a test file
-	ts := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		_, _ = w.Write([]byte("test content"))
-	}))
-	defer ts.Close()
-
-	fileUrl := ts.URL
-	fileName := "testfile.txt"
-
-	// Test downloading the file
-	downloadedFilePath, err := app.downloadFile(fileUrl, fileName)
-	if err != nil {
-		t.Fatalf("Failed to download file: %v", err)
+	tests := []struct {
+		name            string
+		serverContent   string
+		fileName        string
+		expectedContent string
+	}{
+		{
+			name:            "downloads text file successfully",
+			serverContent:   "test content",
+			fileName:        "testfile.txt",
+			expectedContent: "test content",
+		},
+		{
+			name:            "downloads empty file",
+			serverContent:   "",
+			fileName:        "empty.txt",
+			expectedContent: "",
+		},
+		{
+			name:            "handles files with special characters in name",
+			serverContent:   "special content",
+			fileName:        "test-file_123.txt",
+			expectedContent: "special content",
+		},
 	}
 
-	// Check if the file was downloaded correctly
-	content, err := os.ReadFile(downloadedFilePath)
-	if err != nil {
-		t.Fatalf("Failed to read downloaded file: %v", err)
-	}
+	for _, tc := range tests {
+		t.Run(tc.name, func(t *testing.T) {
+			app := setupTestApp(t)
+			defer teardownTestApp(app)
 
-	expectedContent := "test content"
-	if string(content) != expectedContent {
-		t.Errorf("Expected file content %q, got %q", expectedContent, string(content))
+			// Create a test server to serve a test file
+			ts := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+				_, _ = w.Write([]byte(tc.serverContent))
+			}))
+			defer ts.Close()
+
+			// Test downloading the file
+			downloadedFilePath, err := app.downloadFile(ts.URL, tc.fileName)
+			if err != nil {
+				t.Fatalf("Failed to download file: %v", err)
+			}
+
+			// Check if the file was downloaded correctly
+			content, err := os.ReadFile(downloadedFilePath)
+			if err != nil {
+				t.Fatalf("Failed to read downloaded file: %v", err)
+			}
+
+			if string(content) != tc.expectedContent {
+				t.Errorf("Expected file content %q, got %q", tc.expectedContent, string(content))
+			}
+
+			// Verify file exists at expected location
+			if _, err := os.Stat(downloadedFilePath); os.IsNotExist(err) {
+				t.Errorf("Downloaded file does not exist at %s", downloadedFilePath)
+			}
+		})
 	}
 }
 
