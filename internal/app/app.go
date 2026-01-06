@@ -162,44 +162,54 @@ func (a *App) GetCombinedPdf(filenames []string) (string, error) {
 			continue
 		}
 
-		filePath := filepath.Join(a.pdfDir, name)
-		file, err := os.Open(filePath)
+		count, err := a.addPdfToCreator(c, name)
 		if err != nil {
-			return "", fmt.Errorf("unable to open %s: %w", name, err)
+			return "", err
 		}
-
-		reader, err := model.NewPdfReader(file)
-		if err != nil {
-			file.Close()
-			return "", fmt.Errorf("unable to read %s: %w", name, err)
-		}
-
-		numPages, err := reader.GetNumPages()
-		if err != nil {
-			file.Close()
-			return "", fmt.Errorf("unable to get page count for %s: %w", name, err)
-		}
-
-		for pageNum := 1; pageNum <= numPages; pageNum++ {
-			page, err := reader.GetPage(pageNum)
-			if err != nil {
-				file.Close()
-				return "", fmt.Errorf("unable to read page %d from %s: %w", pageNum, name, err)
-			}
-			if err := c.AddPage(page); err != nil {
-				file.Close()
-				return "", fmt.Errorf("unable to add page %d from %s: %w", pageNum, name, err)
-			}
-			pagesAdded++
-		}
-
-		file.Close()
+		pagesAdded += count
 	}
 
 	if pagesAdded == 0 {
 		return "", fmt.Errorf("no pages added to compilation")
 	}
 
+	return a.encodeCreatorToPdf(c)
+}
+
+// addPdfToCreator opens a PDF file and adds all its pages to the creator
+func (a *App) addPdfToCreator(c *creator.Creator, filename string) (int, error) {
+	filePath := filepath.Join(a.pdfDir, filename)
+	file, err := os.Open(filePath)
+	if err != nil {
+		return 0, fmt.Errorf("unable to open %s: %w", filename, err)
+	}
+	defer file.Close()
+
+	reader, err := model.NewPdfReader(file)
+	if err != nil {
+		return 0, fmt.Errorf("unable to read %s: %w", filename, err)
+	}
+
+	numPages, err := reader.GetNumPages()
+	if err != nil {
+		return 0, fmt.Errorf("unable to get page count for %s: %w", filename, err)
+	}
+
+	for pageNum := 1; pageNum <= numPages; pageNum++ {
+		page, err := reader.GetPage(pageNum)
+		if err != nil {
+			return 0, fmt.Errorf("unable to read page %d from %s: %w", pageNum, filename, err)
+		}
+		if err := c.AddPage(page); err != nil {
+			return 0, fmt.Errorf("unable to add page %d from %s: %w", pageNum, filename, err)
+		}
+	}
+
+	return numPages, nil
+}
+
+// encodeCreatorToPdf writes the creator content to a buffer and returns as base64 data URL
+func (a *App) encodeCreatorToPdf(c *creator.Creator) (string, error) {
 	buf := &bytes.Buffer{}
 	if err := c.Write(buf); err != nil {
 		return "", fmt.Errorf("unable to write compiled PDF: %w", err)

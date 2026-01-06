@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"log/slog"
 	"os"
+	"path/filepath"
 	"strings"
 
 	_ "github.com/mattn/go-sqlite3"
@@ -60,87 +61,117 @@ func (a *App) PrepareDatabase() {
 }
 
 func (a *App) FillDatabase() {
-	// Read all XML files in the specified directory
-	xmlFiles, err := os.ReadDir(a.songBookDir)
+	xmlFiles, err := a.getXmlFiles()
 	if err != nil {
-		slog.Error(fmt.Sprintf("Error reading XML files directory: %s", err))
 		a.status.SongsReady = false
 		return
-	}
-	if len(xmlFiles) == 0 {
-		slog.Error(fmt.Sprintf("No XML files in directory: %s", a.songBookDir))
-		a.status.SongsReady = false
-		return
-	}
-	//defer os.RemoveAll(a.songBookDir)
-	if a.testRun {
-		xmlFiles = xmlFiles[:25]
 	}
 
 	totalFiles := len(xmlFiles)
 	a.updateProgress("Plním databázi...", 0)
 
 	_ = a.withDB(func(db *sql.DB) error {
-		// Process each XML file
 		for i, xmlFile := range xmlFiles {
-			// Update progress every 10 files or at the end
-			if i%10 == 0 || i == totalFiles-1 {
-				percent := int((float64(i+1) / float64(totalFiles)) * 100)
-				message := fmt.Sprintf("Plním databázi... (%d/%d)", i+1, totalFiles)
-				a.updateProgress(message, percent)
+			a.updateDatabaseProgress(i, totalFiles)
+			if err := a.processSongFile(db, xmlFile); err != nil {
+				slog.Error("Failed to process song file", "file", xmlFile.Name(), "error", err)
 			}
-
-			// Construct the full path to the XML file
-			// Read XML data from file
-			xmlFilePath := fmt.Sprintf("%s/%s", a.songBookDir, xmlFile.Name())
-
-			song, err := parseXmlSong(xmlFilePath)
-			if err != nil {
-				continue
-			}
-
-			title_d := removeDiacritics(song.Title)
-			// Insert song data into the songs table
-			result, err := db.Exec(`INSERT INTO songs (title, title_d, verse_order, entry) VALUES (?, ?, ?, ?)`,
-				song.Title, title_d, song.VerseOrder, song.Songbook.Entry)
-			if err != nil {
-				slog.Error(fmt.Sprintf("Error inserting song data for file %s: %v\n", xmlFile.Name(), err))
-				continue
-			}
-
-			// Get the ID of the inserted song
-			songID, err := result.LastInsertId()
-			if err != nil {
-				slog.Error(fmt.Sprintf("Error getting last insert ID for file %s: %v\n", xmlFile.Name(), err))
-				continue
-			}
-
-			// Insert author data into the authors table
-			for _, author := range song.Authors {
-				author_d := removeDiacritics(author.Value)
-				_, err := db.Exec(`INSERT INTO authors (song_id, author_type, author_value, author_value_d) VALUES (?, ?, ?, ?)`,
-					songID, author.Type, author.Value, author_d)
-				if err != nil {
-					slog.Error(fmt.Sprintf("Error inserting author data for file %s: %v\n", xmlFile.Name(), err))
-					continue
-				}
-			}
-
-			// Insert verse data into the verses table
-			for _, verse := range song.Lyrics.Verses {
-				lines_d := removeDiacritics(verse.Lines)
-				_, err := db.Exec(`INSERT INTO verses (song_id, name, lines, lines_d) VALUES (?, ?, ?, ?)`,
-					songID, verse.Name, verse.Lines, lines_d)
-				if err != nil {
-					slog.Error(fmt.Sprintf("Error inserting verse data for file %s: %v\n", xmlFile.Name(), err))
-					continue
-				}
-			}
-
-			slog.Debug(fmt.Sprintf("Data inserted  %s : %s file %s\n", song.Songbook.Entry, song.Title, xmlFile.Name()))
 		}
 		return nil
 	})
+}
+
+// getXmlFiles reads and validates XML files from the songbook directory
+func (a *App) getXmlFiles() ([]os.DirEntry, error) {
+	xmlFiles, err := os.ReadDir(a.songBookDir)
+	if err != nil {
+		slog.Error("Error reading XML files directory", "error", err)
+		return nil, err
+	}
+	if len(xmlFiles) == 0 {
+		slog.Error("No XML files in directory", "directory", a.songBookDir)
+		return nil, fmt.Errorf("no XML files found")
+	}
+
+	if a.testRun && len(xmlFiles) > 25 {
+		xmlFiles = xmlFiles[:25]
+	}
+
+	return xmlFiles, nil
+}
+
+// updateDatabaseProgress updates progress every 10 files or at the end
+func (a *App) updateDatabaseProgress(current, total int) {
+	if current%10 == 0 || current == total-1 {
+		percent := int((float64(current+1) / float64(total)) * 100)
+		message := fmt.Sprintf("Plním databázi... (%d/%d)", current+1, total)
+		a.updateProgress(message, percent)
+	}
+}
+
+// processSongFile parses an XML file and inserts song data into the database
+func (a *App) processSongFile(db *sql.DB, xmlFile os.DirEntry) error {
+	xmlFilePath := filepath.Join(a.songBookDir, xmlFile.Name())
+
+	song, err := parseXmlSong(xmlFilePath)
+	if err != nil {
+		return fmt.Errorf("failed to parse XML: %w", err)
+	}
+
+	songID, err := a.insertSong(db, song)
+	if err != nil {
+		return fmt.Errorf("failed to insert song: %w", err)
+	}
+
+	if err := a.insertAuthors(db, songID, song.Authors, xmlFile.Name()); err != nil {
+		return fmt.Errorf("failed to insert authors: %w", err)
+	}
+
+	if err := a.insertVerses(db, songID, song.Lyrics.Verses, xmlFile.Name()); err != nil {
+		return fmt.Errorf("failed to insert verses: %w", err)
+	}
+
+	slog.Debug("Data inserted", "entry", song.Songbook.Entry, "title", song.Title, "file", xmlFile.Name())
+	return nil
+}
+
+// insertSong inserts a song record and returns the song ID
+func (a *App) insertSong(db *sql.DB, song *Song) (int64, error) {
+	title_d := removeDiacritics(song.Title)
+	result, err := db.Exec(`INSERT INTO songs (title, title_d, verse_order, entry) VALUES (?, ?, ?, ?)`,
+		song.Title, title_d, song.VerseOrder, song.Songbook.Entry)
+	if err != nil {
+		return 0, err
+	}
+	return result.LastInsertId()
+}
+
+// insertAuthors inserts all author records for a song
+func (a *App) insertAuthors(db *sql.DB, songID int64, authors []Author, filename string) error {
+	for _, author := range authors {
+		author_d := removeDiacritics(author.Value)
+		_, err := db.Exec(`INSERT INTO authors (song_id, author_type, author_value, author_value_d) VALUES (?, ?, ?, ?)`,
+			songID, author.Type, author.Value, author_d)
+		if err != nil {
+			slog.Error("Error inserting author", "file", filename, "error", err)
+			continue
+		}
+	}
+	return nil
+}
+
+// insertVerses inserts all verse records for a song
+func (a *App) insertVerses(db *sql.DB, songID int64, verses []Verse, filename string) error {
+	for _, verse := range verses {
+		lines_d := removeDiacritics(verse.Lines)
+		_, err := db.Exec(`INSERT INTO verses (song_id, name, lines, lines_d) VALUES (?, ?, ?, ?)`,
+			songID, verse.Name, verse.Lines, lines_d)
+		if err != nil {
+			slog.Error("Error inserting verse", "file", filename, "error", err)
+			continue
+		}
+	}
+	return nil
 }
 
 func (a *App) GetSongs(orderBy string, searchPattern string) ([]dtoSong, error) {
