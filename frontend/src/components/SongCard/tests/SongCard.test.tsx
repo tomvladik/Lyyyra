@@ -164,6 +164,7 @@ describe('<SongCard />', () => {
   });
 
   it('handles null or undefined authors response', async () => {
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     vi.mocked(AppModule.GetSongAuthors).mockResolvedValue(null as any);
 
     await renderWithContext(mockSong);
