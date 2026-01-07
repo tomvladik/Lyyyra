@@ -103,6 +103,13 @@ describe('<HighlightText />', () => {
     expect(marks.length).toBeGreaterThan(0);
   });
 
+  it('highlights partial words without diacritics', () => {
+    const { container } = renderWithContext('Johann Rudolf Ahle, Neue Geistliche […] Andachten, 1664 / Deutsches evangelisches Kirchen­‑Gesangbuch, 1854 / 2018', 'achte');
+    const mark = container.querySelector('mark');
+    expect(mark).toBeInTheDocument();
+    expect(mark?.textContent).toBe('achte');
+  });
+
   it('handles newlines in text', () => {
     const textWithNewlines = 'Line 1\nLine 2\nLine 3';
     renderWithContext(textWithNewlines, 'Line');
