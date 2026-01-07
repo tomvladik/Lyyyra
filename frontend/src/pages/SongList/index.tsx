@@ -6,7 +6,6 @@ import { INITIAL_LOAD_DELAY, SONG_POLL_INTERVAL } from '../../constants';
 import { DataContext } from '../../context';
 import { useDelayedEffect, usePolling } from '../../hooks/usePolling';
 import { dtoSong } from '../../models';
-import { removeDiacritics } from "../../utils/stringUtils";
 
 
 export const SongList = () => {
@@ -35,18 +34,10 @@ export const SongList = () => {
         fetchData();
     }, INITIAL_LOAD_DELAY, []);
 
-    const normalizedFilter = removeDiacritics(status.SearchPattern || '').toLowerCase();
     return (
         <div>
             {songs
-                ?.filter((el) => {
-                    if (!normalizedFilter || normalizedFilter.length < 3) return true;
-                    return removeDiacritics(el.Title).toLowerCase().includes(normalizedFilter)
-                        || removeDiacritics(el.Verses).toLowerCase().includes(normalizedFilter)
-                        || removeDiacritics(el.AuthorMusic).toLowerCase().includes(normalizedFilter)
-                        || removeDiacritics(el.AuthorLyric).toLowerCase().includes(normalizedFilter);
-                })
-                .map((song) => {
+                ?.map((song) => {
                     return <SongCard key={song.Id} data={song} />;
                 })}
         </div>

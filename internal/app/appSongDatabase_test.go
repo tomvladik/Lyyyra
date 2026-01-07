@@ -366,3 +366,200 @@ func TestGetSongProjection(t *testing.T) {
 		t.Errorf("third verse name expected 'v2', got %q", payload.Verses[2].Name)
 	}
 }
+
+func TestGetSongsWithSearch(t *testing.T) {
+	app := setupTestDB(t)
+	defer teardownTestDB(app)
+
+	// Insert sample data into the database
+	db, err := sql.Open("sqlite3", app.dbFilePath)
+	if err != nil {
+		t.Fatalf("Failed to open database: %v", err)
+	}
+	defer db.Close()
+
+	_, err = db.Exec(`
+        INSERT INTO songs (title, title_d, verse_order, entry) VALUES
+            ('Příliš žluťoučký kůň', 'prilis zlutoucka kun', '1', 101),
+            ('Spring Song', 'spring song', '1', 202),
+            ('Third Entry', 'third entry', '1', 303);
+        INSERT INTO verses (song_id, name, lines, lines_d) VALUES
+            (1, 'Verse 1', 'Příliš žluťoučký verses', 'prilis zlutoucka verses'),
+            (2, 'Verse 1', 'Spring is coming now', 'spring is coming now'),
+            (3, 'Verse 1', 'Another verse text', 'another verse text');
+        INSERT INTO authors (song_id, author_type, author_value, author_value_d) VALUES
+            (1, 'music', 'Antonín Dvořák', 'antonin dvorak'),
+            (1, 'words', 'František Matěj', 'frantisek matej'),
+            (2, 'music', 'Wolfgang Mozart', 'wolfgang mozart'),
+            (3, 'music', 'Another Author', 'another author');
+    `, &err)
+	if err != nil {
+		t.Fatalf("Failed to insert sample data: %v", err)
+	}
+
+	testCases := []struct {
+		name            string
+		searchPattern   string
+		expectedCount   int
+		expectedEntries []int
+		testDescription string
+	}{
+		{
+			name:            "Search by diacritics-insensitive title",
+			searchPattern:   "prilis",
+			expectedCount:   1,
+			expectedEntries: []int{101},
+			testDescription: "Should find 'Příliš' when searching for 'prilis'",
+		},
+		{
+			name:            "Search by diacritics-insensitive author",
+			searchPattern:   "dvorak",
+			expectedCount:   1,
+			expectedEntries: []int{101},
+			testDescription: "Should find 'Dvořák' when searching for 'dvorak'",
+		},
+		{
+			name:            "Search by verse lines",
+			searchPattern:   "spring",
+			expectedCount:   1,
+			expectedEntries: []int{202},
+			testDescription: "Should find song with 'Spring' in verses",
+		},
+		{
+			name:            "Search by entry number as integer",
+			searchPattern:   "202",
+			expectedCount:   1,
+			expectedEntries: []int{202},
+			testDescription: "Should find song by entry number 202",
+		},
+		{
+			name:            "Search by entry number prefix",
+			searchPattern:   "303",
+			expectedCount:   1,
+			expectedEntries: []int{303},
+			testDescription: "Should find songs by exact entry number match",
+		},
+		{
+			name:            "Search with less than 3 characters returns all",
+			searchPattern:   "ab",
+			expectedCount:   3,
+			expectedEntries: []int{101, 202, 303},
+			testDescription: "Should return all songs for patterns less than 3 characters",
+		},
+		{
+			name:            "Empty search returns all",
+			searchPattern:   "",
+			expectedCount:   3,
+			expectedEntries: []int{101, 202, 303},
+			testDescription: "Should return all songs for empty search pattern",
+		},
+		{
+			name:            "Case-insensitive search",
+			searchPattern:   "SPRING",
+			expectedCount:   1,
+			expectedEntries: []int{202},
+			testDescription: "Should find songs regardless of case",
+		},
+	}
+
+	for _, tc := range testCases {
+		t.Run(tc.name, func(t *testing.T) {
+			songs, err := app.GetSongs("entry", tc.searchPattern)
+			if err != nil {
+				t.Fatalf("Failed to get songs: %v", err)
+			}
+
+			if len(songs) != tc.expectedCount {
+				t.Errorf("%s: Expected %d songs, got %d", tc.testDescription, tc.expectedCount, len(songs))
+				return
+			}
+
+			for i, expected := range tc.expectedEntries {
+				if i >= len(songs) {
+					t.Errorf("%s: Expected entry %d, but song at index %d does not exist", tc.testDescription, expected, i)
+					continue
+				}
+				if songs[i].Entry != expected {
+					t.Errorf("%s: Expected entry %d at position %d, got %d", tc.testDescription, expected, i, songs[i].Entry)
+				}
+			}
+		})
+	}
+}
+
+func TestGetSongs2WithSearch(t *testing.T) {
+	app := setupTestDB(t)
+	defer teardownTestDB(app)
+
+	// Insert sample data into the database
+	db, err := sql.Open("sqlite3", app.dbFilePath)
+	if err != nil {
+		t.Fatalf("Failed to open database: %v", err)
+	}
+	defer db.Close()
+
+	_, err = db.Exec(`
+        INSERT INTO songs (title, title_d, verse_order, entry) VALUES
+            ('Božena Němcová', 'Bozena Nemcova', '1', 505),
+            ('Modern Song', 'modern song', '1', 606);
+        INSERT INTO verses (song_id, name, lines, lines_d) VALUES
+            (1, 'Verse 1', 'Božena verses', 'bozena verses'),
+            (2, 'Verse 1', 'Modern times', 'modern times');
+        INSERT INTO authors (song_id, author_type, author_value, author_value_d) VALUES
+            (1, 'music', 'Česká hudba', 'ceska hudba'),
+            (2, 'music', 'Contemporary Artist', 'contemporary artist');
+    `)
+	if err != nil {
+		t.Fatalf("Failed to insert sample data: %v", err)
+	}
+
+	testCases := []struct {
+		name            string
+		searchPattern   string
+		expectedCount   int
+		expectedEntries []int
+	}{
+		{
+			name:            "Search by diacritics title in GetSongs2",
+			searchPattern:   "bozena",
+			expectedCount:   1,
+			expectedEntries: []int{505},
+		},
+		{
+			name:            "Search by entry number in GetSongs2",
+			searchPattern:   "606",
+			expectedCount:   1,
+			expectedEntries: []int{606},
+		},
+		{
+			name:            "Search by author in GetSongs2",
+			searchPattern:   "ceska",
+			expectedCount:   1,
+			expectedEntries: []int{505},
+		},
+	}
+
+	for _, tc := range testCases {
+		t.Run(tc.name, func(t *testing.T) {
+			songs, err := app.GetSongs2("entry", tc.searchPattern)
+			if err != nil {
+				t.Fatalf("Failed to get songs: %v", err)
+			}
+
+			if len(songs) != tc.expectedCount {
+				t.Errorf("Expected %d songs, got %d", tc.expectedCount, len(songs))
+				return
+			}
+
+			for i, expected := range tc.expectedEntries {
+				if i >= len(songs) {
+					t.Errorf("Expected entry %d, but song at index %d does not exist", expected, i)
+					continue
+				}
+				if songs[i].Entry != expected {
+					t.Errorf("Expected entry %d at position %d, got %d", expected, i, songs[i].Entry)
+				}
+			}
+		})
+	}
+}

@@ -196,11 +196,18 @@ func (a *App) GetSongs(orderBy string, searchPattern string) ([]dtoSong, error) 
   JOIN verses v ON s.id = v.song_id
 `
 
-		// query_middle := fmt.Sprintf(`
-		// JOIN verses_fts vfts ON v.id = vfts.id
-		// JOIN authors_fts afts ON authors.id=afts.id
-		// WHERE vfts MATCH '%s'
-		// `, searchPattern)
+		// Build WHERE clause if searchPattern provided
+		query_where := ""
+		searchPatternD := ""
+		if len(strings.TrimSpace(searchPattern)) >= 3 {
+			searchPatternD = removeDiacritics(searchPattern)
+			query_where = `
+WHERE s.title_d LIKE ?
+   OR EXISTS (SELECT 1 FROM authors a WHERE a.song_id = s.id AND a.author_value_d LIKE ?)
+   OR v.lines_d LIKE ?
+   OR CAST(s.entry AS TEXT) = ?
+`
+		}
 
 		sortOption := normalizeSortingOption(orderBy)
 		orderColumn := orderColumnForSongs(sortOption)
@@ -210,12 +217,21 @@ GROUP BY
 		 entry,
 		 title
 order by ` + orderColumn + `, v.name`
-		// Perform a full-text search on the lyrics
-		//searchTerm := "your_search_term_here"
-		rows, err := db.Query(query_pre + query_post)
-		if err != nil {
-			slog.Error(fmt.Sprintf("Error querying data: %s", err))
-			return err
+
+		fullQuery := query_pre + query_where + query_post
+
+		var rows *sql.Rows
+		var queryErr error
+		if len(strings.TrimSpace(searchPattern)) >= 3 {
+			searchLike := "%" + searchPatternD + "%"
+			rows, queryErr = db.Query(fullQuery, searchLike, searchLike, searchLike, searchPattern)
+		} else {
+			rows, queryErr = db.Query(fullQuery)
+		}
+
+		if queryErr != nil {
+			slog.Error(fmt.Sprintf("Error querying data: %s", queryErr))
+			return queryErr
 		}
 		defer rows.Close()
 
@@ -252,26 +268,40 @@ SELECT DISTINCT s.id,
        verse_order,
        kytara_file
   FROM songs s
---  JOIN verses v ON v.song_id = s.id
---  JOIN authors a ON a.song_id = s.id
 `
 
-		//  query_middle := fmt.Sprintf(`
-		//  JOIN verses vfts ON v.id = vfts.id
-		//  JOIN authors_fts afts ON authors.id=afts.id
-		//  WHERE vfts MATCH '%s'
-		//  `, searchPattern)
+		// Build WHERE clause if searchPattern provided
+		query_where := ""
+		searchPatternD := ""
+		if len(strings.TrimSpace(searchPattern)) >= 3 {
+			searchPatternD = removeDiacritics(searchPattern)
+			query_where = `
+WHERE s.title_d LIKE ?
+   OR EXISTS (SELECT 1 FROM authors a WHERE a.song_id = s.id AND a.author_value_d LIKE ?)
+   OR EXISTS (SELECT 1 FROM verses v WHERE v.song_id = s.id AND v.lines_d LIKE ?)
+   OR CAST(s.entry AS TEXT) = ?
+`
+		}
 
 		sortOption := normalizeSortingOption(orderBy)
 		orderColumn := orderColumnForSongs2(sortOption)
 		query_post := `
 order by ` + orderColumn
-		//searchTerm := "your_search_term_here"
-		query := query_pre + query_post
-		rows, err := db.Query(query)
-		if err != nil {
-			slog.Error(fmt.Sprintf("Error querying data: %s for: %s", err, query))
-			return err
+
+		fullQuery := query_pre + query_where + query_post
+
+		var rows *sql.Rows
+		var queryErr error
+		if len(strings.TrimSpace(searchPattern)) >= 3 {
+			searchLike := "%" + searchPatternD + "%"
+			rows, queryErr = db.Query(fullQuery, searchLike, searchLike, searchLike, searchPattern)
+		} else {
+			rows, queryErr = db.Query(fullQuery)
+		}
+
+		if queryErr != nil {
+			slog.Error(fmt.Sprintf("Error querying data: %s", queryErr))
+			return queryErr
 		}
 		defer rows.Close()
 
