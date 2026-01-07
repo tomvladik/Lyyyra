@@ -26,7 +26,6 @@ const HighlightText: FC<HighlightTextProps> = ({ text, as = 'p', className }) =>
 
    // Create a mapping from normalized position to original position
    const normalizedToOriginal: number[] = [];
-   let origIndex = 0;
    for (let i = 0; i < text.length; i++) {
       const origChar = text[i].normalize('NFC');
       const normalized = removeDiacritics(origChar).toLowerCase();

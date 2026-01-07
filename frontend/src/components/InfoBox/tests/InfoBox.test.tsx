@@ -1,8 +1,8 @@
 import { render, screen } from '@testing-library/react';
-import { InfoBox } from '../index';
+import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { DataContext } from '../../../context';
 import { createMockStatus } from '../../../test/testHelpers';
-import { describe, it, expect, vi, beforeEach } from 'vitest';
+import { InfoBox } from '../index';
 
 describe('<InfoBox />', () => {
   const mockLoadSongs = vi.fn();
@@ -32,7 +32,7 @@ describe('<InfoBox />', () => {
       DatabaseReady: true,
       SongsReady: true,
     });
-    
+
     const button = screen.queryByText('Stáhnout data z internetu');
     expect(button).not.toBeInTheDocument();
   });
@@ -41,9 +41,9 @@ describe('<InfoBox />', () => {
     renderInfoBox({
       SongsReady: true,
     });
-    
+
     expect(await screen.findByText(/Data jsou stažena/)).toBeInTheDocument();
-    const button = screen.getByRole('button');
+    const button = screen.getByRole('button', { name: /Importovat data/ });
     expect(button).toBeInTheDocument();
     expect(button).toHaveTextContent('Importovat data');
   });

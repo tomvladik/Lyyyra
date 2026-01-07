@@ -37,7 +37,8 @@ export default [
             parserOptions: {
                 ecmaFeatures: {
                     jsx: true
-                }
+                },
+                warnOnUnsupportedTypeScriptVersion: false
             },
             globals
         },
