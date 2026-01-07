@@ -1,0 +1,77 @@
+{
+    "common": {
+        "close": "Zavřít",
+        "loading": "Načítání",
+        "error": "Chyba"
+    },
+    "infoBox": {
+        "dataReady": "Data jsou připravena",
+        "notInitialized": "Zpěvník není inicializován",
+        "dataDownloadedNotImported": "Data jsou stažena, ale nejsou naimportována do interní databáze",
+        "downloadData": "Stáhnout data z internetu",
+        "importData": "Importovat data",
+        "preparingData": "Připravuji data, vyčkejte ....",
+        "copyrightNotice": "Upozorňujeme, že materiály stahované z <1>www.evangelickyzpevnik.cz</1> slouží pouze pro vlastní potřebu a k případnému dalšímu užití je třeba uzavřít licenční smlouvu s nositeli autorských práv.",
+        "searchLabel": "Hledat v textu (diakritika se ignoruje)",
+        "searchPlaceholder": "Hledat text ...",
+        "sortLabel": "Řadit podle",
+        "sortPlaceholder": "Vyberte možnost",
+        "sortOptions": {
+            "entry": "čísla",
+            "title": "názvu",
+            "authorMusic": "autora hudby",
+            "authorLyric": "autora textu"
+        }
+    },
+    "songCard": {
+        "showNotes": "Zobrazit noty",
+        "notesUnavailable": "Noty nejsou dostupné",
+        "authorWords": "T:",
+        "authorMusic": "M:",
+        "addToSelection": "Přidat do výběru",
+        "alreadyInSelection": "Skladba už je ve výběru"
+    },
+    "selectedSongs": {
+        "title": "Připravené písně",
+        "cancel": "Zrušit",
+        "emptySelection": "Výběr je prázdný",
+        "oneSong": "1 skladba ve výběru",
+        "multipleSongs": "skladeb ve výběru: {{count}}",
+        "withoutNotes": "(bez not)",
+        "removeFromList": "Odebrat ze seznamu",
+        "selectionLabel": "Výběr skladeb",
+        "noNotesAvailable": "Žádná z písní ve výběru nemá dostupné noty.",
+        "selectedHaveNoNotes": "Vámi vybrané skladby nemají dostupné noty",
+        "showPreparedNotes": "Zobrazit připravené noty",
+        "creatingPdf": "Vytvářím PDF…",
+        "preparedNotes": "Připravené noty",
+        "pdfCreationFailed": "Nepodařilo se vytvořit společné PDF. Zkuste to prosím znovu.",
+        "projectText": "Promítat texty",
+        "projectionWindowOpen": "Projekční okno je již otevřeno.",
+        "projectionWindowFailed": "Nelze otevřít projekční okno. Zkontrolujte blokování vyskakovacích oken.",
+        "projectionOpenFailed": "Nepodařilo se otevřít projekční okno.",
+        "projectionControl": "Řízení projekce:",
+        "closeProjector": "✕ Zavřít projektor",
+        "closeProjectorTitle": "Zavřít projekční okno",
+        "prevVerse": "◀︎ Sloka",
+        "nextVerse": "Sloka ▶︎",
+        "prevSong": "◀︎ Píseň",
+        "nextSong": "Píseň ▶︎",
+        "prevVerseTitle": "Předchozí verš",
+        "nextVerseTitle": "Další verš",
+        "prevSongTitle": "Předchozí píseň",
+        "nextSongTitle": "Další píseň",
+        "selectScreen": "Vyberte displej pro projekci:",
+        "primary": "(Primární)"
+    },
+    "pdfModal": {
+        "close": "Zavřít (Esc)",
+        "loadingPdf": "Načítání PDF..."
+    },
+    "progress": {
+        "fillingDatabase": "Plním databázi...",
+        "fillingDatabaseProgress": "Plním databázi... ({{current}}/{{total}})",
+        "preparingDatabase": "Připravuji databázi...",
+        "redownloadingData": "Znovu stahuji a připravuji data..."
+    }
+}

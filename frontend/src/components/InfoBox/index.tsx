@@ -1,7 +1,9 @@
 import React, { ChangeEvent, useContext, useEffect, useMemo, useState } from 'react';
+import { Trans, useTranslation } from 'react-i18next';
 import { SortingOption } from '../../AppStatus';
 import { DEBOUNCE_DELAY } from '../../constants';
 import { DataContext } from '../../context';
+import { LanguageSwitcher } from '../LanguageSwitcher';
 import styles from "./index.module.less";
 
 interface Props {
@@ -11,6 +13,7 @@ interface Props {
 }
 
 export function InfoBox(props: Props) {
+  const { t } = useTranslation();
   const { status, updateStatus } = useContext(DataContext);
 
   const [resultText, setResultText] = useState("Zpěvník není inicializován");
@@ -23,16 +26,16 @@ export function InfoBox(props: Props) {
 
   useEffect(() => {
     if (status.DatabaseReady) {
-      setResultText("Data jsou připravena");
-      setButtonText("Stáhnout data z internetu");
+      setResultText(t('infoBox.dataReady'));
+      setButtonText(t('infoBox.downloadData'));
     } else if (status.SongsReady) {
-      setResultText("Data jsou stažena, ale nejsou naimportována do interní databáze");
-      setButtonText("Importovat data");
+      setResultText(t('infoBox.dataDownloadedNotImported'));
+      setButtonText(t('infoBox.importData'));
     } else {
-      setResultText("Zpěvník není inicializován");
-      setButtonText("Stáhnout data z internetu");
+      setResultText(t('infoBox.notInitialized'));
+      setButtonText(t('infoBox.downloadData'));
     }
-  }, [status.DatabaseReady, status.SongsReady]);
+  }, [status.DatabaseReady, status.SongsReady, t]);
 
   useEffect(() => {
     setSearchValue(status.SearchPattern || '');
@@ -52,10 +55,10 @@ export function InfoBox(props: Props) {
   // Initial status check delay removed - no longer needed
 
   const sorting = [
-    { value: 'entry' as SortingOption, label: 'čísla' },
-    { value: 'title' as SortingOption, label: 'názvu' },
-    { value: 'authorMusic' as SortingOption, label: 'autora hudby' },
-    { value: 'authorLyric' as SortingOption, label: 'autora textu' }
+    { value: 'entry' as SortingOption, label: t('infoBox.sortOptions.entry') },
+    { value: 'title' as SortingOption, label: t('infoBox.sortOptions.title') },
+    { value: 'authorMusic' as SortingOption, label: t('infoBox.sortOptions.authorMusic') },
+    { value: 'authorLyric' as SortingOption, label: t('infoBox.sortOptions.authorLyric') }
   ];
 
   function _on(event: ChangeEvent<HTMLSelectElement>): void {
@@ -67,6 +70,7 @@ export function InfoBox(props: Props) {
 
   return (
     <div className="InfoBox">
+      <LanguageSwitcher />
       {isButtonVisible && <div>
         {resultText} &gt;&gt;&gt;
         {!status.IsProgress && <button className={styles.actionButton} onClick={() => {
@@ -75,7 +79,7 @@ export function InfoBox(props: Props) {
       </div>
       }
       {status.IsProgress && <div>
-        <div style={{ marginBottom: '12px' }}>{status.ProgressMessage || 'Připravuji data, vyčkejte ....'}</div>
+        <div style={{ marginBottom: '12px' }}>{status.ProgressMessage || t('infoBox.preparingData')}</div>
         {status.ProgressPercent > 0 && (
           <div>
             <div style={{
@@ -104,12 +108,17 @@ export function InfoBox(props: Props) {
         )}
       </div>}
       <div style={{ marginTop: '12px' }}>
-        Upozorňujeme, že materiály stahované z <a href='https://www.evangelickyzpevnik.cz/zpevnik/kapitoly-a-pisne/' target="_blank">www.evangelickyzpevnik.cz</a> slouží pouze pro vlastní potřebu a k případnému dalšímu užití je třeba uzavřít licenční smlouvu s nositeli autorských práv.
+        <Trans
+          i18nKey="infoBox.copyrightNotice"
+          components={{
+            1: <a href='https://www.evangelickyzpevnik.cz/zpevnik/kapitoly-a-pisne/' target="_blank" rel="noreferrer" />
+          }}
+        />
       </div>
       <div style={{ marginTop: '12px' }}>
         <div style={{ display: 'flex', gap: '20px', flexWrap: 'wrap' }}>
           <div style={{ flex: '1', minWidth: '250px' }}>
-            <label htmlFor="search-box" style={{ display: 'block', marginBottom: '6px', fontSize: '15px', fontWeight: '500', textAlign: 'left' }}>Hledat v textu</label>
+            <label htmlFor="search-box" style={{ display: 'block', marginBottom: '6px', fontSize: '15px', fontWeight: '500', textAlign: 'left' }}>{t('infoBox.searchLabel')}</label>
             <input
               id="search-box"
               className={styles.sorting}
@@ -118,13 +127,13 @@ export function InfoBox(props: Props) {
               onChange={(e: React.ChangeEvent<HTMLInputElement>) => {
                 setSearchValue(e.target.value);
               }}
-              placeholder="Hledat text ..."
+              placeholder={t('infoBox.searchPlaceholder')}
             />
           </div>
           <div style={{ flex: '1', minWidth: '200px' }}>
-            <label htmlFor="sort-select" style={{ display: 'block', marginBottom: '6px', fontSize: '15px', fontWeight: '500', textAlign: 'left' }}>Řadit podle</label>
+            <label htmlFor="sort-select" style={{ display: 'block', marginBottom: '6px', fontSize: '15px', fontWeight: '500', textAlign: 'left' }}>{t('infoBox.sortLabel')}</label>
             <select id="sort-select" className={styles.sorting} value={status.Sorting} onChange={_on}>
-              <option value="" disabled>Vyberte možnost</option>
+              <option value="" disabled>{t('infoBox.sortPlaceholder')}</option>
               {sorting.map((option) => (
                 <option key={option.value} value={option.value}>
                   {option.label}

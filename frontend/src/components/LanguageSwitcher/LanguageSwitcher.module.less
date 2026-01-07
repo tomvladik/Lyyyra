@@ -1,0 +1,29 @@
+.languageSwitcher {
+    display: flex;
+    gap: 4px;
+    align-items: center;
+    justify-content: flex-end;
+    margin-bottom: 12px;
+
+    button {
+        padding: 4px 10px;
+        border: 1px solid #ccc;
+        background: white;
+        cursor: pointer;
+        border-radius: 4px;
+        font-size: 13px;
+        font-weight: 500;
+        transition: all 0.2s;
+
+        &:hover {
+            background: #f0f0f0;
+            border-color: #999;
+        }
+
+        &.active {
+            background: #a67460;
+            color: white;
+            border-color: #a67460;
+        }
+    }
+}

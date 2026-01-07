@@ -1,4 +1,5 @@
 import { useContext, useEffect, useState } from "react";
+import { useTranslation } from "react-i18next";
 import { GetSongAuthors } from "../../../wailsjs/go/app/App";
 import { Author, dtoSong } from "../../models";
 import { SelectionContext } from "../../selectionContext";
@@ -9,6 +10,7 @@ import { AuthorList } from "./AuthorList";
 import styles from "./index.module.less";
 
 export const SongCard = ({ data }: { data: dtoSong }) => {
+    const { t } = useTranslation();
     const [authorData, setData] = useState(new Array<Author>());
     const [pdfModalOpen, setPdfModalOpen] = useState(false);
     const { addSongToSelection, isSongSelected } = useContext(SelectionContext);
@@ -74,7 +76,7 @@ export const SongCard = ({ data }: { data: dtoSong }) => {
                             <span
                                 className={styles.actionIcon}
                                 onClick={handleOpenPdf}
-                                title="Zobrazit noty"
+                                title={t('songCard.showNotes')}
                             >
                                 🎵
                             </span>
@@ -82,7 +84,7 @@ export const SongCard = ({ data }: { data: dtoSong }) => {
                         {!data.KytaraFile && (
                             <span
                                 className={[styles.actionIcon, styles.actionIconDisabled].join(" ")}
-                                title="Noty nejsou dostupné"
+                                title={t('songCard.notesUnavailable')}
                                 aria-disabled="true"
                             >
                                 🎵
@@ -91,7 +93,7 @@ export const SongCard = ({ data }: { data: dtoSong }) => {
                         <span
                             className={[styles.actionIcon, isSelected ? styles.actionIconDisabled : ""].join(" ").trim()}
                             onClick={handleAddToSelection}
-                            title={isSelected ? "Skladba už je ve výběru" : "Přidat do výběru"}
+                            title={isSelected ? t('songCard.alreadyInSelection') : t('songCard.addToSelection')}
                             aria-disabled={isSelected}
                         >
                             📋

@@ -1,0 +1,77 @@
+{
+    "common": {
+        "close": "Close",
+        "loading": "Loading",
+        "error": "Error"
+    },
+    "infoBox": {
+        "dataReady": "Data is ready",
+        "notInitialized": "Songbook is not initialized",
+        "dataDownloadedNotImported": "Data is downloaded but not imported into the internal database",
+        "downloadData": "Download data from internet",
+        "importData": "Import data",
+        "preparingData": "Preparing data, please wait....",
+        "copyrightNotice": "Please note that materials downloaded from <1>www.evangelickyzpevnik.cz</1> are for personal use only. A licensing agreement with the copyright holders is required for any other use.",
+        "searchLabel": "Search in text",
+        "searchPlaceholder": "Search text...",
+        "sortLabel": "Sort by",
+        "sortPlaceholder": "Select option",
+        "sortOptions": {
+            "entry": "number",
+            "title": "title",
+            "authorMusic": "music author",
+            "authorLyric": "lyrics author"
+        }
+    },
+    "songCard": {
+        "showNotes": "Show sheet music",
+        "notesUnavailable": "Sheet music not available",
+        "authorWords": "L:",
+        "authorMusic": "M:",
+        "addToSelection": "Add to selection",
+        "alreadyInSelection": "Song already in selection"
+    },
+    "selectedSongs": {
+        "title": "Prepared Songs",
+        "cancel": "Cancel",
+        "emptySelection": "Selection is empty",
+        "oneSong": "1 song in selection",
+        "multipleSongs": "songs in selection: {{count}}",
+        "withoutNotes": "(without sheet music)",
+        "removeFromList": "Remove from list",
+        "selectionLabel": "Song selection",
+        "noNotesAvailable": "None of the selected songs have sheet music available.",
+        "selectedHaveNoNotes": "Your selected songs have no sheet music available",
+        "showPreparedNotes": "Show prepared sheet music",
+        "creatingPdf": "Creating PDF…",
+        "preparedNotes": "Prepared Sheet Music",
+        "pdfCreationFailed": "Failed to create combined PDF. Please try again.",
+        "projectText": "Project lyrics",
+        "projectionWindowOpen": "Projection window is already open.",
+        "projectionWindowFailed": "Cannot open projection window. Check popup blocking.",
+        "projectionOpenFailed": "Failed to open projection window.",
+        "projectionControl": "Projection Control:",
+        "closeProjector": "✕ Close Projector",
+        "closeProjectorTitle": "Close projection window",
+        "prevVerse": "◀︎ Verse",
+        "nextVerse": "Verse ▶︎",
+        "prevSong": "◀︎ Song",
+        "nextSong": "Song ▶︎",
+        "prevVerseTitle": "Previous verse",
+        "nextVerseTitle": "Next verse",
+        "prevSongTitle": "Previous song",
+        "nextSongTitle": "Next song",
+        "selectScreen": "Select display for projection:",
+        "primary": "(Primary)"
+    },
+    "pdfModal": {
+        "close": "Close (Esc)",
+        "loadingPdf": "Loading PDF..."
+    },
+    "progress": {
+        "fillingDatabase": "Filling database...",
+        "fillingDatabaseProgress": "Filling database... ({{current}}/{{total}})",
+        "preparingDatabase": "Preparing database...",
+        "redownloadingData": "Re-downloading and preparing data..."
+    }
+}

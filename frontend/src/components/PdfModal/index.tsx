@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react";
+import { useTranslation } from "react-i18next";
 import styles from "./index.module.less";
 
 interface WindowWithWails extends Window {
@@ -31,6 +32,7 @@ const invokeGetPdfFile = (filename: string) => {
 };
 
 export const PdfModal = ({ isOpen, filename, dataUrl, songNumber, songName, onClose }: PdfModalProps) => {
+    const { t } = useTranslation();
     const [pdfPath, setPdfPath] = useState<string>("");
     const [error, setError] = useState<string>("");
     const modalTitle = Number.isFinite(songNumber) ? `${songNumber} – ${songName}` : songName || filename || "PDF";
@@ -83,7 +85,7 @@ export const PdfModal = ({ isOpen, filename, dataUrl, songNumber, songName, onCl
             <div className={styles.modalContent} onClick={(e) => e.stopPropagation()}>
                 <div className={styles.modalHeader}>
                     <h2 className={styles.modalTitle}>{modalTitle}</h2>
-                    <button className={styles.closeButton} onClick={onClose} title="Zavřít (Esc)">
+                    <button className={styles.closeButton} onClick={onClose} title={t('pdfModal.close')}>
                         ✕
                     </button>
                 </div>
@@ -97,7 +99,7 @@ export const PdfModal = ({ isOpen, filename, dataUrl, songNumber, songName, onCl
                             title={`PDF: ${filename}`}
                         />
                     ) : (
-                        <div className={styles.loadingMessage}>Načítání PDF...</div>
+                        <div className={styles.loadingMessage}>{t('pdfModal.loadingPdf')}</div>
                     )}
                 </div>
             </div>

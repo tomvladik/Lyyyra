@@ -1,3 +1,4 @@
+import { useTranslation } from "react-i18next";
 import { Author } from "../../models";
 import HighlightText from "../HighlightText";
 import styles from "./index.module.less";
@@ -9,10 +10,11 @@ interface AuthorListProps {
 
 /**
  * Renders a list of authors for a specific type (words or music).
- * Displays with appropriate label (T: for text/words, M: for music).
+ * Displays with appropriate label (L: for lyrics/words, M: for music).
  */
 export const AuthorList = ({ authors, type }: AuthorListProps) => {
-    const label = type === "words" ? "T:" : "M:";
+    const { t } = useTranslation();
+    const label = type === "words" ? t('songCard.authorWords') : t('songCard.authorMusic');
 
     if (!authors || authors.length === 0) return null;
 

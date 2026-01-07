@@ -1,4 +1,5 @@
 import { useContext, useEffect, useMemo, useRef, useState } from "react";
+import { useTranslation } from "react-i18next";
 import { GetCombinedPdf, GetSongProjection, GetSongVerses } from "../../../wailsjs/go/app/App";
 import logoImage from "../../assets/images/logo-universal.png";
 import { useScreenDetection } from "../../hooks/useScreenDetection";
@@ -8,6 +9,7 @@ import styles from "./index.module.less";
 import projectionTemplate from "./projection-template.html?raw";
 
 export const SelectedSongsPanel = () => {
+    const { t } = useTranslation();
     const { selectedSongs, removeSongFromSelection, clearSelection } = useContext(SelectionContext);
     const panelRef = useRef<HTMLDivElement | null>(null);
     const projectionWindowRef = useRef<Window | null>(null);
@@ -86,10 +88,10 @@ export const SelectedSongsPanel = () => {
     };
 
     const panelTitle = useMemo(() => {
-        if (!selectedSongs.length) return "Výběr je prázdný";
-        if (selectedSongs.length === 1) return "1 skladba ve výběru";
-        return `skladeb ve výběru: ${selectedSongs.length}`;
-    }, [selectedSongs.length]);
+        if (!selectedSongs.length) return t('selectedSongs.emptySelection');
+        if (selectedSongs.length === 1) return t('selectedSongs.oneSong');
+        return t('selectedSongs.multipleSongs', { count: selectedSongs.length });
+    }, [selectedSongs.length, t]);
 
     const handleRemove = (id: number) => removeSongFromSelection(id);
 
@@ -97,7 +99,7 @@ export const SelectedSongsPanel = () => {
         if (!selectedSongs.length) return;
         const songsWithNotes = selectedSongs.filter(s => s.hasNotes);
         if (!songsWithNotes.length) {
-            setError("Žádná z písní ve výběru nemá dostupné noty.");
+            setError(t('selectedSongs.noNotesAvailable'));
             return;
         }
         setIsCombining(true);
@@ -109,7 +111,7 @@ export const SelectedSongsPanel = () => {
             setIsModalOpen(true);
         } catch (err) {
             console.error("Failed to create combined PDF", err);
-            setError("Nepodařilo se vytvořit společné PDF. Zkuste to prosím znovu.");
+            setError(t('selectedSongs.pdfCreationFailed'));
         } finally {
             setIsCombining(false);
         }
@@ -119,7 +121,7 @@ export const SelectedSongsPanel = () => {
         if (!selectedSongs.length) return;
 
         if (projectionWindowRef.current && !projectionWindowRef.current.closed) {
-            setError("Projekční okno je již otevřeno.");
+            setError(t('selectedSongs.projectionWindowOpen'));
             return;
         }
 
@@ -139,7 +141,7 @@ export const SelectedSongsPanel = () => {
 
         const w = window.open("", "_blank", `popup=yes,width=${screen.width},height=${screen.height},left=${screen.left},top=${screen.top}`);
         if (!w) {
-            setError("Nelze otevřít projekční okno. Zkontrolujte blokování vyskakovacích oken.");
+            setError(t('selectedSongs.projectionWindowFailed'));
             return;
         }
 
@@ -224,7 +226,7 @@ export const SelectedSongsPanel = () => {
                 }
             }
         } catch (err) {
-            setError("Nepodařilo se otevřít projekční okno.");
+            setError(t('selectedSongs.projectionOpenFailed'));
             setIsProjectionOpen(false);
             projectionWindowRef.current = null;
         }
@@ -240,10 +242,10 @@ export const SelectedSongsPanel = () => {
     }
 
     return (
-        <aside className={styles.panel} aria-label="Výběr skladeb" ref={panelRef}>
+        <aside className={styles.panel} aria-label={t('selectedSongs.selectionLabel')} ref={panelRef}>
             <header className={styles.panelHeader}>
                 <div>
-                    <h1 className={styles.panelTitle}>Připravené písně</h1>
+                    <h1 className={styles.panelTitle}>{t('selectedSongs.title')}</h1>
                     <p className={styles.panelLabel}>{panelTitle}</p>
                 </div>
                 <button
@@ -251,7 +253,7 @@ export const SelectedSongsPanel = () => {
                     className={styles.clearButton}
                     onClick={clearSelection}
                     disabled={!selectedSongs.length || isCombining}
-                >Zrušit</button>
+                >{t('selectedSongs.cancel')}</button>
             </header>
 
             <div className={styles.panelContent}>
@@ -264,7 +266,7 @@ export const SelectedSongsPanel = () => {
                                     <span className={styles.itemTitle}>{song.title}</span>
                                     {!song.hasNotes && (
                                         <span className={styles.songNoteInfo}>
-                                            (bez not)
+                                            {t('selectedSongs.withoutNotes')}
                                         </span>
                                     )}
                                 </div>
@@ -272,7 +274,7 @@ export const SelectedSongsPanel = () => {
                                     type="button"
                                     className={styles.removeButton}
                                     onClick={() => handleRemove(song.id)}
-                                    title="Odebrat ze seznamu"
+                                    title={t('selectedSongs.removeFromList')}
                                 >
                                     ✕
                                 </button>
@@ -283,7 +285,7 @@ export const SelectedSongsPanel = () => {
 
                 {showScreenSelector && (
                     <div className={styles.screenSelector}>
-                        <p className={styles.screenSelectorTitle}>Vyberte displej pro projekci:</p>
+                        <p className={styles.screenSelectorTitle}>{t('selectedSongs.selectScreen')}</p>
                         {availableScreens.map((screen, idx) => (
                             <button
                                 key={idx}
@@ -293,7 +295,7 @@ export const SelectedSongsPanel = () => {
                                     openProjectionWindow(idx);
                                 }}
                             >
-                                {screen.label} {screen.isPrimary ? "(Primární)" : ""} – {screen.width}×{screen.height}
+                                {screen.label} {screen.isPrimary ? t('selectedSongs.primary') : ""} – {screen.width}×{screen.height}
                             </button>
                         ))}
                         <button
@@ -301,7 +303,7 @@ export const SelectedSongsPanel = () => {
                             className={`${styles.clearButton} ${styles.cancelButton}`}
                             onClick={() => setShowScreenSelector(false)}
                         >
-                            Zrušit
+                            {t('selectedSongs.cancel')}
                         </button>
                     </div>
                 )}
@@ -314,25 +316,25 @@ export const SelectedSongsPanel = () => {
                                 className={styles.actionButton}
                                 onClick={handleCombineClick}
                                 disabled={!selectedSongs.length || !selectedSongs.some(s => s.hasNotes) || isCombining}
-                                title={!selectedSongs.some(s => s.hasNotes) && selectedSongs.length ? "Vámi vybrané skladby nemají dostupné noty" : ""}
+                                title={!selectedSongs.some(s => s.hasNotes) && selectedSongs.length ? t('selectedSongs.selectedHaveNoNotes') : ""}
                             >
-                                {isCombining ? "Vytvářím PDF…" : "Zobrazit připravené noty"}
+                                {isCombining ? t('selectedSongs.creatingPdf') : t('selectedSongs.showPreparedNotes')}
                             </button>
                             <button
                                 type="button"
                                 className={styles.actionButton}
                                 onClick={handleProjectClick}
                                 disabled={!selectedSongs.length || isCombining || isProjectionOpen}
-                                title={isProjectionOpen ? "Projekční okno je již otevřeno" : ""}
+                                title={isProjectionOpen ? t('selectedSongs.projectionWindowOpen') : ""}
                             >
-                                Promítat texty
+                                {t('selectedSongs.projectText')}
                             </button>
                         </>
                     )}
 
                     {isProjectionOpen && (
                         <div className={styles.projectionControls}>
-                            <p className={styles.projectionTitle}>Řízení projekce:</p>
+                            <p className={styles.projectionTitle}>{t('selectedSongs.projectionControl')}</p>
 
                             {projectionSongsData.length > 0 && (
                                 <div ref={projectionListRef} className={styles.projectionList}>
@@ -374,41 +376,41 @@ export const SelectedSongsPanel = () => {
                                     type="button"
                                     className={`${styles.actionButton} ${styles.projectionButton}`}
                                     onClick={() => sendProjectionCommand("prevVerse")}
-                                    title="Předchozí verš"
+                                    title={t('selectedSongs.prevVerseTitle')}
                                 >
-                                    ◀︎ Sloka
+                                    {t('selectedSongs.prevVerse')}
                                 </button>
                                 <button
                                     type="button"
                                     className={`${styles.actionButton} ${styles.projectionButton}`}
                                     onClick={() => sendProjectionCommand("nextVerse")}
-                                    title="Další verš"
+                                    title={t('selectedSongs.nextVerseTitle')}
                                 >
-                                    Sloka ▶︎
+                                    {t('selectedSongs.nextVerse')}
                                 </button>
                                 <button
                                     type="button"
                                     className={`${styles.actionButton} ${styles.projectionButton}`}
                                     onClick={() => sendProjectionCommand("prevSong")}
-                                    title="Předchozí píseň"
+                                    title={t('selectedSongs.prevSongTitle')}
                                 >
-                                    ◀︎ Píseň
+                                    {t('selectedSongs.prevSong')}
                                 </button>
                                 <button
                                     type="button"
                                     className={`${styles.actionButton} ${styles.projectionButton}`}
                                     onClick={() => sendProjectionCommand("nextSong")}
-                                    title="Další píseň"
+                                    title={t('selectedSongs.nextSongTitle')}
                                 >
-                                    Píseň ▶︎
+                                    {t('selectedSongs.nextSong')}
                                 </button>
                                 <button
                                     type="button"
                                     className={`${styles.actionButton} ${styles.projectionButton} ${styles.projectionButtonFull} ${styles.closeProjectionButton}`}
                                     onClick={closeProjection}
-                                    title="Zavřít projekční okno"
+                                    title={t('selectedSongs.closeProjectorTitle')}
                                 >
-                                    ✕ Zavřít projektor
+                                    {t('selectedSongs.closeProjector')}
                                 </button>
                             </div>
                         </div>
@@ -421,7 +423,7 @@ export const SelectedSongsPanel = () => {
             <PdfModal
                 isOpen={isModalOpen}
                 dataUrl={combinedPdf}
-                songName="Připravené noty"
+                songName={t('selectedSongs.preparedNotes')}
                 onClose={handleCloseModal}
             />
         </aside>

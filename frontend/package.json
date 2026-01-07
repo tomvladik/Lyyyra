@@ -16,10 +16,12 @@
   "dependencies": {
     "@syncfusion/ej2-react-dropdowns": "^24.1.45",
     "@types/lodash": "^4.14.202",
+    "i18next": "^25.7.4",
     "lodash": "^4.17.21",
     "react": "^18.2.0",
     "react-dom": "^18.2.0",
     "react-dropdown": "^1.11.0",
+    "react-i18next": "^16.5.1",
     "react-select": "^5.8.0"
   },
   "devDependencies": {
@@ -37,7 +39,7 @@
     "eslint-formatter-pretty": "^6.0.1",
     "jsdom": "^23.0.1",
     "less": "^4.2.0",
-    "typescript": "^4.6.4",
+    "typescript": "^5.9.3",
     "vite": "^3.0.7",
     "vitest": "^1.1.0"
   }
