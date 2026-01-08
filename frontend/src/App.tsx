@@ -38,7 +38,7 @@ function App() {
             .then(() => {
                 fetchStatus();
             })
-            .catch(error => {
+            .catch((error: Error) => {
                 console.error("Error during download:", error);
                 fetchStatus();
             });
@@ -66,18 +66,19 @@ function App() {
             };
             setStatus(prev => (isEqualAppStatus(newStatus, prev) ? prev : newStatus));
         } catch (error) {
-            console.error("Failed to fetch status:", error);
+            console.log(error)
         }
     }, []);
 
     // useEffect(() => {
     //     fetchData()
-    // }, [filterValue, status.Sorting]);
+    // }, [status.Sorting]);
 
     // useEffect with an empty dependency array runs once when the component mounts
     useEffect(() => {
         fetchStatus();
         const timer = setTimeout(() => {
+            console.log('Initial load after delay');
             fetchStatus();
         }, INITIAL_LOAD_DELAY);
         return () => clearTimeout(timer);

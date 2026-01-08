@@ -205,6 +205,23 @@ describe('<SongCard />', () => {
     });
   });
 
+  it('allows adding to selection when no notes are available', async () => {
+    vi.mocked(AppModule.GetSongAuthors).mockResolvedValue([]);
+
+    const { selectionContextValue } = await renderWithContext({ ...mockSong, KytaraFile: '' });
+
+    const clipboardButton = screen.getByTitle('Přidat do výběru');
+    fireEvent.click(clipboardButton);
+
+    expect(selectionContextValue.addSongToSelection).toHaveBeenCalledWith({
+      id: mockSong.Id,
+      entry: mockSong.Entry,
+      title: mockSong.Title,
+      filename: undefined,
+      hasNotes: false,
+    });
+  });
+
   it('disables selection when song already added', async () => {
     vi.mocked(AppModule.GetSongAuthors).mockResolvedValue([]);
     const songWithPdf: dtoSong = { ...mockSong, KytaraFile: '123.pdf' };

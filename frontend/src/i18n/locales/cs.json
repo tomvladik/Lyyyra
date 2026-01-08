@@ -26,8 +26,8 @@
     "songCard": {
         "showNotes": "Zobrazit noty",
         "notesUnavailable": "Noty nejsou dostupné",
-        "authorWords": "T:",
-        "authorMusic": "M:",
+        "authorWords": "Text:",
+        "authorMusic": "Hudba:",
         "addToSelection": "Přidat do výběru",
         "alreadyInSelection": "Skladba už je ve výběru"
     },

@@ -1,16 +1,7 @@
 import { useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
+import { GetPdfFile } from "../../../wailsjs/go/app/App";
 import styles from "./index.module.less";
-
-interface WindowWithWails extends Window {
-    go?: {
-        main?: {
-            App?: {
-                GetPdfFile?: (filename: string) => Promise<string>;
-            };
-        };
-    };
-}
 
 interface PdfModalProps {
     isOpen: boolean;
@@ -20,16 +11,6 @@ interface PdfModalProps {
     songName?: string;
     onClose: () => void;
 }
-
-const invokeGetPdfFile = (filename: string) => {
-    const getPdfFile = (window as WindowWithWails).go?.main?.App?.GetPdfFile;
-
-    if (!getPdfFile) {
-        return Promise.reject(new Error("GetPdfFile backend method is unavailable"));
-    }
-
-    return getPdfFile(filename);
-};
 
 export const PdfModal = ({ isOpen, filename, dataUrl, songNumber, songName, onClose }: PdfModalProps) => {
     const { t } = useTranslation();
@@ -68,7 +49,7 @@ export const PdfModal = ({ isOpen, filename, dataUrl, songNumber, songName, onCl
             return;
         }
 
-        invokeGetPdfFile(filename)
+        GetPdfFile(filename)
             .then((remoteDataUrl: string) => {
                 setPdfPath(remoteDataUrl);
             })

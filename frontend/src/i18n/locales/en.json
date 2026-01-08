@@ -26,8 +26,8 @@
     "songCard": {
         "showNotes": "Show sheet music",
         "notesUnavailable": "Sheet music not available",
-        "authorWords": "L:",
-        "authorMusic": "M:",
+        "authorWords": "Lyrics:",
+        "authorMusic": "Music:",
         "addToSelection": "Add to selection",
         "alreadyInSelection": "Song already in selection"
     },
