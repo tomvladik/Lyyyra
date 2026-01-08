@@ -111,7 +111,9 @@ jobs:
           CGO_ENABLED: 1
           CC: ${{ matrix.cc }}
           CXX: ${{ matrix.cxx }}
-        run: wails build -platform ${{ matrix.build_platform }} -tags "$GO_PROD_TAGS"
+        run: |
+          VERSION="${GITHUB_REF_NAME:-dev}"
+          wails build -platform ${{ matrix.build_platform }} -tags "$GO_PROD_TAGS" -ldflags "-X lyyyra/internal/app.buildVersion=$VERSION"
 
       - name: Package Windows artifact
         if: matrix.platform == 'Windows'
