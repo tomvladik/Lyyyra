@@ -440,11 +440,25 @@ func TestGetSongsWithSearch(t *testing.T) {
 			testDescription: "Should find songs by exact entry number match",
 		},
 		{
-			name:            "Search with less than 3 characters returns all",
+			name:            "Search by single-digit entry number (exact only)",
+			searchPattern:   "1",
+			expectedCount:   0,
+			expectedEntries: []int{},
+			testDescription: "Should not match when entry does not exactly equal 1",
+		},
+		{
+			name:            "Search by two-digit entry number (exact only)",
+			searchPattern:   "20",
+			expectedCount:   0,
+			expectedEntries: []int{},
+			testDescription: "Should not match when entry does not exactly equal 20",
+		},
+		{
+			name:            "Search with less than 3 characters (non-numeric) returns all",
 			searchPattern:   "ab",
 			expectedCount:   3,
 			expectedEntries: []int{101, 202, 303},
-			testDescription: "Should return all songs for patterns less than 3 characters",
+			testDescription: "Should return all songs for non-numeric patterns less than 3 characters",
 		},
 		{
 			name:            "Empty search returns all",

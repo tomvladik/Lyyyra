@@ -199,14 +199,31 @@ func (a *App) GetSongs(orderBy string, searchPattern string) ([]dtoSong, error) 
 		// Build WHERE clause if searchPattern provided
 		query_where := ""
 		searchPatternD := ""
-		if len(strings.TrimSpace(searchPattern)) >= 3 {
-			searchPatternD = removeDiacritics(searchPattern)
-			query_where = `
+		trimmedPattern := strings.TrimSpace(searchPattern)
+
+		if len(trimmedPattern) > 0 {
+			// Check if it's a numeric search (for entry numbers)
+			isNumeric := true
+			for _, ch := range trimmedPattern {
+				if ch < '0' || ch > '9' {
+					isNumeric = false
+					break
+				}
+			}
+
+			if isNumeric {
+				// Allow entry number search for any length
+				query_where = `WHERE CAST(s.entry AS TEXT) = ?`
+			} else if len(trimmedPattern) >= 3 {
+				// Text search requires at least 3 characters
+				searchPatternD = removeDiacritics(trimmedPattern)
+				query_where = `
 WHERE s.title_d LIKE ?
    OR EXISTS (SELECT 1 FROM authors a WHERE a.song_id = s.id AND a.author_value_d LIKE ?)
    OR v.lines_d LIKE ?
    OR CAST(s.entry AS TEXT) = ?
 `
+			}
 		}
 
 		sortOption := normalizeSortingOption(orderBy)
@@ -222,13 +239,27 @@ order by ` + orderColumn + `, v.name`
 
 		var rows *sql.Rows
 		var queryErr error
-		if len(strings.TrimSpace(searchPattern)) >= 3 {
-			searchLike := "%" + searchPatternD + "%"
-			rows, queryErr = db.Query(fullQuery, searchLike, searchLike, searchLike, searchPattern)
+		if len(trimmedPattern) > 0 {
+			// Check if numeric
+			isNumeric := true
+			for _, ch := range trimmedPattern {
+				if ch < '0' || ch > '9' {
+					isNumeric = false
+					break
+				}
+			}
+
+			if isNumeric {
+				rows, queryErr = db.Query(fullQuery, trimmedPattern)
+			} else if len(trimmedPattern) >= 3 {
+				searchLike := "%" + searchPatternD + "%"
+				rows, queryErr = db.Query(fullQuery, searchLike, searchLike, searchLike, trimmedPattern)
+			} else {
+				rows, queryErr = db.Query(fullQuery)
+			}
 		} else {
 			rows, queryErr = db.Query(fullQuery)
 		}
-
 		if queryErr != nil {
 			slog.Error(fmt.Sprintf("Error querying data: %s", queryErr))
 			return queryErr
@@ -273,14 +304,31 @@ SELECT DISTINCT s.id,
 		// Build WHERE clause if searchPattern provided
 		query_where := ""
 		searchPatternD := ""
-		if len(strings.TrimSpace(searchPattern)) >= 3 {
-			searchPatternD = removeDiacritics(searchPattern)
-			query_where = `
+		trimmedPattern := strings.TrimSpace(searchPattern)
+
+		if len(trimmedPattern) > 0 {
+			// Check if it's a numeric search (for entry numbers)
+			isNumeric := true
+			for _, ch := range trimmedPattern {
+				if ch < '0' || ch > '9' {
+					isNumeric = false
+					break
+				}
+			}
+
+			if isNumeric {
+				// Allow entry number search for any length
+				query_where = `WHERE CAST(s.entry AS TEXT) = ?`
+			} else if len(trimmedPattern) >= 3 {
+				// Text search requires at least 3 characters
+				searchPatternD = removeDiacritics(trimmedPattern)
+				query_where = `
 WHERE s.title_d LIKE ?
    OR EXISTS (SELECT 1 FROM authors a WHERE a.song_id = s.id AND a.author_value_d LIKE ?)
    OR EXISTS (SELECT 1 FROM verses v WHERE v.song_id = s.id AND v.lines_d LIKE ?)
    OR CAST(s.entry AS TEXT) = ?
 `
+			}
 		}
 
 		sortOption := normalizeSortingOption(orderBy)
@@ -292,9 +340,24 @@ order by ` + orderColumn
 
 		var rows *sql.Rows
 		var queryErr error
-		if len(strings.TrimSpace(searchPattern)) >= 3 {
-			searchLike := "%" + searchPatternD + "%"
-			rows, queryErr = db.Query(fullQuery, searchLike, searchLike, searchLike, searchPattern)
+		if len(trimmedPattern) > 0 {
+			// Check if numeric
+			isNumeric := true
+			for _, ch := range trimmedPattern {
+				if ch < '0' || ch > '9' {
+					isNumeric = false
+					break
+				}
+			}
+
+			if isNumeric {
+				rows, queryErr = db.Query(fullQuery, trimmedPattern)
+			} else if len(trimmedPattern) >= 3 {
+				searchLike := "%" + searchPatternD + "%"
+				rows, queryErr = db.Query(fullQuery, searchLike, searchLike, searchLike, trimmedPattern)
+			} else {
+				rows, queryErr = db.Query(fullQuery)
+			}
 		} else {
 			rows, queryErr = db.Query(fullQuery)
 		}
