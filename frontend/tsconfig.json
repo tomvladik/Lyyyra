@@ -19,7 +19,15 @@
     "isolatedModules": true,
     "noEmit": true,
     "jsx": "react-jsx",
-    "types": ["vitest", "vite/client", "@testing-library/jest-dom"]
+    "types": [
+      "vitest",
+      "vite/client",
+      "@testing-library/jest-dom"
+    ],
+    "noUnusedLocals": true,
+    "noUnusedParameters": true,
+    "noImplicitReturns": true,
+    "noFallthroughCasesInSwitch": true
   },
   "include": [
     "src"

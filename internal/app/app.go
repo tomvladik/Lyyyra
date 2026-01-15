@@ -41,7 +41,7 @@ func NewApp() *App {
 
 	homeDir, err := os.UserHomeDir()
 	if err != nil {
-		slog.Error(err.Error())
+		slog.Error("Failed to get user home directory", "error", err)
 		return &App{}
 	}
 
@@ -49,13 +49,15 @@ func NewApp() *App {
 	// Create directories along the path
 	err = os.MkdirAll(path, os.ModePerm)
 	if err != nil {
+		slog.Error("Failed to create app directory", "path", path, "error", err)
 		return &App{}
 	}
 
 	// Open or create a log file
 	logFile, err := os.OpenFile(filepath.Join(homeDir, "Lyyyra", "app.log"), os.O_CREATE|os.O_WRONLY|os.O_APPEND, 0644)
 	if err != nil {
-		slog.Error(err.Error())
+		slog.Error("Failed to open log file", "error", err)
+		// Continue without file logging, use stderr
 	}
 	// Set the output of the log package to the log file
 	logOptions := slog.HandlerOptions{Level: slog.LevelInfo}
@@ -69,7 +71,7 @@ func NewApp() *App {
 	// Parse the URL
 	parsedURL, err := url.Parse(pdfUrl)
 	if err != nil {
-		slog.Error(err.Error())
+		slog.Error("Failed to parse PDF URL", "url", pdfUrl, "error", err)
 		return &App{}
 	}
 	appDir := filepath.Join(homeDir, "Lyyyra", strings.Replace(parsedURL.Host, ":", "_", -1))

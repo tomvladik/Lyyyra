@@ -19,6 +19,8 @@ const globals = {
     HTMLSelectElement: true,
     HTMLInputElement: true,
     HTMLButtonElement: true,
+    HTMLElement: true,
+    Element: true,
     global: true,
     React: true
 };
