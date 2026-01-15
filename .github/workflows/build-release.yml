@@ -39,10 +39,6 @@ jobs:
         run: npm run lint
         working-directory: frontend
 
-      - name: Run frontend tests
-        run: npm test -- --run
-        working-directory: frontend
-
       - name: Run frontend tests with coverage
         run: |
           npm install -D @vitest/coverage-v8
