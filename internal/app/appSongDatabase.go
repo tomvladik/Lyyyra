@@ -56,6 +56,24 @@ func (a *App) PrepareDatabase() {
 				return err
 			}
 		}
+
+		// Create indexes for common queries
+		indexScripts := []string{
+			`CREATE INDEX IF NOT EXISTS idx_songs_entry ON songs(entry);`,
+			`CREATE INDEX IF NOT EXISTS idx_songs_title_d ON songs(title_d);`,
+			`CREATE INDEX IF NOT EXISTS idx_authors_song_id ON authors(song_id);`,
+			`CREATE INDEX IF NOT EXISTS idx_authors_value_d ON authors(author_value_d);`,
+			`CREATE INDEX IF NOT EXISTS idx_verses_song_id ON verses(song_id);`,
+			`CREATE INDEX IF NOT EXISTS idx_verses_lines_d ON verses(lines_d);`,
+		}
+
+		// Execute index creation scripts
+		for _, script := range indexScripts {
+			if _, err := db.Exec(script); err != nil {
+				slog.Error(fmt.Sprintf("Error executing script: %s", err))
+				return err
+			}
+		}
 		return nil
 	})
 }
