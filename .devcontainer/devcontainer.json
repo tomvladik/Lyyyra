@@ -23,5 +23,5 @@
 			}
 		}
 	},
-		"postAttachCommand": "bash -lc \"sudo chown -R vscode:vscode /workspaces/Lyyyra/frontend/node_modules || true; cd /workspaces/Lyyyra/frontend && npm install -D @vitest/coverage-v8 2>/dev/null || true\""
-	}
+	"postAttachCommand": "bash -lc \"sudo chown -R vscode:vscode /workspaces/Lyyyra/frontend/node_modules || true; cd /workspaces/Lyyyra/frontend && npm install -D @vitest/coverage-v8 2>/dev/null || true\""
+}
