@@ -31,6 +31,10 @@ jobs:
         run: npm ci
         working-directory: frontend
 
+      - name: Build frontend (compile TypeScript)
+        run: npm run build
+        working-directory: frontend
+
       - name: Lint frontend
         run: npm run lint
         working-directory: frontend
@@ -45,17 +49,35 @@ jobs:
           npm run test:coverage -- --run
         working-directory: frontend
 
+      - name: Generate frontend coverage summary
+        if: always()
+        run: |
+          echo "## 📊 Frontend Test Coverage" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          if [ -f frontend/coverage/coverage-summary.json ]; then
+            node -e "
+            const fs = require('fs');
+            const coverage = JSON.parse(fs.readFileSync('frontend/coverage/coverage-summary.json', 'utf8'));
+            const total = coverage.total;
+            console.log('| Metric | Coverage |');
+            console.log('|--------|----------|');
+            console.log('| Statements | ' + total.statements.pct + '% |');
+            console.log('| Branches | ' + total.branches.pct + '% |');
+            console.log('| Functions | ' + total.functions.pct + '% |');
+            console.log('| Lines | ' + total.lines.pct + '% |');
+            " >> $GITHUB_STEP_SUMMARY
+            echo "" >> $GITHUB_STEP_SUMMARY
+          else
+            echo "Coverage report not found" >> $GITHUB_STEP_SUMMARY
+          fi
+
       - name: Upload frontend coverage
         uses: actions/upload-artifact@v4
-        if: always()
+        if: always() && hashFiles('frontend/coverage/**') != ''
         with:
           name: frontend-coverage
           path: frontend/coverage
           retention-days: 30
-
-      - name: Build frontend
-        run: npm run build
-        working-directory: frontend
 
       - name: Upload frontend dist
         uses: actions/upload-artifact@v4
@@ -76,12 +98,25 @@ jobs:
       - name: Run Go tests with coverage
         run: |
           go test -coverprofile=coverage.out ./internal/...
-          go tool cover -func=coverage.out
+          go tool cover -func=coverage.out | tee coverage.txt
           go tool cover -html=coverage.out -o coverage.html
+
+      - name: Generate Go coverage summary
+        if: always()
+        run: |
+          echo "## 🔧 Go Test Coverage" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          if [ -f coverage.txt ]; then
+            echo '```' >> $GITHUB_STEP_SUMMARY
+            tail -1 coverage.txt >> $GITHUB_STEP_SUMMARY
+            echo '```' >> $GITHUB_STEP_SUMMARY
+            echo "" >> $GITHUB_STEP_SUMMARY
+          fi
+          echo "📦 Detailed coverage reports available in artifacts (30 days retention)" >> $GITHUB_STEP_SUMMARY
 
       - name: Upload Go coverage
         uses: actions/upload-artifact@v4
-        if: always()
+        if: always() && hashFiles('coverage.out') != ''
         with:
           name: go-coverage
           path: |
@@ -203,6 +238,7 @@ jobs:
         uses: actions/download-artifact@v4
         with:
           path: artifacts
+          pattern: Lyyyra-*
 
       - name: Create Release
         uses: softprops/action-gh-release@v2

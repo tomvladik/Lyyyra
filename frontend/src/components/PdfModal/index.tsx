@@ -29,6 +29,7 @@ export const PdfModal = ({ isOpen, filename, dataUrl, songNumber, songName, onCl
             document.addEventListener("keydown", handleEscape);
             return () => document.removeEventListener("keydown", handleEscape);
         }
+        return undefined;
     }, [isOpen, onClose]);
 
     useEffect(() => {
