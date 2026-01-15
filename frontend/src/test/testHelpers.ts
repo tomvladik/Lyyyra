@@ -13,5 +13,6 @@ export const createMockStatus = (overrides: Partial<AppStatus> = {}): AppStatus 
     LastSave: '',
     SearchPattern: '',
     Sorting: 'entry' as SortingOption,
+    BuildVersion: 'test',
     ...overrides
 });

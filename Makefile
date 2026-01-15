@@ -72,9 +72,23 @@ clean-data: ## Delete local app data (database, songs, status, logs)
 
 test-all: test frontend-test ## Run all tests (Go + frontend)
 
+test-coverage: ## Run Go tests with coverage
+	@echo "Running Go tests with coverage..."
+	go test -tags "$(GO_PROD_TAGS)" -coverprofile=coverage.out ./internal/...
+	go tool cover -html=coverage.out -o coverage.html
+	@echo "Coverage report generated: coverage.html"
+
+frontend-test-coverage: ## Run frontend tests with coverage
+	@echo "Running frontend tests with coverage..."
+	cd frontend && npm run test:coverage -- --run
+
+test-all-coverage: test-coverage frontend-test-coverage ## Run all tests with coverage
+
 install-tools: ## Install Go test, lint tools, and act for CI testing
 	go install gotest.tools/gotestsum@v1.11.0
 	go install github.com/golangci/golangci-lint/cmd/golangci-lint@v1.54.2
+	@echo "Installing frontend coverage tool..."
+	cd frontend && npm install -D @vitest/coverage-v8
 	@echo "Installing act for local CI testing..."
 	@curl -s https://raw.githubusercontent.com/nektos/act/master/install.sh | sudo bash
 

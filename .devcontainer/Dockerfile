@@ -65,4 +65,9 @@ RUN set -eux; \
 RUN set -eux; \
     gosu vscode go install github.com/wailsapp/wails/v2/cmd/wails@latest
 
+# Install frontend coverage tool during build
+RUN set -eux; \
+    mkdir -p /workspaces/Lyyyra/frontend; \
+    chown -R vscode:vscode /workspaces/Lyyyra
+
 ENV DEBIAN_FRONTEND=
