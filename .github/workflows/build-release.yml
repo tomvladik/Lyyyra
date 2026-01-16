@@ -16,6 +16,11 @@ env:
   WAILS_VERSION: v2.11.0
   GOLANGCI_LINT_VERSION: v1.64.8
 
+permissions:
+  contents: read
+  checks: write
+  pull-requests: write
+
 jobs:
   test:
     name: Run Tests
@@ -62,20 +67,28 @@ jobs:
           if [ -f frontend/test-results.json ]; then
             node -e "
             const fs = require('fs');
-            const results = JSON.parse(fs.readFileSync('frontend/test-results.json', 'utf8'));
-            const total = results.numTotalTests || 0;
-            const passed = results.numPassedTests || 0;
-            const failed = results.numFailedTests || 0;
-            const skipped = results.numPendingTests || 0;
-            console.log('| Status | Count |');
-            console.log('|--------|-------|');
-            console.log('| ✅ Passed | ' + passed + ' |');
-            console.log('| ❌ Failed | ' + failed + ' |');
-            console.log('| ⏭️ Skipped | ' + skipped + ' |');
-            console.log('| **📊 Total** | **' + total + '** |');
-            console.log('');
-            console.log('⏱️ Duration: ' + (results.testResults?.[0]?.perfStats?.runtime || 0) / 1000 + 's');
+            try {
+              const results = JSON.parse(fs.readFileSync('frontend/test-results.json', 'utf8'));
+              const total = results.numTotalTests || 0;
+              const passed = results.numPassedTests || 0;
+              const failed = results.numFailedTests || 0;
+              const skipped = results.numPendingTests || 0;
+              console.log('| Status | Count |');
+              console.log('|--------|-------|');
+              console.log('| ✅ Passed | ' + passed + ' |');
+              console.log('| ❌ Failed | ' + failed + ' |');
+              console.log('| ⏭️ Skipped | ' + skipped + ' |');
+              console.log('| **📊 Total** | **' + total + '** |');
+              console.log('');
+              const runtime = results.testResults?.[0]?.perfStats?.runtime || 0;
+              console.log('⏱️ Duration: ' + (runtime / 1000).toFixed(2) + 's');
+            } catch (e) {
+              console.log('⚠️ Error parsing test results: ' + e.message);
+            }
             " >> $GITHUB_STEP_SUMMARY
+            echo "" >> $GITHUB_STEP_SUMMARY
+          else
+            echo "⚠️ Test results file not found" >> $GITHUB_STEP_SUMMARY
             echo "" >> $GITHUB_STEP_SUMMARY
           fi
 
@@ -140,10 +153,10 @@ jobs:
           echo "## 🧪 Go Test Results" >> $GITHUB_STEP_SUMMARY
           echo "" >> $GITHUB_STEP_SUMMARY
           if [ -f go-test-results.xml ]; then
-            # Parse test results
-            total=$(grep -o 'tests="[0-9]*"' go-test-results.xml | head -1 | grep -o '[0-9]*')
-            failures=$(grep -o 'failures="[0-9]*"' go-test-results.xml | head -1 | grep -o '[0-9]*')
-            skipped=$(grep -o 'skipped="[0-9]*"' go-test-results.xml | head -1 | grep -o '[0-9]*')
+            # Parse test results with defaults
+            total=$(grep -o 'tests="[0-9]*"' go-test-results.xml 2>/dev/null | head -1 | grep -o '[0-9]*' || echo "0")
+            failures=$(grep -o 'failures="[0-9]*"' go-test-results.xml 2>/dev/null | head -1 | grep -o '[0-9]*' || echo "0")
+            skipped=$(grep -o 'skipped="[0-9]*"' go-test-results.xml 2>/dev/null | head -1 | grep -o '[0-9]*' || echo "0")
             passed=$((total - failures - skipped))
             
             echo "| Status | Count |" >> $GITHUB_STEP_SUMMARY
@@ -152,6 +165,9 @@ jobs:
             echo "| ❌ Failed | $failures |" >> $GITHUB_STEP_SUMMARY
             echo "| ⏭️ Skipped | $skipped |" >> $GITHUB_STEP_SUMMARY
             echo "| **📊 Total** | **$total** |" >> $GITHUB_STEP_SUMMARY
+            echo "" >> $GITHUB_STEP_SUMMARY
+          else
+            echo "⚠️ Test results file not found" >> $GITHUB_STEP_SUMMARY
             echo "" >> $GITHUB_STEP_SUMMARY
           fi
 
@@ -183,7 +199,10 @@ jobs:
 
       - name: Publish Go test results
         uses: EnricoMi/publish-unit-test-result-action@v2
-        if: always() && hashFiles('go-test-results.xml') != ''
+        if: |
+          always() &&
+          hashFiles('go-test-results.xml') != '' &&
+          (github.event_name != 'pull_request' || github.event.pull_request.head.repo.full_name == github.repository)
         with:
           files: go-test-results.xml
           check_name: Go Test Results
