@@ -6,7 +6,7 @@ import { SelectionContext, SelectionContextValue } from '../../../selectionConte
 import { SelectedSongsPanel } from '../index';
 
 vi.mock('../../../../wailsjs/go/app/App', () => ({
-  GetCombinedPdf: vi.fn(),
+  GetCombinedPdfWithOptions: vi.fn(),
   GetSongProjection: vi.fn(),
   GetSongVerses: vi.fn(),
 }));
@@ -93,7 +93,7 @@ describe('<SelectedSongsPanel />', () => {
   });
 
   it('requests combined PDF and opens modal', async () => {
-    vi.mocked(AppModule.GetCombinedPdf).mockResolvedValue('data:pdf');
+    vi.mocked(AppModule.GetCombinedPdfWithOptions).mockResolvedValue('data:pdf');
     const value = defaultSelectionValue({ selectedSongs: [sampleSong] });
 
     await act(async () => {
@@ -104,7 +104,7 @@ describe('<SelectedSongsPanel />', () => {
     fireEvent.click(combineButton);
 
     await waitFor(() => {
-      expect(AppModule.GetCombinedPdf).toHaveBeenCalledWith([sampleSong.filename]);
+      expect(AppModule.GetCombinedPdfWithOptions).toHaveBeenCalledWith([sampleSong.filename], false, 0.02);
     });
 
     expect(await screen.findByTestId('pdf-modal')).toBeTruthy();

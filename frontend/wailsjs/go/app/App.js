@@ -22,6 +22,10 @@ export function GetCombinedPdf(arg1) {
   return window['go']['app']['App']['GetCombinedPdf'](arg1);
 }
 
+export function GetCombinedPdfWithOptions(arg1, arg2, arg3) {
+  return window['go']['app']['App']['GetCombinedPdfWithOptions'](arg1, arg2, arg3);
+}
+
 export function GetPdfFile(arg1) {
   return window['go']['app']['App']['GetPdfFile'](arg1);
 }

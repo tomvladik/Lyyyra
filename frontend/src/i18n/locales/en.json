@@ -62,7 +62,9 @@
         "prevSongTitle": "Previous song",
         "nextSongTitle": "Next song",
         "selectScreen": "Select display for projection:",
-        "primary": "(Primary)"
+        "primary": "(Primary)",
+        "cropCombinedPdf": "Crop margins of combined PDF",
+        "cropCombinedPdfHint": "(trims small border around each page)"
     },
     "pdfModal": {
         "close": "Close (Esc)",

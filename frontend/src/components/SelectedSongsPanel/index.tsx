@@ -1,6 +1,6 @@
 import { useContext, useEffect, useMemo, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
-import { GetCombinedPdf, GetSongProjection, GetSongVerses } from "../../../wailsjs/go/app/App";
+import { GetCombinedPdfWithOptions, GetSongProjection, GetSongVerses } from "../../../wailsjs/go/app/App";
 import logoImage from "../../assets/images/logo-universal.png";
 import { useScreenDetection } from "../../hooks/useScreenDetection";
 import { SelectionContext } from "../../selectionContext";
@@ -24,6 +24,7 @@ export const SelectedSongsPanel = () => {
     const [currentSongIdx, setCurrentSongIdx] = useState(0);
     const [currentVerseIdx, setCurrentVerseIdx] = useState(0);
     const [showScreenSelector, setShowScreenSelector] = useState(false);
+    const [shouldCropPdf, setShouldCropPdf] = useState(false);
 
     // Use custom hook for screen detection
     const availableScreens = useScreenDetection();
@@ -106,7 +107,7 @@ export const SelectedSongsPanel = () => {
         setError("");
         try {
             const filenames = songsWithNotes.map(song => song.filename).filter(Boolean) as string[];
-            const dataUrl = await GetCombinedPdf(filenames);
+            const dataUrl = await GetCombinedPdfWithOptions(filenames, shouldCropPdf, 0.02);
             setCombinedPdf(dataUrl);
             setIsModalOpen(true);
         } catch (err) {
@@ -309,6 +310,21 @@ export const SelectedSongsPanel = () => {
                 )}
 
                 <div className={styles.actions}>
+                    {!isProjectionOpen && !showScreenSelector && (
+                        <label className={styles.checkboxRow}>
+                            <input
+                                type="checkbox"
+                                checked={shouldCropPdf}
+                                onChange={(e) => setShouldCropPdf(e.target.checked)}
+                                disabled={!selectedSongs.some(s => s.hasNotes) || isCombining}
+                            />
+                            <span>
+                                {t('selectedSongs.cropCombinedPdf')}
+                                <span className={styles.checkboxHint}> {t('selectedSongs.cropCombinedPdfHint')}</span>
+                            </span>
+                        </label>
+                    )}
+
                     {!isProjectionOpen && !showScreenSelector && (
                         <>
                             <button
