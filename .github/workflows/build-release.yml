@@ -51,8 +51,33 @@ jobs:
 
       - name: Run frontend tests with coverage
         run: |
-          npm run test:coverage -- --run
+          npm run test:coverage -- --run --reporter=verbose --reporter=json --outputFile=test-results.json
         working-directory: frontend
+
+      - name: Generate frontend test summary
+        if: always()
+        run: |
+          echo "## 🧪 Frontend Test Results" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          if [ -f frontend/test-results.json ]; then
+            node -e "
+            const fs = require('fs');
+            const results = JSON.parse(fs.readFileSync('frontend/test-results.json', 'utf8'));
+            const total = results.numTotalTests || 0;
+            const passed = results.numPassedTests || 0;
+            const failed = results.numFailedTests || 0;
+            const skipped = results.numPendingTests || 0;
+            console.log('| Status | Count |');
+            console.log('|--------|-------|');
+            console.log('| ✅ Passed | ' + passed + ' |');
+            console.log('| ❌ Failed | ' + failed + ' |');
+            console.log('| ⏭️ Skipped | ' + skipped + ' |');
+            console.log('| **📊 Total** | **' + total + '** |');
+            console.log('');
+            console.log('⏱️ Duration: ' + (results.testResults?.[0]?.perfStats?.runtime || 0) / 1000 + 's');
+            " >> $GITHUB_STEP_SUMMARY
+            echo "" >> $GITHUB_STEP_SUMMARY
+          fi
 
       - name: Generate frontend coverage summary
         if: always()
@@ -72,6 +97,9 @@ jobs:
             console.log('| Lines | ' + total.lines.pct + '% |');
             " >> $GITHUB_STEP_SUMMARY
             echo "" >> $GITHUB_STEP_SUMMARY
+            echo "📊 **[📈 View Interactive Coverage Report on GitHub Pages](https://${{ github.repository_owner }}.github.io/${{ github.event.repository.name }}/)** (available after deployment)" >> $GITHUB_STEP_SUMMARY
+            echo "" >> $GITHUB_STEP_SUMMARY
+            echo "📦 [Download artifacts](https://github.com/${{ github.repository }}/actions/runs/${{ github.run_id }}#artifacts)" >> $GITHUB_STEP_SUMMARY
           else
             echo "Coverage report not found" >> $GITHUB_STEP_SUMMARY
           fi
@@ -81,7 +109,9 @@ jobs:
         if: always() && hashFiles('frontend/coverage/**') != ''
         with:
           name: frontend-coverage
-          path: frontend/coverage
+          path: |
+            frontend/coverage
+            frontend/test-results.json
           retention-days: 30
 
       - name: Upload frontend dist
@@ -99,9 +129,31 @@ jobs:
 
       - name: Run Go tests with coverage
         run: |
-          go test -coverprofile=coverage.out ./internal/...
+          go install gotest.tools/gotestsum@v1.11.0
+          gotestsum --format testname --junitfile go-test-results.xml -- -coverprofile=coverage.out ./internal/...
           go tool cover -func=coverage.out | tee coverage.txt
           go tool cover -html=coverage.out -o coverage.html
+
+      - name: Generate Go test summary
+        if: always()
+        run: |
+          echo "## 🧪 Go Test Results" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          if [ -f go-test-results.xml ]; then
+            # Parse test results
+            total=$(grep -o 'tests="[0-9]*"' go-test-results.xml | head -1 | grep -o '[0-9]*')
+            failures=$(grep -o 'failures="[0-9]*"' go-test-results.xml | head -1 | grep -o '[0-9]*')
+            skipped=$(grep -o 'skipped="[0-9]*"' go-test-results.xml | head -1 | grep -o '[0-9]*')
+            passed=$((total - failures - skipped))
+            
+            echo "| Status | Count |" >> $GITHUB_STEP_SUMMARY
+            echo "|--------|-------|" >> $GITHUB_STEP_SUMMARY
+            echo "| ✅ Passed | $passed |" >> $GITHUB_STEP_SUMMARY
+            echo "| ❌ Failed | $failures |" >> $GITHUB_STEP_SUMMARY
+            echo "| ⏭️ Skipped | $skipped |" >> $GITHUB_STEP_SUMMARY
+            echo "| **📊 Total** | **$total** |" >> $GITHUB_STEP_SUMMARY
+            echo "" >> $GITHUB_STEP_SUMMARY
+          fi
 
       - name: Generate Go coverage summary
         if: always()
@@ -114,7 +166,9 @@ jobs:
             echo '```' >> $GITHUB_STEP_SUMMARY
             echo "" >> $GITHUB_STEP_SUMMARY
           fi
-          echo "📦 Detailed coverage reports available in artifacts (30 days retention)" >> $GITHUB_STEP_SUMMARY
+          echo "📊 **[📈 View Interactive Coverage Report on GitHub Pages](https://${{ github.repository_owner }}.github.io/${{ github.event.repository.name }}/)** (available after deployment)" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "📦 [Download artifacts](https://github.com/${{ github.repository }}/actions/runs/${{ github.run_id }}#artifacts)" >> $GITHUB_STEP_SUMMARY
 
       - name: Upload Go coverage
         uses: actions/upload-artifact@v4
@@ -124,7 +178,80 @@ jobs:
           path: |
             coverage.out
             coverage.html
+            go-test-results.xml
           retention-days: 30
+
+      - name: Publish Go test results
+        uses: EnricoMi/publish-unit-test-result-action@v2
+        if: always() && hashFiles('go-test-results.xml') != ''
+        with:
+          files: go-test-results.xml
+          check_name: Go Test Results
+          comment_mode: off
+
+      - name: Prepare coverage reports for Pages
+        if: always() && (hashFiles('coverage.html') != '' || hashFiles('frontend/coverage/index.html') != '')
+        run: |
+          mkdir -p coverage-reports
+          if [ -f coverage.html ]; then
+            cp coverage.html coverage-reports/go-coverage.html
+          fi
+          if [ -f frontend/coverage/index.html ]; then
+            cp -r frontend/coverage coverage-reports/frontend
+          fi
+          cat > coverage-reports/index.html << 'EOF'
+          <!DOCTYPE html>
+          <html>
+          <head>
+            <title>Coverage Reports - Lyyyra</title>
+            <style>
+              body { font-family: system-ui; max-width: 800px; margin: 50px auto; padding: 20px; }
+              h1 { color: #333; }
+              .card { border: 1px solid #ddd; border-radius: 8px; padding: 20px; margin: 20px 0; }
+              .card h2 { margin-top: 0; }
+              a { color: #0366d6; text-decoration: none; }
+              a:hover { text-decoration: underline; }
+              .meta { color: #666; font-size: 0.9em; }
+            </style>
+          </head>
+          <body>
+            <h1>📊 Test Coverage Reports</h1>
+            <p class="meta">Build: ${{ github.run_number }} | Commit: ${{ github.sha }}</p>
+            
+            <div class="card">
+              <h2>🔧 Go Backend Coverage</h2>
+              <p><a href="go-coverage.html">View Go Coverage Report →</a></p>
+            </div>
+            
+            <div class="card">
+              <h2>📊 Frontend Coverage</h2>
+              <p><a href="frontend/index.html">View Frontend Coverage Report →</a></p>
+            </div>
+          </body>
+          </html>
+          EOF
+
+      - name: Upload coverage reports to Pages
+        if: always() && hashFiles('coverage-reports/**') != ''
+        uses: actions/upload-pages-artifact@v3
+        with:
+          path: coverage-reports
+
+  deploy-coverage:
+    name: Deploy Coverage to Pages
+    needs: test
+    if: always() && github.event_name != 'pull_request'
+    permissions:
+      pages: write
+      id-token: write
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    runs-on: ubuntu-latest
+    steps:
+      - name: Deploy to GitHub Pages
+        id: deployment
+        uses: actions/deploy-pages@v4
 
   build:
     name: Build ${{ matrix.platform }}
