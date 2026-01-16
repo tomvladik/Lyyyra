@@ -1,4 +1,4 @@
-FROM mcr.microsoft.com/devcontainers/go:1-1.22-bookworm
+FROM mcr.microsoft.com/devcontainers/go:1-1.24-bookworm
 ENV PATH=$PATH:/opt/node/bin
 ENV DEBIAN_FRONTEND=noninteractive
 
@@ -44,7 +44,7 @@ RUN set -eux; \
 
 RUN set -eux; \
     gosu vscode go install gotest.tools/gotestsum@v1.11.0; \
-    gosu vscode go install github.com/golangci/golangci-lint/cmd/golangci-lint@v1.54.2; \
+    gosu vscode go install github.com/golangci/golangci-lint/cmd/golangci-lint@v1.64.8; \
     gosu vscode go install golang.org/x/tools/gopls@v0.16.2
 
 RUN set -eux; \

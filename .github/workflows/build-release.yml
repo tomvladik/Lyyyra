@@ -14,6 +14,7 @@ env:
   NODE_VERSION: '20'
   GO_VERSION_FILE: go.mod
   WAILS_VERSION: v2.11.0
+  GOLANGCI_LINT_VERSION: v1.64.8
 
 jobs:
   test:
@@ -91,7 +92,7 @@ jobs:
           retention-days: 1
 
       - name: Install golangci-lint
-        run: go install github.com/golangci/golangci-lint/cmd/golangci-lint@v1.54.2
+        run: go install github.com/golangci/golangci-lint/cmd/golangci-lint@${{ env.GOLANGCI_LINT_VERSION }}
 
       - name: Lint Go code
         run: golangci-lint run ./internal/... -v

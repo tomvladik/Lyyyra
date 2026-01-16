@@ -1,6 +1,6 @@
 module lyyyra
 
-go 1.22.0
+go 1.24.0
 
 require (
 	github.com/antchfx/htmlquery v1.3.4
