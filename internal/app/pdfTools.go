@@ -11,6 +11,8 @@ import (
 	"regexp"
 	"strings"
 
+	"pdf-crop/pkg/crop"
+
 	"github.com/oliverpool/unipdf/v3/creator"
 	"github.com/oliverpool/unipdf/v3/extractor"
 	"github.com/oliverpool/unipdf/v3/model"
@@ -134,10 +136,11 @@ func (a *App) GetCombinedPdf(filenames []string) (string, error) {
 	return a.combinePdfs(filenames, combinePdfOptions{crop: false, marginRatio: 0})
 }
 
-// GetCombinedPdfWithOptions merges PDF files and optionally crops pages before returning as a data URL.
-// marginRatio is a fraction (0-0.5) of page width/height trimmed from each side when crop is true.
-func (a *App) GetCombinedPdfWithOptions(filenames []string, crop bool, marginRatio float64) (string, error) {
-	return a.combinePdfs(filenames, combinePdfOptions{crop: crop, marginRatio: marginRatio})
+// GetCombinedPdfWithOptions merges PDF files and optionally crops pages using pixel-perfect detection.
+// When crop is true, uses pdf-crop library with MuPDF rendering for accurate bounds.
+// marginRatio is ignored (kept for API compatibility) - uses library defaults.
+func (a *App) GetCombinedPdfWithOptions(filenames []string, cropEnabled bool, marginRatio float64) (string, error) {
+	return a.combinePdfs(filenames, combinePdfOptions{crop: cropEnabled, marginRatio: marginRatio})
 }
 
 func (a *App) combinePdfs(filenames []string, opts combinePdfOptions) (string, error) {
@@ -145,13 +148,12 @@ func (a *App) combinePdfs(filenames []string, opts combinePdfOptions) (string, e
 		return "", fmt.Errorf("no filenames provided")
 	}
 
-	if opts.marginRatio <= 0 {
-		opts.marginRatio = 0.02
-	}
-	if opts.marginRatio >= 0.5 {
-		opts.marginRatio = 0.49
+	// If cropping requested, use pdf-crop library for all files
+	if opts.crop {
+		return a.combinePdfsWithCrop(filenames)
 	}
 
+	// Otherwise, simple merge without cropping
 	c := creator.New()
 	pagesAdded := 0
 
@@ -161,7 +163,7 @@ func (a *App) combinePdfs(filenames []string, opts combinePdfOptions) (string, e
 			continue
 		}
 
-		count, err := a.addPdfToCreator(c, name, opts)
+		count, err := a.addPdfToCreator(c, name)
 		if err != nil {
 			return "", err
 		}
@@ -175,8 +177,8 @@ func (a *App) combinePdfs(filenames []string, opts combinePdfOptions) (string, e
 	return a.encodeCreatorToPdf(c)
 }
 
-// addPdfToCreator opens a PDF file, optionally crops its pages, and adds them to the creator
-func (a *App) addPdfToCreator(c *creator.Creator, filename string, opts combinePdfOptions) (int, error) {
+// addPdfToCreator opens a PDF file and adds all pages to the creator (without cropping)
+func (a *App) addPdfToCreator(c *creator.Creator, filename string) (int, error) {
 	filePath := filepath.Join(a.pdfDir, filename)
 	file, err := os.Open(filePath)
 	if err != nil {
@@ -200,120 +202,12 @@ func (a *App) addPdfToCreator(c *creator.Creator, filename string, opts combineP
 			return 0, fmt.Errorf("unable to read page %d from %s: %w", pageNum, filename, err)
 		}
 
-		if opts.crop {
-			if err := cropPageInPlace(page, opts.marginRatio); err != nil {
-				slog.Warn("skipping crop for page", "page", pageNum, "file", filename, "err", err)
-			}
-		}
-
 		if err := c.AddPage(page); err != nil {
 			return 0, fmt.Errorf("unable to add page %d from %s: %w", pageNum, filename, err)
 		}
 	}
 
 	return numPages, nil
-}
-
-// cropPageInPlace detects content bounds and sets a tight CropBox.
-// marginRatio adds a small padding around detected content (0.01 = 1%).
-func cropPageInPlace(page *model.PdfPage, marginRatio float64) error {
-	mediaBox := page.MediaBox
-	if mediaBox == nil {
-		return fmt.Errorf("page missing MediaBox")
-	}
-
-	// Detect content bounds by analyzing text presence.
-	contentBounds, err := detectPageContentBounds(page)
-	if err != nil {
-		// Fallback: apply conservative uniform margin if detection fails.
-		slog.Debug("content detection failed, falling back to uniform margin", "err", err)
-		return fallbackUniformCrop(page, 0.05)
-	}
-
-	// Apply small padding around detected content.
-	pageWidth := mediaBox.Urx - mediaBox.Llx
-	pageHeight := mediaBox.Ury - mediaBox.Lly
-	padX := marginRatio * pageWidth
-	padY := marginRatio * pageHeight
-
-	// Clamp padding.
-	if padX > contentBounds.Llx-mediaBox.Llx {
-		padX = (contentBounds.Llx - mediaBox.Llx) * 0.5
-	}
-	if padY > contentBounds.Lly-mediaBox.Lly {
-		padY = (contentBounds.Lly - mediaBox.Lly) * 0.5
-	}
-
-	page.CropBox = &model.PdfRectangle{
-		Llx: contentBounds.Llx - padX,
-		Lly: contentBounds.Lly - padY,
-		Urx: contentBounds.Urx + padX,
-		Ury: contentBounds.Ury + padY,
-	}
-
-	return nil
-}
-
-// detectPageContentBounds estimates the bounding box of page content.
-// Uses text extraction to determine content region and applies heuristic shrinking.
-func detectPageContentBounds(page *model.PdfPage) (*model.PdfRectangle, error) {
-	mediaBox := page.MediaBox
-	if mediaBox == nil {
-		return nil, fmt.Errorf("no MediaBox")
-	}
-
-	w := mediaBox.Urx - mediaBox.Llx
-	h := mediaBox.Ury - mediaBox.Lly
-
-	// Extract text to check if page has content.
-	extraction, err := extractor.New(page)
-	if err == nil && extraction != nil {
-		text, _ := extraction.ExtractText()
-		if len(strings.TrimSpace(text)) > 0 {
-			// Page has text content.
-			// Heuristic: typical sheet music/text has margins ~10-15% on sides, ~5-10% on bottom, ~5% on top.
-			return &model.PdfRectangle{
-				Llx: mediaBox.Llx + w*0.12, // ~12% from left
-				Lly: mediaBox.Lly + h*0.08, // ~8% from bottom
-				Urx: mediaBox.Urx - w*0.12, // ~12% from right
-				Ury: mediaBox.Ury - h*0.08, // ~8% from top
-			}, nil
-		}
-	}
-
-	// Fallback: conservative estimate for blank pages.
-	return &model.PdfRectangle{
-		Llx: mediaBox.Llx + w*0.15,
-		Lly: mediaBox.Lly + h*0.1,
-		Urx: mediaBox.Urx - w*0.15,
-		Ury: mediaBox.Ury - h*0.15,
-	}, nil
-}
-
-// fallbackUniformCrop applies a conservative uniform margin when content detection fails.
-func fallbackUniformCrop(page *model.PdfPage, marginRatio float64) error {
-	box := page.MediaBox
-	if box == nil {
-		return fmt.Errorf("no MediaBox")
-	}
-
-	width := box.Urx - box.Llx
-	height := box.Ury - box.Lly
-	if width <= 0 || height <= 0 {
-		return fmt.Errorf("invalid dimensions")
-	}
-
-	dx := marginRatio * width
-	dy := marginRatio * height
-
-	page.CropBox = &model.PdfRectangle{
-		Llx: box.Llx + dx,
-		Lly: box.Lly + dy,
-		Urx: box.Urx - dx,
-		Ury: box.Ury - dy,
-	}
-
-	return nil
 }
 
 // encodeCreatorToPdf writes the creator content to a buffer and returns as base64 data URL
@@ -327,7 +221,94 @@ func (a *App) encodeCreatorToPdf(c *creator.Creator) (string, error) {
 	return "data:application/pdf;base64," + encoded, nil
 }
 
-// ProcessKytaraPDF splits the kytara.pdf into individual song files and updates the database
+// combinePdfsWithCrop uses pdf-crop library to crop and merge PDFs with pixel-perfect detection
+func (a *App) combinePdfsWithCrop(filenames []string) (string, error) {
+	if len(filenames) == 0 {
+		return "", fmt.Errorf("no filenames provided")
+	}
+
+	// Create temp file for merged output
+	tempDir := os.TempDir()
+	tempOutput := filepath.Join(tempDir, fmt.Sprintf("lyyyra_cropped_%d.pdf", os.Getpid()))
+	defer os.Remove(tempOutput)
+
+	// First merge all input PDFs into temp file using pdfcpu
+	inputPaths := make([]string, 0, len(filenames))
+	for _, name := range filenames {
+		name = strings.TrimSpace(name)
+		if name == "" {
+			continue
+		}
+		inputPaths = append(inputPaths, filepath.Join(a.pdfDir, name))
+	}
+
+	if len(inputPaths) == 0 {
+		return "", fmt.Errorf("no valid input files")
+	}
+
+	// Merge first (simple concatenation)
+	tempMerged := filepath.Join(tempDir, fmt.Sprintf("lyyyra_merged_%d.pdf", os.Getpid()))
+	defer os.Remove(tempMerged)
+
+	c := creator.New()
+	for _, inputPath := range inputPaths {
+		file, err := os.Open(inputPath)
+		if err != nil {
+			return "", fmt.Errorf("unable to open %s: %w", inputPath, err)
+		}
+
+		reader, err := model.NewPdfReader(file)
+		file.Close()
+		if err != nil {
+			return "", fmt.Errorf("unable to read %s: %w", inputPath, err)
+		}
+
+		numPages, _ := reader.GetNumPages()
+		for pageNum := 1; pageNum <= numPages; pageNum++ {
+			page, err := reader.GetPage(pageNum)
+			if err != nil {
+				continue
+			}
+			c.AddPage(page)
+		}
+	}
+
+	// Write merged PDF
+	if err := c.WriteToFile(tempMerged); err != nil {
+		return "", fmt.Errorf("failed to write merged PDF: %w", err)
+	}
+
+	// Now crop using pdf-crop library
+	opts := crop.DefaultOptions()
+	opts.DPI = 150         // Good balance between speed and accuracy
+	opts.Threshold = 0.008 // Sensitive detection
+	opts.Space = 5         // 5pt whitespace margin
+
+	slog.Info("Cropping PDF with pixel-perfect detection", "input", tempMerged, "dpi", opts.DPI)
+
+	_, err := crop.CropAllPagesToSingleFile(tempMerged, tempOutput, opts)
+	if err != nil {
+		// If cropping fails (e.g., MuPDF not available on Windows), fall back to uncropped
+		slog.Warn("PDF cropping failed, returning uncropped PDF", "error", err)
+		// Return the merged but uncropped PDF
+		data, readErr := os.ReadFile(tempMerged)
+		if readErr != nil {
+			return "", fmt.Errorf("cropping failed and unable to read fallback PDF: %w", readErr)
+		}
+		encoded := base64.StdEncoding.EncodeToString(data)
+		return "data:application/pdf;base64," + encoded, nil
+	}
+
+	// Read cropped PDF and encode to data URL
+	croppedData, err := os.ReadFile(tempOutput)
+	if err != nil {
+		return "", fmt.Errorf("failed to read cropped PDF: %w", err)
+	}
+
+	encoded := base64.StdEncoding.EncodeToString(croppedData)
+	return fmt.Sprintf("data:application/pdf;base64,%s", encoded), nil
+}
+
 func (a *App) ProcessKytaraPDF() error {
 	if a.testRun {
 		return nil

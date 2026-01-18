@@ -27,6 +27,7 @@ Thumbs.db
 
 # Logs
 *.log
-coverage.html
-coverage.out
+
+coverage.*
 frontend/coverage/*
+bin/*

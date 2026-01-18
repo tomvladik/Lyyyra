@@ -8,9 +8,23 @@ require (
 	github.com/oliverpool/unipdf/v3 v3.10.0
 	github.com/wailsapp/wails/v2 v2.11.0
 	gopkg.in/yaml.v2 v2.4.0
+	pdf-crop v0.0.0-00010101000000-000000000000
 )
 
-require github.com/gorilla/websocket v1.5.3 // indirect
+replace pdf-crop => github.com/tomvladik/pdf-crop v0.0.0-20260118230518-79beda2e9c98
+
+require (
+	github.com/clipperhouse/uax29/v2 v2.2.0 // indirect
+	github.com/ebitengine/purego v0.8.4 // indirect
+	github.com/gen2brain/go-fitz v1.24.15 // indirect
+	github.com/gorilla/websocket v1.5.3 // indirect
+	github.com/hhrutter/lzw v1.0.0 // indirect
+	github.com/hhrutter/pkcs7 v0.2.0 // indirect
+	github.com/hhrutter/tiff v1.0.2 // indirect
+	github.com/jupiterrider/ffi v0.5.0 // indirect
+	github.com/mattn/go-runewidth v0.0.19 // indirect
+	github.com/pdfcpu/pdfcpu v0.11.1 // indirect
+)
 
 require (
 	github.com/antchfx/xpath v1.3.3 // indirect
@@ -43,11 +57,11 @@ require (
 	github.com/valyala/fasttemplate v1.2.2 // indirect
 	github.com/wailsapp/go-webview2 v1.0.22 // indirect
 	github.com/wailsapp/mimetype v1.4.1 // indirect
-	golang.org/x/crypto v0.33.0 // indirect
-	golang.org/x/image v0.24.0 // indirect
-	golang.org/x/net v0.35.0 // indirect
-	golang.org/x/sys v0.30.0 // indirect
-	golang.org/x/text v0.22.0
+	golang.org/x/crypto v0.43.0 // indirect
+	golang.org/x/image v0.32.0 // indirect
+	golang.org/x/net v0.45.0 // indirect
+	golang.org/x/sys v0.37.0 // indirect
+	golang.org/x/text v0.30.0
 	golang.org/x/xerrors v0.0.0-20240903120638-7835f813f4da // indirect
 	gopkg.in/yaml.v3 v3.0.1 // indirect
 )

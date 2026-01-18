@@ -15,24 +15,27 @@ WEBKIT_TAG ?= webkit2_41
 GO_DEV_TAGS ?= dev $(WEBKIT_TAG)
 GO_PROD_TAGS ?= $(WEBKIT_TAG)
 
+# CGO configuration for go-mupdf (PDF rendering)
+CGO_ENABLED ?= 1
+
 # Go backend tasks
 .PHONY: build test fmt lint
 
 build: ## Build the Go backend
 	@echo "Building Go backend..."
-	go build -v -tags "$(GO_DEV_TAGS)" -o build/bin/lyyyra .
+	CGO_ENABLED=$(CGO_ENABLED) go build -v -tags "$(GO_DEV_TAGS)" -o build/bin/lyyyra .
 
 build-prod: ## Build production binary with optimizations
 	@echo "Building production binary..."
-	go build -v -tags "$(GO_PROD_TAGS)" -ldflags="-s -w" -o build/bin/lyyyra .
+	CGO_ENABLED=$(CGO_ENABLED) go build -v -tags "$(GO_PROD_TAGS)" -ldflags="-s -w" -o build/bin/lyyyra .
 
 test: ## Run Go tests
 	@echo "Running Go tests..."
-	gotestsum --format testname -- -tags "$(GO_PROD_TAGS)" ./internal/...
+	CGO_ENABLED=$(CGO_ENABLED) gotestsum --format testname -- -tags "$(GO_PROD_TAGS)" ./internal/...
 
 test-verbose: ## Run Go tests with full output
 	@echo "Running Go tests (verbose)..."
-	gotestsum --format standard-verbose -- -tags "$(GO_PROD_TAGS)" ./internal/...
+	CGO_ENABLED=$(CGO_ENABLED) gotestsum --format standard-verbose -- -tags "$(GO_PROD_TAGS)" ./internal/...
 fmt: ## Format Go code
 	go fmt ./internal/...
 
@@ -85,8 +88,11 @@ frontend-test-coverage: ## Run frontend tests with coverage
 test-all-coverage: test-coverage frontend-test-coverage ## Run all tests with coverage
 
 install-tools: ## Install Go test, lint tools, and act for CI testing
+	@echo "Installing system dependencies..."
+	sudo apt-get update && sudo apt-get install -y libmupdf-dev gcc
+	@echo "Installing Go tools..."
 	go install gotest.tools/gotestsum@v1.11.0
-	go install github.com/golangci/golangci-lint/cmd/golangci-lint@v1.54.2
+	go install github.com/golangci/golangci-lint/cmd/golangci-lint@v1.64.8
 	@echo "Installing frontend coverage tool..."
 	cd frontend && npm install -D @vitest/coverage-v8
 	@echo "Installing act for local CI testing..."

@@ -8,6 +8,7 @@ import (
 	"net/url"
 	"os"
 	"path/filepath"
+	goruntime "runtime"
 	"strings"
 	"sync"
 	"time"
@@ -118,6 +119,21 @@ func (a *App) Shutdown() {
 // so we can call the runtime methods.
 func (a *App) Startup(ctx context.Context) {
 	a.ctx = ctx
+
+	// On Windows, ensure MuPDF DLLs are available for PDF cropping
+	if goruntime.GOOS == "windows" {
+		a.initializeWindowsDLLs()
+	}
+}
+
+// initializeWindowsDLLs attempts to set up MuPDF DLLs on Windows
+func (a *App) initializeWindowsDLLs() {
+	// Try to ensure DLLs are available
+	// This will work if they're embedded, in PATH, or in current directory
+	slog.Info("Initializing MuPDF libraries for Windows...")
+	// Note: Actual DLL extraction happens in embedded package when pdf-crop is used
+	// Here we just log the status
+	slog.Info("PDF cropping will use system MuPDF if available, or gracefully disable if not")
 }
 
 // GetPdfFile returns the PDF contents encoded as a data URL
