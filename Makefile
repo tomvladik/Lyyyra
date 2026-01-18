@@ -23,19 +23,35 @@ CGO_ENABLED ?= 1
 
 build: ## Build the Go backend
 	@echo "Building Go backend..."
+ifeq ($(OS),Windows_NT)
+	@powershell -NoProfile -Command "$$env:CGO_ENABLED='$(CGO_ENABLED)'; go build -v -tags \"$(GO_DEV_TAGS)\" -o build/bin/lyyyra ."
+else
 	CGO_ENABLED=$(CGO_ENABLED) go build -v -tags "$(GO_DEV_TAGS)" -o build/bin/lyyyra .
+endif
 
 build-prod: ## Build production binary with optimizations
 	@echo "Building production binary..."
+ifeq ($(OS),Windows_NT)
+	@powershell -NoProfile -Command "$$env:CGO_ENABLED='$(CGO_ENABLED)'; go build -v -tags \"$(GO_PROD_TAGS)\" -ldflags=\"-s -w\" -o build/bin/lyyyra ."
+else
 	CGO_ENABLED=$(CGO_ENABLED) go build -v -tags "$(GO_PROD_TAGS)" -ldflags="-s -w" -o build/bin/lyyyra .
+endif
 
 test: ## Run Go tests
 	@echo "Running Go tests..."
+ifeq ($(OS),Windows_NT)
+	@powershell -NoProfile -Command "$$env:CGO_ENABLED='$(CGO_ENABLED)'; gotestsum --format testname -- -tags \"$(GO_PROD_TAGS)\" ./internal/..."
+else
 	CGO_ENABLED=$(CGO_ENABLED) gotestsum --format testname -- -tags "$(GO_PROD_TAGS)" ./internal/...
+endif
 
 test-verbose: ## Run Go tests with full output
 	@echo "Running Go tests (verbose)..."
+ifeq ($(OS),Windows_NT)
+	@powershell -NoProfile -Command "$$env:CGO_ENABLED='$(CGO_ENABLED)'; gotestsum --format standard-verbose -- -tags \"$(GO_PROD_TAGS)\" ./internal/..."
+else
 	CGO_ENABLED=$(CGO_ENABLED) gotestsum --format standard-verbose -- -tags "$(GO_PROD_TAGS)" ./internal/...
+endif
 fmt: ## Format Go code
 	go fmt ./internal/...
 
@@ -117,7 +133,11 @@ wails-build: ## Build Wails application for production
 	wails build -tags "$(GO_PROD_TAGS)"-devtools
 
 wails-build-windows-skip-frontend: ## Build Windows app (skip frontend rebuild, devcontainer cross-compile)
+ifeq ($(OS),Windows_NT)
+	@powershell -NoProfile -Command "$$env:CGO_ENABLED='1'; $$env:CC='x86_64-w64-mingw32-gcc'; $$env:CXX='x86_64-w64-mingw32-g++'; wails build -platform windows/amd64 -tags \"$(GO_PROD_TAGS)\" -devtools -skipbindings -s"
+else
 	CGO_ENABLED=1 CC=x86_64-w64-mingw32-gcc CXX=x86_64-w64-mingw32-g++ wails build -platform windows/amd64 -tags "$(GO_PROD_TAGS)" -devtools -skipbindings -s
+endif
 
 wails-build-windows: frontend-build wails-build-windows-skip-frontend ## Build Wails for Windows (cross-compile in devcontainer)
 
