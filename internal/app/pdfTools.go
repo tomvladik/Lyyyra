@@ -269,7 +269,10 @@ func (a *App) combinePdfsWithCrop(filenames []string) (string, error) {
 			if err != nil {
 				continue
 			}
-			c.AddPage(page)
+			if err := c.AddPage(page); err != nil {
+				slog.Warn("Error adding page to creator", "pageNum", pageNum, "error", err)
+				continue
+			}
 		}
 	}
 
