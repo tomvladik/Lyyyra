@@ -577,3 +577,299 @@ func TestGetSongs2WithSearch(t *testing.T) {
 		})
 	}
 }
+
+// ============ SCHEMA MIGRATION TESTS ============
+
+// TestDetectSchemaVersion_FreshDatabase tests detection of v0 (fresh) database
+func TestDetectSchemaVersion_FreshDatabase(t *testing.T) {
+	dbFile, err := os.CreateTemp("", "testdb_*.sqlite")
+	if err != nil {
+		t.Fatalf("Failed to create temp database: %v", err)
+	}
+	dbPath := dbFile.Name()
+	dbFile.Close()
+	defer os.Remove(dbPath)
+
+	db, err := sql.Open("sqlite3", dbPath)
+	if err != nil {
+		t.Fatalf("Failed to open database: %v", err)
+	}
+	defer db.Close()
+
+	app := &App{}
+	version, err := app.detectSchemaVersion(db)
+
+	if err != nil {
+		t.Fatalf("detectSchemaVersion failed: %v", err)
+	}
+	if version != 0 {
+		t.Errorf("Expected version 0 for fresh database, got %d", version)
+	}
+}
+
+// TestCreateSchemaV1 tests that v1 schema is created correctly
+func TestCreateSchemaV1(t *testing.T) {
+	dbFile, err := os.CreateTemp("", "testdb_*.sqlite")
+	if err != nil {
+		t.Fatalf("Failed to create temp database: %v", err)
+	}
+	dbPath := dbFile.Name()
+	dbFile.Close()
+	defer os.Remove(dbPath)
+
+	db, err := sql.Open("sqlite3", dbPath)
+	if err != nil {
+		t.Fatalf("Failed to open database: %v", err)
+	}
+	defer db.Close()
+
+	app := &App{}
+	err = app.createSchemaV1(db)
+	if err != nil {
+		t.Fatalf("createSchemaV1 failed: %v", err)
+	}
+
+	// Check that V1 tables were created (NOT songbooks, which is V2 feature)
+	tables := []string{"songs", "authors", "verses"}
+	for _, table := range tables {
+		var exists int
+		err := db.QueryRow(`SELECT COUNT(*) FROM sqlite_master WHERE type='table' AND name=?`, table).Scan(&exists)
+		if err != nil || exists == 0 {
+			t.Errorf("Table %s was not created", table)
+		}
+	}
+
+	// Verify songbooks table was NOT created (V2 feature)
+	var songbooksExists int
+	err = db.QueryRow(`SELECT COUNT(*) FROM sqlite_master WHERE type='table' AND name='songbooks'`).Scan(&songbooksExists)
+	if err == nil && songbooksExists > 0 {
+		t.Error("songbooks table should NOT exist in V1 schema")
+	}
+
+	// Check that V1 indexes were created (NO idx_songs_song_book_id, which is V2 feature)
+	indexes := []string{
+		"idx_songs_entry",
+		"idx_songs_title_d",
+		"idx_authors_song_id",
+		"idx_authors_value_d",
+		"idx_verses_song_id",
+		"idx_verses_lines_d",
+	}
+	for _, idx := range indexes {
+		var exists int
+		err := db.QueryRow(`SELECT COUNT(*) FROM sqlite_master WHERE type='index' AND name=?`, idx).Scan(&exists)
+		if err != nil || exists == 0 {
+			t.Errorf("Index %s was not created", idx)
+		}
+	}
+
+	// Verify idx_songs_song_book_id index was NOT created (V2 feature)
+	var songBookIdIdxExists int
+	err = db.QueryRow(`SELECT COUNT(*) FROM sqlite_master WHERE type='index' AND name='idx_songs_song_book_id'`).Scan(&songBookIdIdxExists)
+	if err == nil && songBookIdIdxExists > 0 {
+		t.Error("idx_songs_song_book_id index should NOT exist in V1 schema")
+	}
+}
+
+// TestDetectSchemaVersion_V1Database tests detection of v1 database (old release)
+func TestDetectSchemaVersion_V1Database(t *testing.T) {
+	dbFile, err := os.CreateTemp("", "testdb_*.sqlite")
+	if err != nil {
+		t.Fatalf("Failed to create temp database: %v", err)
+	}
+	dbPath := dbFile.Name()
+	dbFile.Close()
+	defer os.Remove(dbPath)
+
+	db, err := sql.Open("sqlite3", dbPath)
+	if err != nil {
+		t.Fatalf("Failed to open database: %v", err)
+	}
+	defer db.Close()
+
+	app := &App{}
+
+	// Create v1 schema
+	err = app.createSchemaV1(db)
+	if err != nil {
+		t.Fatalf("Failed to create v1 schema: %v", err)
+	}
+
+	// Detect version
+	version, err := app.detectSchemaVersion(db)
+	if err != nil {
+		t.Fatalf("detectSchemaVersion failed: %v", err)
+	}
+	if version != 1 {
+		t.Errorf("Expected version 1 for v1 database, got %d", version)
+	}
+}
+
+// TestMigrateToV2 tests migration from v1 to v2
+func TestMigrateToV2(t *testing.T) {
+	dbFile, err := os.CreateTemp("", "testdb_*.sqlite")
+	if err != nil {
+		t.Fatalf("Failed to create temp database: %v", err)
+	}
+	dbPath := dbFile.Name()
+	dbFile.Close()
+	defer os.Remove(dbPath)
+
+	db, err := sql.Open("sqlite3", dbPath)
+	if err != nil {
+		t.Fatalf("Failed to open database: %v", err)
+	}
+	defer db.Close()
+
+	app := &App{}
+
+	// Create v1 schema
+	err = app.createSchemaV1(db)
+	if err != nil {
+		t.Fatalf("Failed to create v1 schema: %v", err)
+	}
+
+	// Migrate to v2
+	err = app.migrateToV2(db)
+	if err != nil {
+		t.Fatalf("migrateToV2 failed: %v", err)
+	}
+
+	// Verify schema_version table exists and has version 2
+	var version int
+	err = db.QueryRow(`SELECT MAX(version) FROM schema_version`).Scan(&version)
+	if err != nil {
+		t.Fatalf("Failed to query schema_version table: %v", err)
+	}
+	if version != 2 {
+		t.Errorf("Expected schema version 2 after migration, got %d", version)
+	}
+}
+
+// TestDetectSchemaVersion_V2Database tests detection of v2 database
+func TestDetectSchemaVersion_V2Database(t *testing.T) {
+	dbFile, err := os.CreateTemp("", "testdb_*.sqlite")
+	if err != nil {
+		t.Fatalf("Failed to create temp database: %v", err)
+	}
+	dbPath := dbFile.Name()
+	dbFile.Close()
+	defer os.Remove(dbPath)
+
+	db, err := sql.Open("sqlite3", dbPath)
+	if err != nil {
+		t.Fatalf("Failed to open database: %v", err)
+	}
+	defer db.Close()
+
+	app := &App{}
+
+	// Create v1 schema and migrate to v2
+	err = app.createSchemaV1(db)
+	if err != nil {
+		t.Fatalf("Failed to create v1 schema: %v", err)
+	}
+
+	err = app.migrateToV2(db)
+	if err != nil {
+		t.Fatalf("Failed to migrate to v2: %v", err)
+	}
+
+	// Detect version
+	version, err := app.detectSchemaVersion(db)
+	if err != nil {
+		t.Fatalf("detectSchemaVersion failed: %v", err)
+	}
+	if version != 2 {
+		t.Errorf("Expected version 2 for v2 database, got %d", version)
+	}
+}
+
+// TestColumnExists checks if columnExists helper works correctly
+func TestColumnExists(t *testing.T) {
+	dbFile, err := os.CreateTemp("", "testdb_*.sqlite")
+	if err != nil {
+		t.Fatalf("Failed to create temp database: %v", err)
+	}
+	dbPath := dbFile.Name()
+	dbFile.Close()
+	defer os.Remove(dbPath)
+
+	db, err := sql.Open("sqlite3", dbPath)
+	if err != nil {
+		t.Fatalf("Failed to open database: %v", err)
+	}
+	defer db.Close()
+
+	app := &App{}
+
+	// Create v1 schema
+	err = app.createSchemaV1(db)
+	if err != nil {
+		t.Fatalf("Failed to create v1 schema: %v", err)
+	}
+
+	// Test existing column
+	exists, err := app.columnExists(db, "songs", "title")
+	if err != nil {
+		t.Fatalf("columnExists failed: %v", err)
+	}
+	if !exists {
+		t.Error("Expected column 'title' to exist in 'songs' table")
+	}
+
+	// Test non-existing column
+	exists, err = app.columnExists(db, "songs", "nonexistent_column")
+	if err != nil {
+		t.Fatalf("columnExists failed: %v", err)
+	}
+	if exists {
+		t.Error("Expected column 'nonexistent_column' to not exist in 'songs' table")
+	}
+}
+
+// TestAddColumnIfNotExists tests adding a new column if it doesn't exist
+func TestAddColumnIfNotExists(t *testing.T) {
+	dbFile, err := os.CreateTemp("", "testdb_*.sqlite")
+	if err != nil {
+		t.Fatalf("Failed to create temp database: %v", err)
+	}
+	dbPath := dbFile.Name()
+	dbFile.Close()
+	defer os.Remove(dbPath)
+
+	db, err := sql.Open("sqlite3", dbPath)
+	if err != nil {
+		t.Fatalf("Failed to open database: %v", err)
+	}
+	defer db.Close()
+
+	app := &App{}
+
+	// Create v1 schema
+	err = app.createSchemaV1(db)
+	if err != nil {
+		t.Fatalf("Failed to create v1 schema: %v", err)
+	}
+
+	// Add a new column
+	err = app.addColumnIfNotExists(db, "songs", "test_column", "TEXT DEFAULT 'test'")
+	if err != nil {
+		t.Fatalf("addColumnIfNotExists failed: %v", err)
+	}
+
+	// Verify the column was added
+	exists, err := app.columnExists(db, "songs", "test_column")
+	if err != nil {
+		t.Fatalf("columnExists failed: %v", err)
+	}
+	if !exists {
+		t.Error("Expected column 'test_column' to exist after adding it")
+	}
+
+	// Try adding the same column again - should not fail
+	err = app.addColumnIfNotExists(db, "songs", "test_column", "TEXT DEFAULT 'test'")
+	if err != nil {
+		t.Fatalf("addColumnIfNotExists failed on second attempt: %v", err)
+	}
+}
