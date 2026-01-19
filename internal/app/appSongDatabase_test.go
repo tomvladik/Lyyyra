@@ -24,7 +24,7 @@ func setupTestDB(t *testing.T) *App {
 	}
 
 	// Prepare the database
-	app.PrepareDatabase()
+	app.InitializeDatabase()
 
 	return app
 }

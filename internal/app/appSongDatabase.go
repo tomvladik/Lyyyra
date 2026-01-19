@@ -15,8 +15,10 @@ import (
 // Current database schema version
 const CurrentDBVersion = 2
 
-func (a *App) PrepareDatabase() {
-	slog.Info(fmt.Sprintf("PrepareDatabase: %s", a.dbFilePath))
+// InitializeDatabase checks schema version and applies migrations.
+// This is called on every app startup to ensure the database schema is up-to-date.
+func (a *App) InitializeDatabase() {
+	slog.Info(fmt.Sprintf("InitializeDatabase: %s", a.dbFilePath))
 
 	_ = a.withDB(func(db *sql.DB) error {
 		// Detect current database version

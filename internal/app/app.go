@@ -120,6 +120,9 @@ func (a *App) Shutdown() {
 func (a *App) Startup(ctx context.Context) {
 	a.ctx = ctx
 
+	// Initialize database schema and apply migrations on every start
+	a.InitializeDatabase()
+
 	// On Windows, ensure MuPDF DLLs are available for PDF cropping
 	if goruntime.GOOS == "windows" {
 		a.initializeWindowsDLLs()

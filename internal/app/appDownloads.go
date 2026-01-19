@@ -228,9 +228,8 @@ func (a *App) DownloadEz() error {
 	}
 
 	if !a.status.DatabaseReady {
-		a.updateProgress("Připravuji databázi...", 0)
+		a.updateProgress("Naplňuji databázi...", 0)
 
-		a.PrepareDatabase()
 		a.FillDatabase()
 		a.status.DatabaseReady = true
 		a.saveStatus()
