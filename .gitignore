@@ -31,3 +31,4 @@ Thumbs.db
 coverage.*
 frontend/coverage/*
 bin/*
+vendor/*

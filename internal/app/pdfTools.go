@@ -278,35 +278,71 @@ func (a *App) combinePdfsWithCrop(filenames []string) (string, error) {
 		return "", fmt.Errorf("failed to write merged PDF: %w", err)
 	}
 
-	// Now crop using pdf-crop library
+	// Now crop using pdf-crop library with the same defaults as crop_all_pdf CLI
 	opts := crop.DefaultOptions()
-	opts.DPI = 150         // Good balance between speed and accuracy
-	opts.Threshold = 0.008 // Sensitive detection
-	opts.Space = 5         // 5pt whitespace margin
-
-	slog.Info("Cropping PDF with pixel-perfect detection", "input", tempMerged, "dpi", opts.DPI)
+	opts.Threshold = 0.1
+	opts.Space = 5
+	opts.DPI = 128
+	opts.CropFrom = "center"
+	slog.Info("Cropping PDF with pixel-perfect detection", "input", tempMerged, "dpi", opts.DPI, "threshold", opts.Threshold, "space", opts.Space, "cropFrom", opts.CropFrom)
 
 	_, err := crop.CropAllPagesToSingleFile(tempMerged, tempOutput, opts)
 	if err != nil {
 		// If cropping fails (e.g., MuPDF not available on Windows), fall back to uncropped
 		slog.Warn("PDF cropping failed, returning uncropped PDF", "error", err)
-		// Return the merged but uncropped PDF
-		data, readErr := os.ReadFile(tempMerged)
-		if readErr != nil {
-			return "", fmt.Errorf("cropping failed and unable to read fallback PDF: %w", readErr)
+		return a.readPdfAsDataURL(tempMerged)
+	}
+
+	// Validate cropped size vs original to avoid over-cropping (missing lyrics/credits)
+	origW, origH, errOrig := firstPageSize(tempMerged)
+	cropW, cropH, errCrop := firstPageSize(tempOutput)
+	if errOrig == nil && errCrop == nil {
+		ratioW := cropW / origW
+		ratioH := cropH / origH
+		if ratioW < 0.8 || ratioH < 0.8 {
+			slog.Warn("Cropped page significantly smaller than original; returning uncropped PDF", "ratioW", ratioW, "ratioH", ratioH)
+			return a.readPdfAsDataURL(tempMerged)
 		}
-		encoded := base64.StdEncoding.EncodeToString(data)
-		return "data:application/pdf;base64," + encoded, nil
 	}
 
 	// Read cropped PDF and encode to data URL
-	croppedData, err := os.ReadFile(tempOutput)
+	return a.readPdfAsDataURL(tempOutput)
+}
+
+func firstPageSize(path string) (float64, float64, error) {
+	f, err := os.Open(path)
 	if err != nil {
-		return "", fmt.Errorf("failed to read cropped PDF: %w", err)
+		return 0, 0, err
+	}
+	defer f.Close()
+
+	r, err := model.NewPdfReader(f)
+	if err != nil {
+		return 0, 0, err
 	}
 
-	encoded := base64.StdEncoding.EncodeToString(croppedData)
-	return fmt.Sprintf("data:application/pdf;base64,%s", encoded), nil
+	page, err := r.GetPage(1)
+	if err != nil {
+		return 0, 0, err
+	}
+
+	box, err := page.GetMediaBox()
+	if err != nil {
+		return 0, 0, err
+	}
+
+	width := box.Urx - box.Llx
+	height := box.Ury - box.Lly
+	return width, height, nil
+}
+
+func (a *App) readPdfAsDataURL(path string) (string, error) {
+	data, err := os.ReadFile(path)
+	if err != nil {
+		return "", err
+	}
+	encoded := base64.StdEncoding.EncodeToString(data)
+	return "data:application/pdf;base64," + encoded, nil
 }
 
 func (a *App) ProcessKytaraPDF() error {

@@ -8,10 +8,10 @@ require (
 	github.com/oliverpool/unipdf/v3 v3.10.0
 	github.com/wailsapp/wails/v2 v2.11.0
 	gopkg.in/yaml.v2 v2.4.0
-	pdf-crop v0.0.0-00010101000000-000000000000
+	pdf-crop v0.0.0-20260118232439-8dacb6478e28
 )
 
-replace pdf-crop => github.com/tomvladik/pdf-crop v0.0.0-20260118230518-79beda2e9c98
+replace pdf-crop => github.com/tomvladik/pdf-crop v0.0.0-20260118232439-8dacb6478e28
 
 require (
 	github.com/clipperhouse/uax29/v2 v2.2.0 // indirect
