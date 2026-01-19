@@ -57,7 +57,7 @@ export const SongCard = ({ data }: { data: dtoSong }) => {
             <div className={styles.songCard}>
                 <div className={styles.songHeader}>
                     <div className={styles.title}>
-                        <span className={styles.songNumber}>{data.Entry}:</span>{' '}
+                        <span className={styles.songNumber}>{data.SongbookAcronym} {data.Entry}:</span>{' '}
                         <HighlightText as="span" text={data.Title} />
                     </div>
                     {authorData?.filter((el) => el.Type === "words")

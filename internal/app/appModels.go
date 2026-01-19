@@ -58,13 +58,14 @@ type Verse struct {
 }
 
 type dtoSong struct {
-	Id          int
-	Entry       int
-	Title       string
-	Verses      string
-	AuthorMusic string
-	AuthorLyric string
-	KytaraFile  string
+	Id              int
+	Entry           int
+	Title           string
+	Verses          string
+	AuthorMusic     string
+	AuthorLyric     string
+	KytaraFile      string
+	SongbookAcronym string
 }
 
 type dtoSongHeader struct {

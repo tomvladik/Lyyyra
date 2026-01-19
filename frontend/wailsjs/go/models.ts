@@ -52,6 +52,7 @@ export namespace app {
 	    AuthorMusic: string;
 	    AuthorLyric: string;
 	    KytaraFile: string;
+	    SongbookAcronym: string;
 	
 	    static createFrom(source: any = {}) {
 	        return new dtoSong(source);
@@ -66,6 +67,7 @@ export namespace app {
 	        this.AuthorMusic = source["AuthorMusic"];
 	        this.AuthorLyric = source["AuthorLyric"];
 	        this.KytaraFile = source["KytaraFile"];
+	        this.SongbookAcronym = source["SongbookAcronym"];
 	    }
 	}
 	export class dtoSongHeader {

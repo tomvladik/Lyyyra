@@ -161,7 +161,7 @@ func (a *App) createSchemaV1(db *sql.DB) error {
 // migrateToV2 upgrades from v1 to v2
 // Changes:
 // - Adds songbooks table for multi-songbook support
-// - Adds song_book_id column to songs table
+// - Adds songbook_acronym column to songs table
 // - Adds schema_version table for tracking migrations
 func (a *App) migrateToV2(db *sql.DB) error {
 	slog.Info("Migrating to schema v2")
@@ -169,9 +169,9 @@ func (a *App) migrateToV2(db *sql.DB) error {
 	// Create songbooks table
 	if _, err := db.Exec(`
 		CREATE TABLE IF NOT EXISTS songbooks (
-			acronym TEXT PRIMARY KEY NOT NULL,
+			songbook_acronym TEXT PRIMARY KEY NOT NULL,
 			name TEXT NOT NULL,
-			CHECK(length(acronym) <= 10)
+			CHECK(length(songbook_acronym) <= 10)
 		);
 	`); err != nil {
 		return fmt.Errorf("error creating songbooks table: %w", err)
@@ -187,33 +187,33 @@ func (a *App) migrateToV2(db *sql.DB) error {
 		return fmt.Errorf("error creating schema_version table: %w", err)
 	}
 
-	// Add song_book_id column to songs table
-	if err := a.addColumnIfNotExists(db, "songs", "song_book_id", "TEXT"); err != nil {
-		return fmt.Errorf("error adding song_book_id column: %w", err)
+	// Add songbook_acronym column to songs table
+	if err := a.addColumnIfNotExists(db, "songs", "songbook_acronym", "TEXT"); err != nil {
+		return fmt.Errorf("error adding songbook_acronym column: %w", err)
 	}
 
-	// Add index for song_book_id
+	// Add index for songbook_acronym
 	if _, err := db.Exec(`
-		CREATE INDEX IF NOT EXISTS idx_songs_song_book_id ON songs(song_book_id);
+		CREATE INDEX IF NOT EXISTS idx_songs_songbook_acronym ON songs(songbook_acronym);
 	`); err != nil {
 		return fmt.Errorf("error creating index: %w", err)
 	}
 
 	// Insert default songbook for existing data
 	if _, err := db.Exec(`
-		INSERT OR IGNORE INTO songbooks (acronym, name) VALUES (?, ?)
+		INSERT OR IGNORE INTO songbooks (songbook_acronym, name) VALUES (?, ?)
 	`, "EZ", "Evangelický zpěvník 2021"); err != nil {
 		return fmt.Errorf("error inserting default songbook: %w", err)
 	}
 
 	// Update existing songs to reference the default songbook
 	if _, err := db.Exec(`
-		UPDATE songs SET song_book_id = ? WHERE song_book_id IS NULL
+		UPDATE songs SET songbook_acronym = ? WHERE songbook_acronym IS NULL
 	`, "EZ"); err != nil {
 		return fmt.Errorf("error updating songs with default songbook: %w", err)
 	}
 
-	// Make song_book_id NOT NULL after populating it
+	// Make songbook_acronym NOT NULL after populating it
 	// Note: SQLite doesn't support ALTER COLUMN directly, so we keep it nullable or use a migration strategy
 	// For now, we'll just add a constraint check in the application
 
@@ -263,8 +263,8 @@ func (a *App) FillDatabase() {
 	a.updateProgress("Plním databázi...", 0)
 
 	_ = a.withDB(func(db *sql.DB) error {
-		// Check if we're on v2 (has song_book_id column)
-		hasMultiSongbook, err := a.columnExists(db, "songs", "song_book_id")
+		// Check if we're on v2 (has songbook_acronym column)
+		hasMultiSongbook, err := a.columnExists(db, "songs", "songbook_acronym")
 		if err != nil {
 			slog.Error("Failed to check schema version", "error", err)
 			return err
@@ -346,23 +346,23 @@ func (a *App) processSongFile(db *sql.DB, xmlFile os.DirEntry, songbookAcronym s
 }
 
 // insertSong inserts a song record and returns the song ID
-// In V1, song_book_id is empty; in V2+, it contains the songbook acronym
+// In V1, songbook_acronym is empty; in V2+, it contains the songbook acronym
 func (a *App) insertSong(db *sql.DB, song *Song, songbookAcronym string) (int64, error) {
 	title_d := removeDiacritics(song.Title)
 
-	// Check if song_book_id column exists (V2+ schema)
-	hasMultiSongbook, err := a.columnExists(db, "songs", "song_book_id")
+	// Check if songbook_acronym column exists (V2+ schema)
+	hasMultiSongbook, err := a.columnExists(db, "songs", "songbook_acronym")
 	if err != nil {
 		return 0, err
 	}
 
 	var result sql.Result
 	if hasMultiSongbook {
-		// V2+ - insert with song_book_id
-		result, err = db.Exec(`INSERT INTO songs (song_book_id, title, title_d, verse_order, entry) VALUES (?, ?, ?, ?, ?)`,
+		// V2+ - insert with songbook_acronym
+		result, err = db.Exec(`INSERT INTO songs (songbook_acronym, title, title_d, verse_order, entry) VALUES (?, ?, ?, ?, ?)`,
 			songbookAcronym, song.Title, title_d, song.VerseOrder, song.Songbook.Entry)
 	} else {
-		// V1 - insert without song_book_id
+		// V1 - insert without songbook_acronym
 		result, err = db.Exec(`INSERT INTO songs (title, title_d, verse_order, entry) VALUES (?, ?, ?, ?)`,
 			song.Title, title_d, song.VerseOrder, song.Songbook.Entry)
 	}
@@ -408,7 +408,7 @@ func (a *App) getOrCreateSongbook(db *sql.DB, acronym string, name string) (stri
 	}
 
 	// Try to get existing songbook
-	row := db.QueryRow(`SELECT acronym FROM songbooks WHERE acronym = ?`, acronym)
+	row := db.QueryRow(`SELECT songbook_acronym FROM songbooks WHERE songbook_acronym = ?`, acronym)
 	var existingAcronym string
 	err := row.Scan(&existingAcronym)
 	if err == nil {
@@ -419,7 +419,7 @@ func (a *App) getOrCreateSongbook(db *sql.DB, acronym string, name string) (stri
 	}
 
 	// Create new songbook
-	_, err = db.Exec(`INSERT INTO songbooks (acronym, name) VALUES (?, ?)`, acronym, name)
+	_, err = db.Exec(`INSERT INTO songbooks (songbook_acronym, name) VALUES (?, ?)`, acronym, name)
 	if err != nil {
 		return "", err
 	}
@@ -443,7 +443,8 @@ func (a *App) GetSongs(orderBy string, searchPattern string) ([]dtoSong, error) 
             FROM authors
             WHERE song_id = s.id AND author_type = 'words'
             ORDER BY id LIMIT 1),'') AS authorLyric,
-    COALESCE(kytara_file, '') AS kytara_file
+    COALESCE(kytara_file, '') AS kytara_file,
+    COALESCE(s.songbook_acronym, '') AS songbook_acronym
   FROM songs s
   JOIN verses v ON s.id = v.song_id
 `
@@ -520,16 +521,16 @@ order by ` + orderColumn + `, v.name`
 
 		for rows.Next() {
 			var (
-				title, allVerses, authorMusic, authorLyric, kytaraFile string
-				id, entry                                              int
+				title, allVerses, authorMusic, authorLyric, kytaraFile, songbookAcronym string
+				id, entry                                                               int
 			)
-			err := rows.Scan(&id, &entry, &title, &allVerses, &authorMusic, &authorLyric, &kytaraFile)
+			err := rows.Scan(&id, &entry, &title, &allVerses, &authorMusic, &authorLyric, &kytaraFile, &songbookAcronym)
 			if err != nil {
 				slog.Error(fmt.Sprintf("Error scanning row: %s", err))
 				return err
 			}
 
-			result = append(result, dtoSong{Id: id, Entry: entry, Title: title, Verses: allVerses, AuthorMusic: authorMusic, AuthorLyric: authorLyric, KytaraFile: kytaraFile})
+			result = append(result, dtoSong{Id: id, Entry: entry, Title: title, Verses: allVerses, AuthorMusic: authorMusic, AuthorLyric: authorLyric, KytaraFile: kytaraFile, SongbookAcronym: songbookAcronym})
 		}
 		return nil
 	})

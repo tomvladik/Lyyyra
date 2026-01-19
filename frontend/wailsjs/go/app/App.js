@@ -54,8 +54,8 @@ export function GetStatus() {
   return window['go']['app']['App']['GetStatus']();
 }
 
-export function PrepareDatabase() {
-  return window['go']['app']['App']['PrepareDatabase']();
+export function InitializeDatabase() {
+  return window['go']['app']['App']['InitializeDatabase']();
 }
 
 export function ProcessKytaraPDF() {

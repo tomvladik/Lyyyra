@@ -15,6 +15,7 @@ export interface dtoSong {
     AuthorMusic: string
     AuthorLyric: string
     KytaraFile: string
+    SongbookAcronym: string
 }
 
 export interface SelectedSong {

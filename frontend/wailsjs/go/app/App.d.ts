@@ -28,7 +28,7 @@ export function GetSongs2(arg1:string,arg2:string):Promise<Array<app.dtoSongHead
 
 export function GetStatus():Promise<app.AppStatus>;
 
-export function PrepareDatabase():Promise<void>;
+export function InitializeDatabase():Promise<void>;
 
 export function ProcessKytaraPDF():Promise<void>;
 
