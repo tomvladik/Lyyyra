@@ -14,6 +14,7 @@
         "copyrightNotice": "Upozorňujeme, že materiály stahované z <1>www.evangelickyzpevnik.cz</1> slouží pouze pro vlastní potřebu a k případnému dalšímu užití je třeba uzavřít licenční smlouvu s nositeli autorských práv.",
         "searchLabel": "Hledat v textu (diakritika se ignoruje)",
         "searchPlaceholder": "Hledat text ...",
+        "clearSearch": "Vymazat hledání",
         "sortLabel": "Řadit podle",
         "sortPlaceholder": "Vyberte možnost",
         "sortOptions": {

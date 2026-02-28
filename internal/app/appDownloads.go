@@ -177,10 +177,46 @@ func (a *App) DownloadSongBase() error {
 
 	a.updateProgress("Rozbaluji soubory...", 50)
 
-	if err := unzip(fileName, a.songBookDir); err != nil {
-		slog.Error("Failed to unzip song base", "error", err)
+	ezDir := filepath.Join(a.songBookDir, "EZ")
+	if err := os.MkdirAll(ezDir, os.ModePerm); err != nil {
+		slog.Error("Failed to create EZ directory", "dir", ezDir, "error", err)
 		return err
 	}
+
+	if err := unzip(fileName, ezDir); err != nil {
+		slog.Error("Failed to unzip EZ song base", "error", err)
+		return err
+	}
+	return nil
+}
+
+func (a *App) DownloadKK() error {
+	if err := os.MkdirAll(a.songBookDir, os.ModePerm); err != nil {
+		return err
+	}
+
+	a.updateProgress("Stahuji KK XML soubory...", 0)
+
+	fileName, err := a.downloadFile(XMLUrl_KK, "SongsKK.zip")
+	if err != nil {
+		slog.Error(err.Error())
+		return err
+	}
+	defer os.Remove(fileName)
+
+	a.updateProgress("Rozbaluji KK soubory...", 50)
+
+	kkDir := filepath.Join(a.songBookDir, "KK")
+	if err := os.MkdirAll(kkDir, os.ModePerm); err != nil {
+		slog.Error("Failed to create KK directory", "dir", kkDir, "error", err)
+		return err
+	}
+
+	if err := unzip(fileName, kkDir); err != nil {
+		slog.Error("Failed to unzip KK song base", "error", err)
+		return err
+	}
+
 	return nil
 }
 
@@ -215,15 +251,22 @@ func (a *App) DownloadEz() error {
 
 	supplementalErrCh := a.startSupplementalDownload()
 
+	// Download EZ songbook
 	if !a.status.SongsReady && !a.testRun {
 		err = a.DownloadSongBase()
 		if err != nil {
 			a.clearProgress()
 			return err
-
 		}
-		a.status.DatabaseReady = false
+
+		// Download KK songbook after EZ
+		if err := a.DownloadKK(); err != nil {
+			slog.Warn("Failed to download KK songbook (continuing)", "error", err)
+			// Don't fail the whole process if KK download fails
+		}
+
 		a.status.SongsReady = true
+		a.status.DatabaseReady = false
 		a.saveStatus()
 	}
 

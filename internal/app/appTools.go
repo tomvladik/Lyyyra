@@ -5,6 +5,8 @@ import (
 	"io"
 	"os"
 	"path/filepath"
+
+	"golang.org/x/text/encoding/charmap"
 )
 
 func unzip(zipFile, destination string) error {
@@ -15,7 +17,15 @@ func unzip(zipFile, destination string) error {
 	defer r.Close()
 
 	for _, file := range r.File {
-		filePath := filepath.Join(destination, file.Name)
+		// Decode CP852-encoded names (common in Czech/Central European zips)
+		name := file.Name
+		if file.NonUTF8 {
+			if decoded, err := charmap.CodePage852.NewDecoder().String(name); err == nil {
+				name = decoded
+			}
+		}
+
+		filePath := filepath.Join(destination, name)
 
 		// If the entry is a directory, create it
 		if file.FileInfo().IsDir() {

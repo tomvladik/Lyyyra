@@ -132,10 +132,10 @@ func TestDownloadSongBase(t *testing.T) {
 		t.Fatalf("Failed to download song base: %v", err)
 	}
 
-	// Check if the zip file was downloaded and unzipped correctly
-	_, err = os.Stat(filepath.Join(app.songBookDir, "empty.txt"))
+	// Check if the zip file was downloaded and unzipped into EZ subdirectory
+	_, err = os.Stat(filepath.Join(app.songBookDir, "EZ", "empty.txt"))
 	if os.IsNotExist(err) {
-		t.Errorf("Expected zip file to be unzipped, but it was not found")
+		t.Errorf("Expected zip file to be unzipped into EZ directory, but it was not found")
 	}
 }
 

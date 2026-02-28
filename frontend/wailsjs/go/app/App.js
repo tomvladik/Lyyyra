@@ -10,6 +10,10 @@ export function DownloadInternal() {
   return window['go']['app']['App']['DownloadInternal']();
 }
 
+export function DownloadKK() {
+  return window['go']['app']['App']['DownloadKK']();
+}
+
 export function DownloadSongBase() {
   return window['go']['app']['App']['DownloadSongBase']();
 }

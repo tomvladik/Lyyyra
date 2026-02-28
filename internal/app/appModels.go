@@ -57,6 +57,14 @@ type Verse struct {
 	Lines string `xml:",innerxml"`
 }
 
+// SongKK represents the flat structure used by Katolický kancionál
+type SongKK struct {
+	Title      string `xml:"title"`
+	Author     string `xml:"author"`
+	HymnNumber string `xml:"hymn_number"`
+	Lyrics     string `xml:"lyrics"`
+}
+
 type dtoSong struct {
 	Id              int
 	Entry           int

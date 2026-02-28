@@ -6,6 +6,8 @@ export function DownloadEz():Promise<void>;
 
 export function DownloadInternal():Promise<void>;
 
+export function DownloadKK():Promise<void>;
+
 export function DownloadSongBase():Promise<void>;
 
 export function FillDatabase():Promise<void>;

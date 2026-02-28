@@ -125,6 +125,26 @@ func parseXmlSong(xmlFilePath string) (*Song, error) {
 	return &song, nil
 }
 
+func parseXmlSongKK(xmlFilePath string) (*SongKK, error) {
+	xmlData, err := os.ReadFile(xmlFilePath)
+	if err != nil {
+		slog.Error(fmt.Sprintf("Error reading KK XML file %s: %v\n", xmlFilePath, err))
+		return nil, err
+	}
+
+	var song SongKK
+	err = xml.Unmarshal(xmlData, &song)
+	if err != nil {
+		slog.Error(fmt.Sprintf("Error unmarshalling KK XML in file %s: %v\n", xmlFilePath, err))
+		return nil, err
+	}
+
+	// Clean up lyrics - remove extra whitespace but preserve verse structure
+	song.Lyrics = strings.TrimSpace(song.Lyrics)
+
+	return &song, nil
+}
+
 // removeDiacritics removes accents from a UTF-8 string
 func removeDiacritics(s string) string {
 	t := transform.Chain(norm.NFD, runes.Remove(runes.In(unicode.Mn)), norm.NFC)

@@ -102,11 +102,56 @@ make test-all
 
 ## Make Targets
 
-- `make build`, `make build-prod`, `make wails-build`
-- `make test`, `make frontend-test`, `make test-all`
-- `make frontend-test-watch`, `make frontend-test-ui`
-- `make frontend-build`, `make frontend-install`
-- `make clean`
+Run `make help` for a quick overview of all available targets.
+
+**Build**
+
+| Target | Description |
+|---|---|
+| `make build` | Build the Go backend (dev tags) |
+| `make build-prod` | Build production binary with `-ldflags="-s -w"` optimizations |
+| `make wails-build` | Build full Wails application for production |
+| `make wails-build-windows` | Cross-compile Wails app for Windows (builds frontend first) |
+| `make wails-build-windows-skip-frontend` | Cross-compile for Windows, skipping frontend rebuild |
+| `make wails-install` | Install Wails CLI |
+
+**Development**
+
+| Target | Description |
+|---|---|
+| `make wails-dev` | Start Wails + Vite dev server (hot reload) |
+| `make frontend-install` | Install frontend npm dependencies |
+| `make frontend-build` | Build frontend for production |
+| `make frontend-dev` | Start frontend development server only |
+
+**Testing**
+
+| Target | Description |
+|---|---|
+| `make test` | Run Go tests |
+| `make test-verbose` | Run Go tests with full output |
+| `make test-coverage` | Run Go tests and generate `coverage.html` |
+| `make frontend-test` | Run frontend Vitest tests (non-watch) |
+| `make frontend-test-watch` | Run frontend tests in watch mode |
+| `make frontend-test-coverage` | Run frontend tests with coverage report |
+| `make test-all` | Run all tests (Go + frontend) |
+| `make test-all-coverage` | Run all tests with coverage (Go + frontend) |
+
+**Code Quality**
+
+| Target | Description |
+|---|---|
+| `make fmt` | Format Go code (`go fmt ./internal/...`) |
+| `make lint` | Lint Go code with golangci-lint and frontend with eslint |
+
+**Maintenance**
+
+| Target | Description |
+|---|---|
+| `make clean` | Remove Go and frontend build artifacts |
+| `make clean-data` | Delete local app data (`~/Lyyyra`) – next run starts fresh |
+| `make install-tools` | Install Go tools (gotestsum, golangci-lint), coverage plugin, and act |
+| `make ci-test` | Test the GitHub Actions workflow locally using act |
 
 ## Testing & Tooling
 
@@ -117,7 +162,8 @@ make test-all
 ## Building Releases
 
 ```bash
-make build          # Dev builds
-make build-prod     # Optimized builds
-wails build -s -nopackage  # Direct Wails build
+make build                        # Dev build (Go backend only)
+make build-prod                   # Optimized Go backend build (-s -w)
+make wails-build                  # Full Wails production build (current platform)
+make wails-build-windows          # Cross-compile for Windows (devcontainer / mingw-w64)
 ```

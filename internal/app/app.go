@@ -2,6 +2,7 @@ package app
 
 import (
 	"context"
+	"database/sql"
 	"encoding/base64"
 	"fmt"
 	"log/slog"
@@ -170,8 +171,15 @@ func (a *App) ResetData() error {
 	a.startProgress("Mažu uložená data...")
 	defer a.clearProgress()
 
+	// Force close any database connections by opening and immediately closing
+	// This ensures SQLite releases any file locks on Windows
+	_ = a.withDB(func(db *sql.DB) error {
+		return nil
+	})
+
 	// Remove application data directory
 	if err := os.RemoveAll(a.appDir); err != nil {
+		slog.Error("Failed to remove app directory", "path", a.appDir, "error", err)
 		return err
 	}
 
@@ -186,9 +194,18 @@ func (a *App) ResetData() error {
 		return err
 	}
 
-	// Reset status
-	a.status = AppStatus{Sorting: Title, BuildVersion: buildVersion}
+	// Reset status to force re-download
+	a.status = AppStatus{
+		Sorting:           Title,
+		BuildVersion:      buildVersion,
+		WebResourcesReady: false,
+		SongsReady:        false,
+		DatabaseReady:     false,
+	}
 	a.saveStatus()
+
+	// Reinitialize database schema after deletion
+	a.InitializeDatabase()
 
 	// Re-run full download and DB preparation
 	a.updateProgress("Znovu stahuji a připravuji data...", 0)

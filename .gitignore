@@ -32,3 +32,4 @@ coverage.*
 frontend/coverage/*
 bin/*
 vendor/*
+build/tmp/*

@@ -371,7 +371,7 @@ func (a *App) ProcessKytaraPDF() error {
 // updateSongFilenames updates the database with the song PDF filenames
 func (a *App) updateSongFilenames(songFiles map[int]string) error {
 	return a.withDB(func(db *sql.DB) error {
-		stmt, err := db.Prepare("UPDATE songs SET kytara_file = ? WHERE entry = ?")
+		stmt, err := db.Prepare("UPDATE songs SET kytara_file = ? WHERE entry = ? AND songbook_acronym = 'EZ'")
 		if err != nil {
 			return err
 		}

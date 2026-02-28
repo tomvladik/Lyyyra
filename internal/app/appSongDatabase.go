@@ -7,6 +7,7 @@ import (
 	"log/slog"
 	"os"
 	"path/filepath"
+	"strconv"
 	"strings"
 
 	_ "github.com/mattn/go-sqlite3"
@@ -217,6 +218,18 @@ func (a *App) migrateToV2(db *sql.DB) error {
 	// Note: SQLite doesn't support ALTER COLUMN directly, so we keep it nullable or use a migration strategy
 	// For now, we'll just add a constraint check in the application
 
+	// Add entry_text column to songs table to store original song numbers with characters
+	if err := a.addColumnIfNotExists(db, "songs", "entry_text", "TEXT"); err != nil {
+		return fmt.Errorf("error adding entry_text column: %w", err)
+	}
+
+	// Create index for entry_text for efficient searching
+	if _, err := db.Exec(`
+		CREATE INDEX IF NOT EXISTS idx_songs_entry_text ON songs(entry_text);
+	`); err != nil {
+		return fmt.Errorf("error creating index: %w", err)
+	}
+
 	// Record that this version was applied
 	_, err := db.Exec(`INSERT INTO schema_version (version) VALUES (2)`)
 	return err
@@ -253,119 +266,282 @@ func (a *App) addColumnIfNotExists(db *sql.DB, table, column, columnDef string) 
 }
 
 func (a *App) FillDatabase() {
-	xmlFiles, err := a.getXmlFiles()
-	if err != nil {
-		a.status.SongsReady = false
-		return
-	}
-
-	totalFiles := len(xmlFiles)
 	a.updateProgress("Plním databázi...", 0)
 
 	_ = a.withDB(func(db *sql.DB) error {
-		// Check if we're on v2 (has songbook_acronym column)
-		hasMultiSongbook, err := a.columnExists(db, "songs", "songbook_acronym")
-		if err != nil {
-			slog.Error("Failed to check schema version", "error", err)
+		// Process EZ songbook
+		if err := a.fillEZSongs(db); err != nil {
+			slog.Error("Failed to fill EZ songs", "error", err)
 			return err
 		}
 
-		var songbookAcronym string
-		if hasMultiSongbook {
-			// V2+ schema - use songbook support
-			acronym, err := a.getOrCreateSongbook(db, "EZ", "Evangelický zpěvník 2021")
-			if err != nil {
-				slog.Error("Failed to get or create songbook", "error", err)
-				return err
-			}
-			songbookAcronym = acronym
+		// Process KK songbook
+		if err := a.fillKKSongs(db); err != nil {
+			slog.Error("Failed to fill KK songs", "error", err)
+			return err
 		}
 
-		for i, xmlFile := range xmlFiles {
-			a.updateDatabaseProgress(i, totalFiles)
-			if err := a.processSongFile(db, xmlFile, songbookAcronym); err != nil {
-				slog.Error("Failed to process song file", "file", xmlFile.Name(), "error", err)
-			}
-		}
 		return nil
 	})
 }
 
-// getXmlFiles reads and validates XML files from the songbook directory
-func (a *App) getXmlFiles() ([]os.DirEntry, error) {
-	xmlFiles, err := os.ReadDir(a.songBookDir)
+// fillEZSongs processes Evangelický zpěvník songs
+func (a *App) fillEZSongs(db *sql.DB) error {
+	ezDir := filepath.Join(a.songBookDir, "EZ")
+	xmlFiles, err := a.getXmlFilesFromDir(ezDir)
 	if err != nil {
-		slog.Error("Error reading XML files directory", "error", err)
+		return err
+	}
+
+	songbookAcronym, err := a.getOrCreateSongbook(db, Acronym_EZ, "Evangelický zpěvník 2021")
+	if err != nil {
+		return fmt.Errorf("failed to get or create EZ songbook: %w", err)
+	}
+
+	totalFiles := len(xmlFiles)
+	for i, xmlFile := range xmlFiles {
+		if i%10 == 0 || i == totalFiles-1 {
+			percent := int((float64(i+1) / float64(totalFiles)) * 50) // 0-50%
+			message := fmt.Sprintf("Plním EZ databázi... (%d/%d)", i+1, totalFiles)
+			a.updateProgress(message, percent)
+		}
+
+		if err := a.processEZSongFile(db, xmlFile, songbookAcronym); err != nil {
+			slog.Error("Failed to process EZ song file", "file", xmlFile.Name(), "error", err)
+		}
+	}
+	return nil
+}
+
+// fillKKSongs processes Katolický kancionál songs
+func (a *App) fillKKSongs(db *sql.DB) error {
+	kkDir := filepath.Join(a.songBookDir, "KK", "Kancional")
+	if _, err := os.Stat(kkDir); os.IsNotExist(err) {
+		slog.Info("KK directory not found, skipping KK import", "dir", kkDir)
+		return nil // Not an error - KK is optional
+	}
+
+	xmlFiles, err := a.getXmlFilesFromDir(kkDir)
+	if err != nil {
+		return err
+	}
+
+	songbookAcronym, err := a.getOrCreateSongbook(db, Acronym_KK, "Katolický kancionál")
+	if err != nil {
+		return fmt.Errorf("failed to get or create KK songbook: %w", err)
+	}
+
+	totalFiles := len(xmlFiles)
+	for i, xmlFile := range xmlFiles {
+		if i%10 == 0 || i == totalFiles-1 {
+			percent := 50 + int((float64(i+1)/float64(totalFiles))*50) // 50-100%
+			message := fmt.Sprintf("Plním KK databázi... (%d/%d)", i+1, totalFiles)
+			a.updateProgress(message, percent)
+		}
+
+		if err := a.processKKSongFile(db, xmlFile, songbookAcronym); err != nil {
+			slog.Error("Failed to process KK song file", "file", xmlFile.Name(), "error", err)
+		}
+	}
+	return nil
+}
+
+// getXmlFilesFromDir reads and validates XML files from a directory
+func (a *App) getXmlFilesFromDir(dir string) ([]os.DirEntry, error) {
+	xmlFiles, err := os.ReadDir(dir)
+	if err != nil {
+		slog.Error("Error reading XML files directory", "error", err, "dir", dir)
 		return nil, err
 	}
 	if len(xmlFiles) == 0 {
-		slog.Error("No XML files in directory", "directory", a.songBookDir)
+		slog.Warn("No XML files in directory", "directory", dir)
 		return nil, fmt.Errorf("no XML files found")
 	}
 
-	if a.testRun && len(xmlFiles) > 25 {
-		xmlFiles = xmlFiles[:25]
+	// Filter out directories
+	var files []os.DirEntry
+	for _, f := range xmlFiles {
+		if !f.IsDir() {
+			files = append(files, f)
+		}
 	}
 
-	return xmlFiles, nil
-}
-
-// updateDatabaseProgress updates progress every 10 files or at the end
-func (a *App) updateDatabaseProgress(current, total int) {
-	if current%10 == 0 || current == total-1 {
-		percent := int((float64(current+1) / float64(total)) * 100)
-		message := fmt.Sprintf("Plním databázi... (%d/%d)", current+1, total)
-		a.updateProgress(message, percent)
+	if a.testRun && len(files) > 25 {
+		files = files[:25]
 	}
+
+	return files, nil
 }
 
-// processSongFile parses an XML file and inserts song data into the database
-func (a *App) processSongFile(db *sql.DB, xmlFile os.DirEntry, songbookAcronym string) error {
-	xmlFilePath := filepath.Join(a.songBookDir, xmlFile.Name())
+// getXmlFiles is kept for backward compatibility - delegates to root songbook dir
+func (a *App) getXmlFiles() ([]os.DirEntry, error) {
+	return a.getXmlFilesFromDir(a.songBookDir)
+}
+
+// processEZSongFile parses an EZ XML file and inserts song data
+func (a *App) processEZSongFile(db *sql.DB, xmlFile os.DirEntry, songbookAcronym string) error {
+	xmlFilePath := filepath.Join(a.songBookDir, "EZ", xmlFile.Name())
 
 	song, err := parseXmlSong(xmlFilePath)
 	if err != nil {
-		return fmt.Errorf("failed to parse XML: %w", err)
+		return fmt.Errorf("failed to parse EZ XML: %w", err)
 	}
 
 	songID, err := a.insertSong(db, song, songbookAcronym)
 	if err != nil {
-		return fmt.Errorf("failed to insert song: %w", err)
+		return fmt.Errorf("failed to insert EZ song: %w", err)
 	}
 
 	if err := a.insertAuthors(db, songID, song.Authors, xmlFile.Name()); err != nil {
-		return fmt.Errorf("failed to insert authors: %w", err)
+		return fmt.Errorf("failed to insert EZ authors: %w", err)
 	}
 
 	if err := a.insertVerses(db, songID, song.Lyrics.Verses, xmlFile.Name()); err != nil {
-		return fmt.Errorf("failed to insert verses: %w", err)
+		return fmt.Errorf("failed to insert EZ verses: %w", err)
 	}
 
-	slog.Debug("Data inserted", "entry", song.Songbook.Entry, "title", song.Title, "file", xmlFile.Name())
+	slog.Debug("EZ data inserted", "entry", song.Songbook.Entry, "title", song.Title, "file", xmlFile.Name())
+	return nil
+}
+
+// processKKSongFile parses a KK XML file and inserts song data
+func (a *App) processKKSongFile(db *sql.DB, xmlFile os.DirEntry, songbookAcronym string) error {
+	xmlFilePath := filepath.Join(a.songBookDir, "KK", "Kancional", xmlFile.Name())
+
+	song, err := parseXmlSongKK(xmlFilePath)
+	if err != nil {
+		return fmt.Errorf("failed to parse KK XML: %w", err)
+	}
+
+	songID, err := a.insertSongKK(db, song, songbookAcronym)
+	if err != nil {
+		return fmt.Errorf("failed to insert KK song: %w", err)
+	}
+
+	if err := a.insertVersesKK(db, songID, song.Lyrics, xmlFile.Name()); err != nil {
+		return fmt.Errorf("failed to insert KK verses: %w", err)
+	}
+
+	slog.Debug("KK data inserted", "entry", song.HymnNumber, "title", song.Title, "file", xmlFile.Name())
+	return nil
+}
+
+// parseHymnNumber extracts the numeric part from hymn numbers that may contain letters or special characters
+// Examples: "511A" -> 511, "067a" -> 67, "2.4" -> 2, "067b" -> 67
+func parseHymnNumber(hymnStr string) int {
+	hymnStr = strings.TrimSpace(hymnStr)
+
+	// Extract leading digits only
+	var numStr strings.Builder
+	for _, ch := range hymnStr {
+		if ch >= '0' && ch <= '9' {
+			numStr.WriteRune(ch)
+		} else {
+			// Stop at first non-digit
+			break
+		}
+	}
+
+	if numStr.Len() == 0 {
+		return 0
+	}
+
+	num, err := strconv.Atoi(numStr.String())
+	if err != nil {
+		return 0
+	}
+	return num
+}
+
+// insertSongKK inserts a KK song record and returns the song ID
+func (a *App) insertSongKK(db *sql.DB, song *SongKK, songbookAcronym string) (int64, error) {
+	// Remove song number prefix from title (e.g., "065 Litanie..." -> "Litanie...")
+	title := song.Title
+	if idx := strings.Index(title, " "); idx > 0 {
+		// Check if prefix starts with numeric (handles "511A Title", "067b Title", etc.)
+		prefix := title[:idx]
+		if len(prefix) > 0 && prefix[0] >= '0' && prefix[0] <= '9' {
+			// Strip the number prefix (includes letters like "511A")
+			title = strings.TrimSpace(title[idx+1:])
+		}
+	}
+
+	title_d := removeDiacritics(title)
+
+	// Convert hymn number to integer, handling letters and special characters
+	entryNum := parseHymnNumber(song.HymnNumber)
+
+	// V3+ - insert with original entry_text (supports "511A", "067b", etc.)
+	result, err := db.Exec(`INSERT INTO songs (songbook_acronym, title, title_d, verse_order, entry, entry_text) VALUES (?, ?, ?, ?, ?, ?)`,
+		songbookAcronym, title, title_d, "", entryNum, song.HymnNumber)
+
+	if err != nil {
+		return 0, err
+	}
+	return result.LastInsertId()
+}
+
+// insertVersesKK parses and inserts KK verses from plain text with [V1], [V2] markers
+func (a *App) insertVersesKK(db *sql.DB, songID int64, lyrics string, filename string) error {
+	// Split lyrics by verse markers like [V1], [V2], etc.
+	lines := strings.Split(lyrics, "\n")
+	var currentVerseName string
+	var currentVerseLines []string
+
+	for _, line := range lines {
+		line = strings.TrimSpace(line)
+		if line == "" {
+			continue
+		}
+
+		// Check if line is a verse marker
+		if strings.HasPrefix(line, "[V") && strings.Contains(line, "]") {
+			// Save previous verse if exists
+			if currentVerseName != "" && len(currentVerseLines) > 0 {
+				verseText := strings.Join(currentVerseLines, "\n")
+				lines_d := removeDiacritics(verseText)
+				_, err := db.Exec(`INSERT INTO verses (song_id, name, lines, lines_d) VALUES (?, ?, ?, ?)`,
+					songID, currentVerseName, verseText, lines_d)
+				if err != nil {
+					slog.Error("Error inserting KK verse", "file", filename, "verse", currentVerseName, "error", err)
+				}
+			}
+
+			// Start new verse
+			endIdx := strings.Index(line, "]")
+			currentVerseName = strings.ToLower(line[1:endIdx])
+			currentVerseLines = []string{}
+		} else if currentVerseName != "" {
+			// Add line to current verse
+			currentVerseLines = append(currentVerseLines, line)
+		}
+	}
+
+	// Insert last verse
+	if currentVerseName != "" && len(currentVerseLines) > 0 {
+		verseText := strings.Join(currentVerseLines, "\n")
+		lines_d := removeDiacritics(verseText)
+		_, err := db.Exec(`INSERT INTO verses (song_id, name, lines, lines_d) VALUES (?, ?, ?, ?)`,
+			songID, currentVerseName, verseText, lines_d)
+		if err != nil {
+			slog.Error("Error inserting KK verse (last)", "file", filename, "verse", currentVerseName, "error", err)
+		}
+	}
+
 	return nil
 }
 
 // insertSong inserts a song record and returns the song ID
-// In V1, songbook_acronym is empty; in V2+, it contains the songbook acronym
 func (a *App) insertSong(db *sql.DB, song *Song, songbookAcronym string) (int64, error) {
 	title_d := removeDiacritics(song.Title)
 
 	// Check if songbook_acronym column exists (V2+ schema)
-	hasMultiSongbook, err := a.columnExists(db, "songs", "songbook_acronym")
-	if err != nil {
-		return 0, err
-	}
 
-	var result sql.Result
-	if hasMultiSongbook {
-		// V2+ - insert with songbook_acronym
-		result, err = db.Exec(`INSERT INTO songs (songbook_acronym, title, title_d, verse_order, entry) VALUES (?, ?, ?, ?, ?)`,
-			songbookAcronym, song.Title, title_d, song.VerseOrder, song.Songbook.Entry)
-	} else {
-		// V1 - insert without songbook_acronym
-		result, err = db.Exec(`INSERT INTO songs (title, title_d, verse_order, entry) VALUES (?, ?, ?, ?)`,
-			song.Title, title_d, song.VerseOrder, song.Songbook.Entry)
-	}
+	// Convert entry string to integer for storage in entry column
+	entryNum, _ := strconv.Atoi(song.Songbook.Entry)
+
+	result, err := db.Exec(`INSERT INTO songs (songbook_acronym, title, title_d, verse_order, entry, entry_text) VALUES (?, ?, ?, ?, ?, ?)`,
+		songbookAcronym, song.Title, title_d, song.VerseOrder, entryNum, song.Songbook.Entry)
 
 	if err != nil {
 		return 0, err

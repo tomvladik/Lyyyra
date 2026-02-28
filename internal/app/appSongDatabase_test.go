@@ -4,6 +4,7 @@ import (
 	"database/sql"
 	"encoding/json"
 	"os"
+	"path/filepath"
 	"testing"
 
 	_ "github.com/mattn/go-sqlite3"
@@ -45,8 +46,15 @@ func TestFillDatabase(t *testing.T) {
 	}
 	defer os.RemoveAll(xmlDir)
 
-	// Copy the sample XML file to the temporary directory
-	err = copyDir("testdata/", xmlDir)
+	// Create EZ subdirectory
+	ezDir := filepath.Join(xmlDir, "EZ")
+	err = os.MkdirAll(ezDir, os.ModePerm)
+	if err != nil {
+		t.Fatalf("Failed to create EZ subdirectory: %v", err)
+	}
+
+	// Copy the sample XML file to the EZ subdirectory
+	err = copyDir("testdata/", ezDir)
 	if err != nil {
 		t.Fatalf("Failed to copy temp XML directory: %v", err)
 	}

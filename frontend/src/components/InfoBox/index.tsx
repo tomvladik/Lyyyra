@@ -119,16 +119,29 @@ export function InfoBox(props: Props) {
         <div style={{ display: 'flex', gap: '20px', flexWrap: 'wrap' }}>
           <div style={{ flex: '1', minWidth: '250px' }}>
             <label htmlFor="search-box" style={{ display: 'block', marginBottom: '6px', fontSize: '15px', fontWeight: '500', textAlign: 'left' }}>{t('infoBox.searchLabel')}</label>
-            <input
-              id="search-box"
-              className={styles.sorting}
-              type="text"
-              value={searchValue}
-              onChange={(e: React.ChangeEvent<HTMLInputElement>) => {
-                setSearchValue(e.target.value);
-              }}
-              placeholder={t('infoBox.searchPlaceholder')}
-            />
+            <div className={styles.searchWrapper}>
+              <input
+                id="search-box"
+                className={styles.searchInput}
+                type="text"
+                value={searchValue}
+                onChange={(e: React.ChangeEvent<HTMLInputElement>) => {
+                  setSearchValue(e.target.value);
+                }}
+                placeholder={t('infoBox.searchPlaceholder')}
+              />
+              {searchValue && (
+                <button
+                  className={styles.clearButton}
+                  onClick={() => setSearchValue('')}
+                  aria-label={t('infoBox.clearSearch')}
+                  title={t('infoBox.clearSearch')}
+                  type="button"
+                >
+                  ×
+                </button>
+              )}
+            </div>
           </div>
           <div style={{ flex: '1', minWidth: '200px' }}>
             <label htmlFor="sort-select" style={{ display: 'block', marginBottom: '6px', fontSize: '15px', fontWeight: '500', textAlign: 'left' }}>{t('infoBox.sortLabel')}</label>
