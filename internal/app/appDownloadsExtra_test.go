@@ -101,7 +101,15 @@ func TestDownloadFile_FileScheme(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	fileURL := fmt.Sprintf("file://%s", srcPath)
+	absSrcPath, err := filepath.Abs(srcPath)
+	if err != nil {
+		t.Fatal(err)
+	}
+	filePathForURL := filepath.ToSlash(absSrcPath)
+	if len(filePathForURL) == 0 || filePathForURL[0] != '/' {
+		filePathForURL = "/" + filePathForURL
+	}
+	fileURL := (&url.URL{Scheme: "file", Path: filePathForURL}).String()
 	dest, err := app.downloadFile(fileURL, "dest.txt")
 	if err != nil {
 		t.Fatalf("downloadFile file:// failed: %v", err)
@@ -137,6 +145,40 @@ func TestDownloadFile_InvalidURL(t *testing.T) {
 	_, err := app.downloadFile("://bad-url", "file.txt")
 	if err == nil {
 		t.Error("expected error for invalid URL")
+	}
+}
+
+func TestToLocalFilePath_WindowsDriveLikeURL(t *testing.T) {
+	parsed, err := url.Parse("file:///C:/Users/test/source.txt")
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	got, err := toLocalFilePath(parsed)
+	if err != nil {
+		t.Fatalf("toLocalFilePath: %v", err)
+	}
+
+	want := filepath.FromSlash("C:/Users/test/source.txt")
+	if got != want {
+		t.Errorf("path mismatch: got %q, want %q", got, want)
+	}
+}
+
+func TestToLocalFilePath_UnixLikeURL(t *testing.T) {
+	parsed, err := url.Parse("file:///tmp/source.txt")
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	got, err := toLocalFilePath(parsed)
+	if err != nil {
+		t.Fatalf("toLocalFilePath: %v", err)
+	}
+
+	want := filepath.FromSlash("/tmp/source.txt")
+	if got != want {
+		t.Errorf("path mismatch: got %q, want %q", got, want)
 	}
 }
 

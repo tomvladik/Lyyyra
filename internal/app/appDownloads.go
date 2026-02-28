@@ -13,6 +13,31 @@ import (
 	"time"
 )
 
+func toLocalFilePath(parsedURL *url.URL) (string, error) {
+	if parsedURL == nil {
+		return "", fmt.Errorf("nil URL")
+	}
+
+	pathValue := parsedURL.Path
+	if parsedURL.Host != "" && parsedURL.Host != "localhost" {
+		pathValue = "//" + parsedURL.Host + parsedURL.Path
+	}
+
+	unescapedPath, err := url.PathUnescape(pathValue)
+	if err != nil {
+		return "", err
+	}
+
+	if len(unescapedPath) >= 4 && unescapedPath[0] == '/' && unescapedPath[2] == ':' {
+		driveLetter := unescapedPath[1]
+		if (driveLetter >= 'a' && driveLetter <= 'z') || (driveLetter >= 'A' && driveLetter <= 'Z') {
+			unescapedPath = unescapedPath[1:]
+		}
+	}
+
+	return filepath.FromSlash(unescapedPath), nil
+}
+
 func (a *App) downloadFile(fileUrl, fileName string) (string, error) {
 	// Create or truncate the file in the app directory
 	fullPath := filepath.Join(a.appDir, fileName)
@@ -31,7 +56,11 @@ func (a *App) downloadFile(fileUrl, fileName string) (string, error) {
 	}
 
 	if parsedURL.Scheme == "file" {
-		sourceFile, err := os.Open(fmt.Sprintf("%s%s", parsedURL.Host, parsedURL.Path))
+		sourcePath, err := toLocalFilePath(parsedURL)
+		if err != nil {
+			return "", err
+		}
+		sourceFile, err := os.Open(sourcePath)
 		if err != nil {
 			return "", err
 		}
