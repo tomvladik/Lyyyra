@@ -2,6 +2,9 @@ FROM mcr.microsoft.com/devcontainers/go:1-1.24-bookworm
 ENV PATH=$PATH:/opt/node/bin
 ENV DEBIAN_FRONTEND=noninteractive
 
+# Remove stale Yarn apt repo (shipped by base image) whose GPG key has expired
+RUN rm -f /etc/apt/sources.list.d/yarn.list /usr/share/keyrings/yarnkey.gpg 2>/dev/null || true
+
 RUN apt-get update && apt-get upgrade -y
 
 RUN set -eux; \
