@@ -11,7 +11,7 @@ import (
 )
 
 func Test_parseXmlSongKK(t *testing.T) {
-	song, err := parseXmlSongKK("../../build/tmp/kk_sample_0.xml")
+	song, err := parseXmlSongKK("testdata/kk_sample_0.xml")
 	if err != nil {
 		t.Fatalf("Failed to parse KK XML: %v", err)
 	}
