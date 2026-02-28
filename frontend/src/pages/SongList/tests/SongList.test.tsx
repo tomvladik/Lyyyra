@@ -4,6 +4,7 @@ import { beforeEach, describe, expect, it, vi } from 'vitest';
 import * as AppModule from '../../../../wailsjs/go/app/App';
 import { AppStatus } from '../../../AppStatus';
 import { DataContext } from '../../../context';
+import { SONG_POLL_INTERVAL } from '../../../constants';
 import { dtoSong } from '../../../models';
 import { createMockStatus } from '../../../test/testHelpers';
 import { SongList } from '../index';
@@ -12,19 +13,11 @@ vi.mock('../../../../wailsjs/go/app/App', () => ({
     GetSongs: vi.fn(),
 }));
 
-// Mock the polling hooks
+const usePollingMock = vi.hoisted(() => vi.fn());
+
 vi.mock('../../../hooks/usePolling', () => ({
-    usePolling: vi.fn((callback: () => void, _interval: number, condition: boolean) => {
-        // Only execute callback if condition is true
-        if (condition) {
-            // Execute immediately for testing
-            callback();
-        }
-    }),
-    useDelayedEffect: vi.fn((callback: () => void) => {
-        // Execute immediately for testing
-        callback();
-    }),
+    usePolling: usePollingMock,
+    useDelayedEffect: vi.fn(),
 }));
 
 describe('<SongList />', () => {
@@ -231,19 +224,21 @@ describe('<SongList />', () => {
         });
     });
 
-    it('polls for songs when database is being filled', () => {
+    it('polls for songs when database is being filled', async () => {
         renderWithContext({
             IsProgress: true,
             DatabaseReady: false,
             SongsReady: true,
         });
 
-        // The usePolling mock will execute callback immediately
-        // Should have called GetSongs at least once
-        expect(AppModule.GetSongs).toHaveBeenCalled();
+        await waitFor(() => {
+            expect(AppModule.GetSongs).toHaveBeenCalled();
+        });
+
+        expect(usePollingMock).toHaveBeenCalledWith(expect.any(Function), SONG_POLL_INTERVAL, true);
     });
 
-    it('does not poll when not in progress', () => {
+    it('does not poll when not in progress', async () => {
         vi.clearAllMocks();
 
         renderWithContext({
@@ -252,11 +247,14 @@ describe('<SongList />', () => {
             SongsReady: true,
         });
 
-        // Only initial fetch should occur, no polling
-        expect(AppModule.GetSongs).toHaveBeenCalledTimes(2); // Initial + delayed effect
+        await waitFor(() => {
+            expect(AppModule.GetSongs).toHaveBeenCalled();
+        });
+
+        expect(usePollingMock).toHaveBeenCalledWith(expect.any(Function), SONG_POLL_INTERVAL, false);
     });
 
-    it('does not poll when database is ready', () => {
+    it('does not poll when database is ready', async () => {
         vi.clearAllMocks();
 
         renderWithContext({
@@ -265,11 +263,14 @@ describe('<SongList />', () => {
             SongsReady: true,
         });
 
-        // Should not poll because DatabaseReady is true
-        expect(AppModule.GetSongs).toHaveBeenCalledTimes(2); // Initial + delayed effect only
+        await waitFor(() => {
+            expect(AppModule.GetSongs).toHaveBeenCalled();
+        });
+
+        expect(usePollingMock).toHaveBeenCalledWith(expect.any(Function), SONG_POLL_INTERVAL, false);
     });
 
-    it('does not poll when songs are not ready', () => {
+    it('does not poll when songs are not ready', async () => {
         vi.clearAllMocks();
 
         renderWithContext({
@@ -278,7 +279,10 @@ describe('<SongList />', () => {
             SongsReady: false,
         });
 
-        // Should not poll because SongsReady is false
-        expect(AppModule.GetSongs).toHaveBeenCalledTimes(2); // Initial + delayed effect only
+        await waitFor(() => {
+            expect(AppModule.GetSongs).toHaveBeenCalled();
+        });
+
+        expect(usePollingMock).toHaveBeenCalledWith(expect.any(Function), SONG_POLL_INTERVAL, false);
     });
 });

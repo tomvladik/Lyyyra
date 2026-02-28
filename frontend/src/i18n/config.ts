@@ -3,8 +3,14 @@ import { initReactI18next } from 'react-i18next';
 import cs from './locales/cs.json';
 import en from './locales/en.json';
 
-// eslint-disable-next-line no-undef
-const savedLanguage = typeof localStorage !== 'undefined' ? localStorage.getItem('language') || 'cs' : 'cs';
+const getSavedLanguage = (): string => {
+    if (typeof window === 'undefined' || !window.localStorage) {
+        return 'cs';
+    }
+    return window.localStorage.getItem('language') || 'cs';
+};
+
+const savedLanguage = getSavedLanguage();
 
 i18n
     .use(initReactI18next)

@@ -25,6 +25,7 @@ export const SelectedSongsPanel = () => {
     const [currentVerseIdx, setCurrentVerseIdx] = useState(0);
     const [showScreenSelector, setShowScreenSelector] = useState(false);
     const [shouldCropPdf, setShouldCropPdf] = useState(false);
+    const projectionMessageHandlerRef = useRef<((event: globalThis.MessageEvent) => void) | null>(null);
 
     // Use custom hook for screen detection
     const availableScreens = useScreenDetection();
@@ -68,19 +69,23 @@ export const SelectedSongsPanel = () => {
 
     const sendProjectionCommand = (command: "nextVerse" | "prevVerse" | "nextSong" | "prevSong") => {
         if (projectionWindowRef.current && !projectionWindowRef.current.closed) {
-            projectionWindowRef.current.postMessage({ type: "projection-control", command }, "*");
+            projectionWindowRef.current.postMessage({ type: "projection-control", command }, window.location.origin);
         }
     };
 
     const jumpToVerse = (songIdx: number, verseIdx: number) => {
         if (projectionWindowRef.current && !projectionWindowRef.current.closed) {
-            projectionWindowRef.current.postMessage({ type: "projection-jump", songIdx, verseIdx }, "*");
+            projectionWindowRef.current.postMessage({ type: "projection-jump", songIdx, verseIdx }, window.location.origin);
             setCurrentSongIdx(songIdx);
             setCurrentVerseIdx(verseIdx);
         }
     };
 
     const closeProjection = () => {
+        if (projectionMessageHandlerRef.current) {
+            window.removeEventListener("message", projectionMessageHandlerRef.current);
+            projectionMessageHandlerRef.current = null;
+        }
         if (projectionWindowRef.current && !projectionWindowRef.current.closed) {
             projectionWindowRef.current.close();
         }
@@ -185,12 +190,17 @@ export const SelectedSongsPanel = () => {
 
             setProjectionSongsData(songsData);
 
-            window.addEventListener("message", (event) => {
+            if (projectionMessageHandlerRef.current) {
+                window.removeEventListener("message", projectionMessageHandlerRef.current);
+            }
+
+            projectionMessageHandlerRef.current = (event: globalThis.MessageEvent) => {
                 if (event.data && event.data.type === "projection-state") {
                     setCurrentSongIdx(event.data.songIdx || 0);
                     setCurrentVerseIdx(event.data.verseIdx || 0);
                 }
-            });
+            };
+            window.addEventListener("message", projectionMessageHandlerRef.current);
 
             const safeSongsJson = encodeURIComponent(JSON.stringify(songsData)
                 .replace(/\n/g, "\\n")
@@ -209,6 +219,10 @@ export const SelectedSongsPanel = () => {
                 w.location.href = url;
                 w.addEventListener("beforeunload", () => {
                     URL.revokeObjectURL(url);
+                    if (projectionMessageHandlerRef.current) {
+                        window.removeEventListener("message", projectionMessageHandlerRef.current);
+                        projectionMessageHandlerRef.current = null;
+                    }
                     setIsProjectionOpen(false);
                     projectionWindowRef.current = null;
                 });
@@ -218,6 +232,10 @@ export const SelectedSongsPanel = () => {
                     w.document.write(html);
                     w.document.close();
                     w.addEventListener("beforeunload", () => {
+                        if (projectionMessageHandlerRef.current) {
+                            window.removeEventListener("message", projectionMessageHandlerRef.current);
+                            projectionMessageHandlerRef.current = null;
+                        }
                         setIsProjectionOpen(false);
                         projectionWindowRef.current = null;
                     });
@@ -232,6 +250,15 @@ export const SelectedSongsPanel = () => {
             projectionWindowRef.current = null;
         }
     };
+
+    useEffect(() => {
+        return () => {
+            if (projectionMessageHandlerRef.current) {
+                window.removeEventListener("message", projectionMessageHandlerRef.current);
+                projectionMessageHandlerRef.current = null;
+            }
+        };
+    }, []);
 
     const handleCloseModal = () => {
         setIsModalOpen(false);

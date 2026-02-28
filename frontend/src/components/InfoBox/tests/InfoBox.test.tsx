@@ -1,6 +1,7 @@
-import { render, screen } from '@testing-library/react';
+import { fireEvent, render, screen, waitFor } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
+import { DEBOUNCE_DELAY } from '../../../constants';
 import { DataContext } from '../../../context';
 import { createMockStatus } from '../../../test/testHelpers';
 import { InfoBox } from '../index';
@@ -50,9 +51,10 @@ describe('<InfoBox />', () => {
   });
 
   it('calls loadSongs when action button is clicked', async () => {
+    const user = userEvent.setup();
     renderInfoBox();
     const button = screen.getByRole('button', { name: /Stáhnout data/ });
-    await userEvent.click(button);
+    await user.click(button);
     expect(mockLoadSongs).toHaveBeenCalledTimes(1);
   });
 
@@ -80,8 +82,12 @@ describe('<InfoBox />', () => {
   it('updates search value on input change', async () => {
     renderInfoBox({ DatabaseReady: true, SongsReady: true });
     const input = screen.getByRole('textbox');
-    await userEvent.type(input, 'Ježíš');
+    fireEvent.change(input, { target: { value: 'Ježíš' } });
     expect(input).toHaveValue('Ježíš');
+
+    await waitFor(() => {
+      expect(mockUpdateStatus).toHaveBeenCalledWith(expect.objectContaining({ SearchPattern: 'Ježíš' }));
+    }, { timeout: DEBOUNCE_DELAY + 300 });
   });
 
   it('shows clear button when search has value', async () => {
@@ -93,9 +99,13 @@ describe('<InfoBox />', () => {
   it('clears search when clear button is clicked', async () => {
     renderInfoBox({ DatabaseReady: true, SongsReady: true, SearchPattern: 'test' });
     const clearBtn = await screen.findByRole('button', { name: /Vymazat/i });
-    await userEvent.click(clearBtn);
+    fireEvent.click(clearBtn);
     const input = screen.getByRole('textbox');
     expect(input).toHaveValue('');
+
+    await waitFor(() => {
+      expect(mockUpdateStatus).toHaveBeenCalledWith(expect.objectContaining({ SearchPattern: '' }));
+    }, { timeout: DEBOUNCE_DELAY + 300 });
   });
 
   it('renders the sort dropdown with options', () => {
@@ -107,6 +117,7 @@ describe('<InfoBox />', () => {
   });
 
   it('calls updateStatus with new sorting when dropdown changes', async () => {
+    const user = userEvent.setup();
     const status = createMockStatus({ DatabaseReady: true, SongsReady: true, Sorting: 'entry' });
     render(
       <DataContext.Provider value={{ status, updateStatus: mockUpdateStatus }}>
@@ -114,7 +125,7 @@ describe('<InfoBox />', () => {
       </DataContext.Provider>
     );
     const select = screen.getByRole('combobox');
-    await userEvent.selectOptions(select, 'title');
+    await user.selectOptions(select, 'title');
     expect(mockUpdateStatus).toHaveBeenCalledWith(expect.objectContaining({ Sorting: 'title' }));
   });
 

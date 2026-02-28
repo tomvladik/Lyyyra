@@ -4,12 +4,16 @@ import styles from './LanguageSwitcher.module.less';
 export const LanguageSwitcher = () => {
     const { i18n } = useTranslation();
 
+    const persistLanguage = (lng: string) => {
+        if (typeof window === 'undefined' || !window.localStorage) {
+            return;
+        }
+        window.localStorage.setItem('language', lng);
+    };
+
     const changeLanguage = (lng: string) => {
         i18n.changeLanguage(lng);
-        if (typeof localStorage !== 'undefined') {
-            // eslint-disable-next-line no-undef
-            localStorage.setItem('language', lng);
-        }
+        persistLanguage(lng);
     };
 
     return (

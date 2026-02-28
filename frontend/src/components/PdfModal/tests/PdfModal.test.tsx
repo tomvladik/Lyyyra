@@ -46,6 +46,7 @@ describe('<PdfModal />', () => {
         render(
             <PdfModal
                 isOpen={true}
+                dataUrl="data:application/pdf;base64,mock"
                 filename="test.pdf"
                 onClose={mockOnClose}
             />
@@ -58,6 +59,7 @@ describe('<PdfModal />', () => {
         render(
             <PdfModal
                 isOpen={true}
+                dataUrl="data:application/pdf;base64,mock"
                 filename="song.pdf"
                 songNumber={123}
                 songName="Amazing Song"
@@ -72,6 +74,7 @@ describe('<PdfModal />', () => {
         render(
             <PdfModal
                 isOpen={true}
+                dataUrl="data:application/pdf;base64,mock"
                 filename="song.pdf"
                 songName="Amazing Song"
                 onClose={mockOnClose}
@@ -85,6 +88,7 @@ describe('<PdfModal />', () => {
         render(
             <PdfModal
                 isOpen={true}
+                dataUrl="data:application/pdf;base64,mock"
                 filename="document.pdf"
                 onClose={mockOnClose}
             />
@@ -97,6 +101,7 @@ describe('<PdfModal />', () => {
         render(
             <PdfModal
                 isOpen={true}
+                dataUrl="data:application/pdf;base64,mock"
                 filename="test.pdf"
                 onClose={mockOnClose}
             />
@@ -112,6 +117,7 @@ describe('<PdfModal />', () => {
         const { container } = render(
             <PdfModal
                 isOpen={true}
+                dataUrl="data:application/pdf;base64,mock"
                 filename="test.pdf"
                 onClose={mockOnClose}
             />
@@ -129,6 +135,7 @@ describe('<PdfModal />', () => {
         render(
             <PdfModal
                 isOpen={true}
+                dataUrl="data:application/pdf;base64,mock"
                 filename="test.pdf"
                 onClose={mockOnClose}
             />
@@ -145,6 +152,7 @@ describe('<PdfModal />', () => {
         render(
             <PdfModal
                 isOpen={true}
+                dataUrl="data:application/pdf;base64,mock"
                 filename="test.pdf"
                 onClose={mockOnClose}
             />
@@ -161,6 +169,7 @@ describe('<PdfModal />', () => {
         render(
             <PdfModal
                 isOpen={true}
+                dataUrl="data:application/pdf;base64,mock"
                 filename="test.pdf"
                 onClose={mockOnClose}
             />

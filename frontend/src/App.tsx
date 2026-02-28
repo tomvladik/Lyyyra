@@ -1,4 +1,4 @@
-import { MouseEvent, useCallback, useEffect, useState } from 'react';
+import { MouseEvent, useCallback, useEffect, useMemo, useState } from 'react';
 import * as go from '../wailsjs/go/app/App';
 import './App.less';
 import { AppStatus, isEqualAppStatus, SortingOption } from "./AppStatus";
@@ -44,16 +44,6 @@ function App() {
             });
     }
 
-    // const fetchData = async () => {
-    //     try {
-    //         // Assume fetchData returns a Promise
-    //         const songs = await go.GetSongs(status.Sorting, status.SearchPattern);
-    //         setSongs(songs);
-    //     } catch (error) {
-    //         console.log(error)
-    //     }
-    // };
-
     const fetchStatus = useCallback(async () => {
         try {
             // Assume fetchData returns a Promise
@@ -66,19 +56,14 @@ function App() {
             };
             setStatus(prev => (isEqualAppStatus(newStatus, prev) ? prev : newStatus));
         } catch (error) {
-            console.log(error)
+            console.error("Error fetching status:", error);
         }
     }, []);
-
-    // useEffect(() => {
-    //     fetchData()
-    // }, [status.Sorting]);
 
     // useEffect with an empty dependency array runs once when the component mounts
     useEffect(() => {
         fetchStatus();
         const timer = setTimeout(() => {
-            console.log('Initial load after delay');
             fetchStatus();
         }, INITIAL_LOAD_DELAY);
         return () => clearTimeout(timer);
@@ -125,9 +110,15 @@ function App() {
 
     const isSongSelected = useCallback((id: number) => selectedSongs.some(song => song.id === id), [selectedSongs]);
 
+    const dataContextValue = useMemo(() => ({ status, updateStatus }), [status]);
+    const selectionContextValue = useMemo(
+        () => ({ selectedSongs, addSongToSelection, removeSongFromSelection, clearSelection, isSongSelected }),
+        [selectedSongs, addSongToSelection, removeSongFromSelection, clearSelection, isSongSelected]
+    );
+
     return (
-        <DataContext.Provider value={{ status: status, updateStatus: updateStatus }}>
-            <SelectionContext.Provider value={{ selectedSongs, addSongToSelection, removeSongFromSelection, clearSelection, isSongSelected }}>
+        <DataContext.Provider value={dataContextValue}>
+            <SelectionContext.Provider value={selectionContextValue}>
                 <div
                     id="App"
                     className="AppShell"
