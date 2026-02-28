@@ -1,4 +1,5 @@
 import { render, screen } from '@testing-library/react';
+import userEvent from '@testing-library/user-event';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { DataContext } from '../../../context';
 import { createMockStatus } from '../../../test/testHelpers';
@@ -46,6 +47,81 @@ describe('<InfoBox />', () => {
     const button = screen.getByRole('button', { name: /Importovat data/ });
     expect(button).toBeInTheDocument();
     expect(button).toHaveTextContent('Importovat data');
+  });
+
+  it('calls loadSongs when action button is clicked', async () => {
+    renderInfoBox();
+    const button = screen.getByRole('button', { name: /Stáhnout data/ });
+    await userEvent.click(button);
+    expect(mockLoadSongs).toHaveBeenCalledTimes(1);
+  });
+
+  it('hides action button while in progress', () => {
+    renderInfoBox({ IsProgress: true, ProgressMessage: 'Zpracovávám...', ProgressPercent: 0 });
+    expect(screen.queryByRole('button', { name: /Stáhnout/ })).not.toBeInTheDocument();
+  });
+
+  it('shows progress message when IsProgress is true', () => {
+    renderInfoBox({ IsProgress: true, ProgressMessage: 'Nahrávám data...', ProgressPercent: 0 });
+    expect(screen.getByText('Nahrávám data...')).toBeInTheDocument();
+  });
+
+  it('shows progress bar when ProgressPercent > 0', () => {
+    renderInfoBox({ IsProgress: true, ProgressMessage: 'Nahrávám...', ProgressPercent: 42 });
+    expect(screen.getByText('42%')).toBeInTheDocument();
+  });
+
+  it('renders the search input', () => {
+    renderInfoBox({ DatabaseReady: true, SongsReady: true });
+    const input = screen.getByRole('textbox');
+    expect(input).toBeInTheDocument();
+  });
+
+  it('updates search value on input change', async () => {
+    renderInfoBox({ DatabaseReady: true, SongsReady: true });
+    const input = screen.getByRole('textbox');
+    await userEvent.type(input, 'Ježíš');
+    expect(input).toHaveValue('Ježíš');
+  });
+
+  it('shows clear button when search has value', async () => {
+    renderInfoBox({ DatabaseReady: true, SongsReady: true, SearchPattern: 'test' });
+    const clearBtn = await screen.findByRole('button', { name: /Vymazat/i });
+    expect(clearBtn).toBeInTheDocument();
+  });
+
+  it('clears search when clear button is clicked', async () => {
+    renderInfoBox({ DatabaseReady: true, SongsReady: true, SearchPattern: 'test' });
+    const clearBtn = await screen.findByRole('button', { name: /Vymazat/i });
+    await userEvent.click(clearBtn);
+    const input = screen.getByRole('textbox');
+    expect(input).toHaveValue('');
+  });
+
+  it('renders the sort dropdown with options', () => {
+    renderInfoBox({ DatabaseReady: true, SongsReady: true });
+    const select = screen.getByRole('combobox');
+    expect(select).toBeInTheDocument();
+    expect(screen.getByText('čísla')).toBeInTheDocument();
+    expect(screen.getByText('názvu')).toBeInTheDocument();
+  });
+
+  it('calls updateStatus with new sorting when dropdown changes', async () => {
+    const status = createMockStatus({ DatabaseReady: true, SongsReady: true, Sorting: 'entry' });
+    render(
+      <DataContext.Provider value={{ status, updateStatus: mockUpdateStatus }}>
+        <InfoBox loadSongs={mockLoadSongs} />
+      </DataContext.Provider>
+    );
+    const select = screen.getByRole('combobox');
+    await userEvent.selectOptions(select, 'title');
+    expect(mockUpdateStatus).toHaveBeenCalledWith(expect.objectContaining({ Sorting: 'title' }));
+  });
+
+  it('shows data ready state correctly', async () => {
+    renderInfoBox({ DatabaseReady: true, SongsReady: true });
+    // Button should not be visible when both are ready
+    expect(screen.queryByRole('button', { name: /Stáhnout/ })).not.toBeInTheDocument();
   });
 });
 
