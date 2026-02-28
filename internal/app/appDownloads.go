@@ -1,6 +1,7 @@
 package app
 
 import (
+	"context"
 	"fmt"
 	"io"
 	"log/slog"
@@ -9,6 +10,7 @@ import (
 	"os"
 	"path"
 	"path/filepath"
+	"time"
 )
 
 func (a *App) downloadFile(fileUrl, fileName string) (string, error) {
@@ -39,8 +41,20 @@ func (a *App) downloadFile(fileUrl, fileName string) (string, error) {
 			return "", err
 		}
 	} else {
-		// Make a GET request to the URL
-		response, err := http.Get(fileUrl)
+		requestCtx := a.ctx
+		if requestCtx == nil {
+			requestCtx = context.Background()
+		}
+
+		downloadCtx, cancel := context.WithTimeout(requestCtx, 2*time.Minute)
+		defer cancel()
+
+		req, err := http.NewRequestWithContext(downloadCtx, http.MethodGet, fileUrl, nil)
+		if err != nil {
+			return "", err
+		}
+
+		response, err := http.DefaultClient.Do(req)
 		if err != nil {
 			return "", err
 		}

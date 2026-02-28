@@ -42,10 +42,16 @@ func (a *App) reconcileStoredStatus() {
 }
 
 func (a *App) hasDownloadedSongs() bool {
-	entries, err := os.ReadDir(a.songBookDir)
+	searchDir := filepath.Join(a.songBookDir, "EZ")
+	entries, err := os.ReadDir(searchDir)
 	if err != nil {
-		slog.Warn("Failed to inspect songBookDir", "error", err)
-		return false
+		// Backward compatibility with legacy layout where XML files were at songBookDir root.
+		searchDir = a.songBookDir
+		entries, err = os.ReadDir(searchDir)
+		if err != nil {
+			slog.Warn("Failed to inspect songBookDir", "error", err)
+			return false
+		}
 	}
 	count := 0
 	for _, entry := range entries {
@@ -60,7 +66,7 @@ func (a *App) hasDownloadedSongs() bool {
 		return count > 0
 	}
 	if count != ExpectedSongCount {
-		slog.Warn("Unexpected number of XML files", "found", count, "expected", ExpectedSongCount)
+		slog.Warn("Unexpected number of XML files", "dir", searchDir, "found", count, "expected", ExpectedSongCount)
 		return false
 	}
 	return true

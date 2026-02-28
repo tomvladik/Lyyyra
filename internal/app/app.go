@@ -5,6 +5,7 @@ import (
 	"database/sql"
 	"encoding/base64"
 	"fmt"
+	"io"
 	"log/slog"
 	"net/url"
 	"os"
@@ -58,9 +59,13 @@ func NewApp() *App {
 		slog.Error("Failed to open log file", "error", err)
 		// Continue without file logging, use stderr
 	}
-	// Set the output of the log package to the log file
+	// Set the output of the log package to the log file (or stderr fallback)
+	var logWriter io.Writer = os.Stderr
+	if logFile != nil {
+		logWriter = logFile
+	}
 	logOptions := slog.HandlerOptions{Level: slog.LevelInfo}
-	logger := slog.New(slog.NewTextHandler(logFile, &logOptions))
+	logger := slog.New(slog.NewTextHandler(logWriter, &logOptions))
 	slog.SetDefault(logger)
 
 	slog.Info("=========================================================================================")

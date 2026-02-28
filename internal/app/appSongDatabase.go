@@ -73,11 +73,8 @@ func (a *App) detectSchemaVersion(db *sql.DB) (int, error) {
 	if schemaVersionExists > 0 {
 		// schema_version table exists - read the version (v2+)
 		var version int
-		row := db.QueryRow(`SELECT MAX(version) FROM schema_version`)
+		row := db.QueryRow(`SELECT COALESCE(MAX(version), 1) FROM schema_version`)
 		err = row.Scan(&version)
-		if err == sql.ErrNoRows {
-			return 1, nil
-		}
 		return version, err
 	}
 
@@ -602,6 +599,72 @@ func (a *App) getOrCreateSongbook(db *sql.DB, acronym string, name string) (stri
 	return acronym, nil
 }
 
+type songSearchFilter struct {
+	trimmedPattern string
+	isNumeric      bool
+	hasTextSearch  bool
+	searchLike     string
+}
+
+func newSongSearchFilter(searchPattern string) songSearchFilter {
+	trimmedPattern := strings.TrimSpace(searchPattern)
+	if trimmedPattern == "" {
+		return songSearchFilter{}
+	}
+
+	isNumeric := true
+	for _, ch := range trimmedPattern {
+		if ch < '0' || ch > '9' {
+			isNumeric = false
+			break
+		}
+	}
+
+	if isNumeric {
+		return songSearchFilter{trimmedPattern: trimmedPattern, isNumeric: true}
+	}
+
+	if len(trimmedPattern) < 3 {
+		return songSearchFilter{trimmedPattern: trimmedPattern}
+	}
+
+	searchLike := "%" + removeDiacritics(trimmedPattern) + "%"
+	return songSearchFilter{trimmedPattern: trimmedPattern, hasTextSearch: true, searchLike: searchLike}
+}
+
+func (f songSearchFilter) whereClause(verseCondition string) string {
+	if f.trimmedPattern == "" {
+		return ""
+	}
+
+	if f.isNumeric {
+		return `WHERE CAST(s.entry AS TEXT) = ?`
+	}
+
+	if f.hasTextSearch {
+		return fmt.Sprintf(`
+WHERE s.title_d LIKE ?
+   OR EXISTS (SELECT 1 FROM authors a WHERE a.song_id = s.id AND a.author_value_d LIKE ?)
+   OR %s
+   OR CAST(s.entry AS TEXT) = ?
+`, verseCondition)
+	}
+
+	return ""
+}
+
+func (f songSearchFilter) queryRows(db *sql.DB, fullQuery string) (*sql.Rows, error) {
+	if f.isNumeric {
+		return db.Query(fullQuery, f.trimmedPattern)
+	}
+
+	if f.hasTextSearch {
+		return db.Query(fullQuery, f.searchLike, f.searchLike, f.searchLike, f.trimmedPattern)
+	}
+
+	return db.Query(fullQuery)
+}
+
 func (a *App) GetSongs(orderBy string, searchPattern string) ([]dtoSong, error) {
 	var result []dtoSong
 	err := a.withDB(func(db *sql.DB) error {
@@ -625,35 +688,8 @@ func (a *App) GetSongs(orderBy string, searchPattern string) ([]dtoSong, error) 
   JOIN verses v ON s.id = v.song_id
 `
 
-		// Build WHERE clause if searchPattern provided
-		query_where := ""
-		searchPatternD := ""
-		trimmedPattern := strings.TrimSpace(searchPattern)
-
-		if len(trimmedPattern) > 0 {
-			// Check if it's a numeric search (for entry numbers)
-			isNumeric := true
-			for _, ch := range trimmedPattern {
-				if ch < '0' || ch > '9' {
-					isNumeric = false
-					break
-				}
-			}
-
-			if isNumeric {
-				// Allow entry number search for any length
-				query_where = `WHERE CAST(s.entry AS TEXT) = ?`
-			} else if len(trimmedPattern) >= 3 {
-				// Text search requires at least 3 characters
-				searchPatternD = removeDiacritics(trimmedPattern)
-				query_where = `
-WHERE s.title_d LIKE ?
-   OR EXISTS (SELECT 1 FROM authors a WHERE a.song_id = s.id AND a.author_value_d LIKE ?)
-   OR v.lines_d LIKE ?
-   OR CAST(s.entry AS TEXT) = ?
-`
-			}
-		}
+		filter := newSongSearchFilter(searchPattern)
+		query_where := filter.whereClause("v.lines_d LIKE ?")
 
 		sortOption := normalizeSortingOption(orderBy)
 		orderColumn := orderColumnForSongs(sortOption)
@@ -666,29 +702,7 @@ order by ` + orderColumn + `, v.name`
 
 		fullQuery := query_pre + query_where + query_post
 
-		var rows *sql.Rows
-		var queryErr error
-		if len(trimmedPattern) > 0 {
-			// Check if numeric
-			isNumeric := true
-			for _, ch := range trimmedPattern {
-				if ch < '0' || ch > '9' {
-					isNumeric = false
-					break
-				}
-			}
-
-			if isNumeric {
-				rows, queryErr = db.Query(fullQuery, trimmedPattern)
-			} else if len(trimmedPattern) >= 3 {
-				searchLike := "%" + searchPatternD + "%"
-				rows, queryErr = db.Query(fullQuery, searchLike, searchLike, searchLike, trimmedPattern)
-			} else {
-				rows, queryErr = db.Query(fullQuery)
-			}
-		} else {
-			rows, queryErr = db.Query(fullQuery)
-		}
+		rows, queryErr := filter.queryRows(db, fullQuery)
 		if queryErr != nil {
 			slog.Error(fmt.Sprintf("Error querying data: %s", queryErr))
 			return queryErr
@@ -730,35 +744,8 @@ SELECT DISTINCT s.id,
   FROM songs s
 `
 
-		// Build WHERE clause if searchPattern provided
-		query_where := ""
-		searchPatternD := ""
-		trimmedPattern := strings.TrimSpace(searchPattern)
-
-		if len(trimmedPattern) > 0 {
-			// Check if it's a numeric search (for entry numbers)
-			isNumeric := true
-			for _, ch := range trimmedPattern {
-				if ch < '0' || ch > '9' {
-					isNumeric = false
-					break
-				}
-			}
-
-			if isNumeric {
-				// Allow entry number search for any length
-				query_where = `WHERE CAST(s.entry AS TEXT) = ?`
-			} else if len(trimmedPattern) >= 3 {
-				// Text search requires at least 3 characters
-				searchPatternD = removeDiacritics(trimmedPattern)
-				query_where = `
-WHERE s.title_d LIKE ?
-   OR EXISTS (SELECT 1 FROM authors a WHERE a.song_id = s.id AND a.author_value_d LIKE ?)
-   OR EXISTS (SELECT 1 FROM verses v WHERE v.song_id = s.id AND v.lines_d LIKE ?)
-   OR CAST(s.entry AS TEXT) = ?
-`
-			}
-		}
+		filter := newSongSearchFilter(searchPattern)
+		query_where := filter.whereClause("EXISTS (SELECT 1 FROM verses v WHERE v.song_id = s.id AND v.lines_d LIKE ?)")
 
 		sortOption := normalizeSortingOption(orderBy)
 		orderColumn := orderColumnForSongs2(sortOption)
@@ -767,29 +754,7 @@ order by ` + orderColumn
 
 		fullQuery := query_pre + query_where + query_post
 
-		var rows *sql.Rows
-		var queryErr error
-		if len(trimmedPattern) > 0 {
-			// Check if numeric
-			isNumeric := true
-			for _, ch := range trimmedPattern {
-				if ch < '0' || ch > '9' {
-					isNumeric = false
-					break
-				}
-			}
-
-			if isNumeric {
-				rows, queryErr = db.Query(fullQuery, trimmedPattern)
-			} else if len(trimmedPattern) >= 3 {
-				searchLike := "%" + searchPatternD + "%"
-				rows, queryErr = db.Query(fullQuery, searchLike, searchLike, searchLike, trimmedPattern)
-			} else {
-				rows, queryErr = db.Query(fullQuery)
-			}
-		} else {
-			rows, queryErr = db.Query(fullQuery)
-		}
+		rows, queryErr := filter.queryRows(db, fullQuery)
 
 		if queryErr != nil {
 			slog.Error(fmt.Sprintf("Error querying data: %s", queryErr))

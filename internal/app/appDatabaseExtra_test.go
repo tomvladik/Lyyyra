@@ -382,10 +382,11 @@ func TestDetectSchemaVersion_EmptySchemaVersionTable(t *testing.T) {
 	db.Exec(`CREATE TABLE schema_version (version INTEGER PRIMARY KEY, applied_at DATETIME)`) //nolint
 
 	app := &App{}
-	// MAX(version) on empty table returns NULL which cannot be scanned into int,
-	// so detectSchemaVersion returns an error in this case.
-	_, err = app.detectSchemaVersion(db)
-	if err == nil {
-		t.Error("expected error when schema_version table is empty (NULL scan)")
+	version, err := app.detectSchemaVersion(db)
+	if err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
+	if version != 1 {
+		t.Errorf("expected version 1 for empty schema_version table, got %d", version)
 	}
 }
