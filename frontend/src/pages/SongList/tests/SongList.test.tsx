@@ -64,6 +64,8 @@ describe('<SongList />', () => {
                 ...statusOverrides,
             }),
             updateStatus: mockUpdateStatus,
+            sourceFilter: '',
+            setSourceFilter: vi.fn(),
         };
 
         return render(
@@ -101,7 +103,7 @@ describe('<SongList />', () => {
         renderWithContext({ Sorting: 'title' });
 
         await waitFor(() => {
-            expect(AppModule.GetSongs).toHaveBeenCalledWith('title', '');
+            expect(AppModule.GetSongs).toHaveBeenCalledWith('title', '', '');
         });
     });
 
@@ -109,7 +111,7 @@ describe('<SongList />', () => {
         renderWithContext({ SearchPattern: 'test search' });
 
         await waitFor(() => {
-            expect(AppModule.GetSongs).toHaveBeenCalledWith('entry', 'test search');
+            expect(AppModule.GetSongs).toHaveBeenCalledWith('entry', 'test search', '');
         });
     });
 
@@ -117,7 +119,7 @@ describe('<SongList />', () => {
         const { rerender } = renderWithContext({ Sorting: 'entry' });
 
         await waitFor(() => {
-            expect(AppModule.GetSongs).toHaveBeenCalledWith('entry', '');
+            expect(AppModule.GetSongs).toHaveBeenCalledWith('entry', '', '');
         });
 
         // Change sorting
@@ -130,6 +132,8 @@ describe('<SongList />', () => {
                 Sorting: 'authorMusic',
             }),
             updateStatus: mockUpdateStatus,
+            sourceFilter: '',
+            setSourceFilter: vi.fn(),
         };
 
         rerender(
@@ -139,7 +143,7 @@ describe('<SongList />', () => {
         );
 
         await waitFor(() => {
-            expect(AppModule.GetSongs).toHaveBeenCalledWith('authorMusic', '');
+            expect(AppModule.GetSongs).toHaveBeenCalledWith('authorMusic', '', '');
         });
     });
 
@@ -147,7 +151,7 @@ describe('<SongList />', () => {
         const { rerender } = renderWithContext({ SearchPattern: '' });
 
         await waitFor(() => {
-            expect(AppModule.GetSongs).toHaveBeenCalledWith('entry', '');
+            expect(AppModule.GetSongs).toHaveBeenCalledWith('entry', '', '');
         });
 
         // Change search pattern
@@ -160,6 +164,8 @@ describe('<SongList />', () => {
                 Sorting: 'entry',
             }),
             updateStatus: mockUpdateStatus,
+            sourceFilter: '',
+            setSourceFilter: vi.fn(),
         };
 
         rerender(
@@ -169,7 +175,7 @@ describe('<SongList />', () => {
         );
 
         await waitFor(() => {
-            expect(AppModule.GetSongs).toHaveBeenCalledWith('entry', 'new search');
+            expect(AppModule.GetSongs).toHaveBeenCalledWith('entry', 'new search', '');
         });
     });
 

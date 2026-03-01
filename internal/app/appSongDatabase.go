@@ -604,14 +604,17 @@ type songSearchFilter struct {
 	isNumeric      bool
 	hasTextSearch  bool
 	searchLike     string
+	sourceFilter   string // "EZ", "KK", or "" for both
 }
 
-func newSongSearchFilter(searchPattern string) songSearchFilter {
+func newSongSearchFilter(searchPattern string, sourceFilter string) songSearchFilter {
+	f := songSearchFilter{sourceFilter: strings.TrimSpace(sourceFilter)}
 	trimmedPattern := strings.TrimSpace(searchPattern)
 	if trimmedPattern == "" {
-		return songSearchFilter{}
+		return f
 	}
 
+	f.trimmedPattern = trimmedPattern
 	isNumeric := true
 	for _, ch := range trimmedPattern {
 		if ch < '0' || ch > '9' {
@@ -621,51 +624,58 @@ func newSongSearchFilter(searchPattern string) songSearchFilter {
 	}
 
 	if isNumeric {
-		return songSearchFilter{trimmedPattern: trimmedPattern, isNumeric: true}
+		f.isNumeric = true
+		return f
 	}
 
 	if len(trimmedPattern) < 3 {
-		return songSearchFilter{trimmedPattern: trimmedPattern}
+		return f
 	}
 
-	searchLike := "%" + removeDiacritics(trimmedPattern) + "%"
-	return songSearchFilter{trimmedPattern: trimmedPattern, hasTextSearch: true, searchLike: searchLike}
+	f.hasTextSearch = true
+	f.searchLike = "%" + removeDiacritics(trimmedPattern) + "%"
+	return f
 }
 
 func (f songSearchFilter) whereClause(verseCondition string) string {
-	if f.trimmedPattern == "" {
+	var conditions []string
+
+	if f.trimmedPattern != "" {
+		if f.isNumeric {
+			conditions = append(conditions, "CAST(s.entry AS TEXT) = ?")
+		} else if f.hasTextSearch {
+			conditions = append(conditions, fmt.Sprintf(
+				"(s.title_d LIKE ?\n   OR EXISTS (SELECT 1 FROM authors a WHERE a.song_id = s.id AND a.author_value_d LIKE ?)\n   OR %s\n   OR CAST(s.entry AS TEXT) = ?)",
+				verseCondition))
+		}
+	}
+
+	if f.sourceFilter != "" {
+		conditions = append(conditions, "s.songbook_acronym = ?")
+	}
+
+	if len(conditions) == 0 {
 		return ""
 	}
-
-	if f.isNumeric {
-		return `WHERE CAST(s.entry AS TEXT) = ?`
-	}
-
-	if f.hasTextSearch {
-		return fmt.Sprintf(`
-WHERE s.title_d LIKE ?
-   OR EXISTS (SELECT 1 FROM authors a WHERE a.song_id = s.id AND a.author_value_d LIKE ?)
-   OR %s
-   OR CAST(s.entry AS TEXT) = ?
-`, verseCondition)
-	}
-
-	return ""
+	return "WHERE " + strings.Join(conditions, "\n  AND ")
 }
 
 func (f songSearchFilter) queryRows(db *sql.DB, fullQuery string) (*sql.Rows, error) {
-	if f.isNumeric {
-		return db.Query(fullQuery, f.trimmedPattern)
+	var args []interface{}
+	if f.trimmedPattern != "" {
+		if f.isNumeric {
+			args = append(args, f.trimmedPattern)
+		} else if f.hasTextSearch {
+			args = append(args, f.searchLike, f.searchLike, f.searchLike, f.trimmedPattern)
+		}
 	}
-
-	if f.hasTextSearch {
-		return db.Query(fullQuery, f.searchLike, f.searchLike, f.searchLike, f.trimmedPattern)
+	if f.sourceFilter != "" {
+		args = append(args, f.sourceFilter)
 	}
-
-	return db.Query(fullQuery)
+	return db.Query(fullQuery, args...)
 }
 
-func (a *App) GetSongs(orderBy string, searchPattern string) ([]dtoSong, error) {
+func (a *App) GetSongs(orderBy string, searchPattern string, sourceFilter string) ([]dtoSong, error) {
 	var result []dtoSong
 	err := a.withDB(func(db *sql.DB) error {
 
@@ -688,7 +698,7 @@ func (a *App) GetSongs(orderBy string, searchPattern string) ([]dtoSong, error) 
   JOIN verses v ON s.id = v.song_id
 `
 
-		filter := newSongSearchFilter(searchPattern)
+		filter := newSongSearchFilter(searchPattern, sourceFilter)
 		query_where := filter.whereClause("v.lines_d LIKE ?")
 
 		sortOption := normalizeSortingOption(orderBy)
@@ -730,7 +740,7 @@ order by ` + orderColumn + `, v.name`
 	return result, err
 }
 
-func (a *App) GetSongs2(orderBy string, searchPattern string) ([]dtoSongHeader, error) {
+func (a *App) GetSongs2(orderBy string, searchPattern string, sourceFilter string) ([]dtoSongHeader, error) {
 	var result []dtoSongHeader
 	err := a.withDB(func(db *sql.DB) error {
 
@@ -744,7 +754,7 @@ SELECT DISTINCT s.id,
   FROM songs s
 `
 
-		filter := newSongSearchFilter(searchPattern)
+		filter := newSongSearchFilter(searchPattern, sourceFilter)
 		query_where := filter.whereClause("EXISTS (SELECT 1 FROM verses v WHERE v.song_id = s.id AND v.lines_d LIKE ?)")
 
 		sortOption := normalizeSortingOption(orderBy)

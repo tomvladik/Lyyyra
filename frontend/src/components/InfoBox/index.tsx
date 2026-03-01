@@ -14,7 +14,7 @@ interface Props {
 
 export function InfoBox(props: Props) {
   const { t } = useTranslation();
-  const { status, updateStatus } = useContext(DataContext);
+  const { status, updateStatus, sourceFilter, setSourceFilter } = useContext(DataContext);
 
   const [resultText, setResultText] = useState("Zpěvník není inicializován");
   const [buttonText, setButtonText] = useState("Stáhnout data z internetu");
@@ -59,6 +59,12 @@ export function InfoBox(props: Props) {
     { value: 'title' as SortingOption, label: t('infoBox.sortOptions.title') },
     { value: 'authorMusic' as SortingOption, label: t('infoBox.sortOptions.authorMusic') },
     { value: 'authorLyric' as SortingOption, label: t('infoBox.sortOptions.authorLyric') }
+  ];
+
+  const sourceOptions = [
+    { value: '', label: t('infoBox.sourceOptions.both') },
+    { value: 'EZ', label: t('infoBox.sourceOptions.ez') },
+    { value: 'KK', label: t('infoBox.sourceOptions.kk') },
   ];
 
   function _on(event: ChangeEvent<HTMLSelectElement>): void {
@@ -148,6 +154,21 @@ export function InfoBox(props: Props) {
             <select id="sort-select" className={styles.sorting} value={status.Sorting} onChange={_on}>
               <option value="" disabled>{t('infoBox.sortPlaceholder')}</option>
               {sorting.map((option) => (
+                <option key={option.value} value={option.value}>
+                  {option.label}
+                </option>
+              ))}
+            </select>
+          </div>
+          <div style={{ flex: '1', minWidth: '160px' }}>
+            <label htmlFor="source-select" style={{ display: 'block', marginBottom: '6px', fontSize: '15px', fontWeight: '500', textAlign: 'left' }}>{t('infoBox.sourceFilterLabel')}</label>
+            <select
+              id="source-select"
+              className={styles.sorting}
+              value={sourceFilter}
+              onChange={(e) => setSourceFilter(e.target.value)}
+            >
+              {sourceOptions.map((option) => (
                 <option key={option.value} value={option.value}>
                   {option.label}
                 </option>

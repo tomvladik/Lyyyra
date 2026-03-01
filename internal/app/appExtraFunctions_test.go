@@ -90,7 +90,7 @@ func TestGetSongVerses(t *testing.T) {
 	app.FillDatabase()
 
 	// Get the first song id
-	songs, err := app.GetSongs("entry", "")
+	songs, err := app.GetSongs("entry", "", "")
 	if err != nil || len(songs) == 0 {
 		t.Fatalf("GetSongs failed or returned empty: %v", err)
 	}
@@ -131,7 +131,7 @@ func TestGetSongVerses_MultipleVersesSeparator(t *testing.T) {
 	app.songBookDir = xmlDir
 	app.FillDatabase()
 
-	songs, err := app.GetSongs("entry", "")
+	songs, err := app.GetSongs("entry", "", "")
 	if err != nil || len(songs) == 0 {
 		t.Fatal("no songs available")
 	}
@@ -352,7 +352,7 @@ func TestProcessKKSongFile(t *testing.T) {
 	}
 
 	// Verify song was inserted
-	songs, err := app.GetSongs("entry", "")
+	songs, err := app.GetSongs("entry", "", "")
 	if err != nil {
 		t.Fatalf("GetSongs: %v", err)
 	}

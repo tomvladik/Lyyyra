@@ -83,7 +83,7 @@ func TestFillKKSongs_WithFixture(t *testing.T) {
 	}
 
 	// Verify at least one KK song is in the DB
-	songs, err := app.GetSongs("entry", "")
+	songs, err := app.GetSongs("entry", "", "")
 	if err != nil {
 		t.Fatalf("GetSongs: %v", err)
 	}
@@ -120,7 +120,7 @@ func setupDBWithSong(t *testing.T) (*App, int) {
 	app.songBookDir = xmlDir
 	app.FillDatabase()
 
-	songs, err := app.GetSongs("entry", "")
+	songs, err := app.GetSongs("entry", "", "")
 	if err != nil || len(songs) == 0 {
 		t.Fatalf("no songs after FillDatabase: %v", err)
 	}
@@ -298,7 +298,7 @@ func TestGetSongVerses_InvalidDB(t *testing.T) {
 
 func TestGetSongs_InvalidDB(t *testing.T) {
 	app := &App{dbFilePath: "/nonexistent/db.sqlite"}
-	_, err := app.GetSongs("entry", "")
+	_, err := app.GetSongs("entry", "", "")
 	if err == nil {
 		t.Error("expected error with invalid db path")
 	}
@@ -309,7 +309,7 @@ func TestGetSongs_InvalidDB(t *testing.T) {
 
 func TestGetSongs2_InvalidDB(t *testing.T) {
 	app := &App{dbFilePath: "/nonexistent/db.sqlite"}
-	_, err := app.GetSongs2("entry", "")
+	_, err := app.GetSongs2("entry", "", "")
 	if err == nil {
 		t.Error("expected error with invalid db path")
 	}

@@ -193,7 +193,7 @@ func TestGetSongs(t *testing.T) {
 	for _, tc := range testCases {
 		t.Run(tc.name, func(t *testing.T) {
 			// Get songs from the database
-			songs, err := app.GetSongs(tc.orderBy, "")
+			songs, err := app.GetSongs(tc.orderBy, "", "")
 			if err != nil {
 				t.Errorf("Failed to get songs: %v", err)
 				return
@@ -234,7 +234,7 @@ func TestGetSongs2(t *testing.T) {
 	}
 
 	// Get songs from the database
-	songs, err := app.GetSongs2("title", "")
+	songs, err := app.GetSongs2("title", "", "")
 	if err != nil {
 		t.Errorf("Failed to get songs: %v", err)
 	}
@@ -244,7 +244,7 @@ func TestGetSongs2(t *testing.T) {
 		t.Errorf("Expected to get 'Sample Song', got %v", songs)
 	}
 
-	invalidOrderSongs, err := app.GetSongs2("invalid", "")
+	invalidOrderSongs, err := app.GetSongs2("invalid", "", "")
 	if err != nil {
 		t.Errorf("Failed to get songs with invalid order: %v", err)
 	}
@@ -486,7 +486,7 @@ func TestGetSongsWithSearch(t *testing.T) {
 
 	for _, tc := range testCases {
 		t.Run(tc.name, func(t *testing.T) {
-			songs, err := app.GetSongs("entry", tc.searchPattern)
+			songs, err := app.GetSongs("entry", tc.searchPattern, "")
 			if err != nil {
 				t.Fatalf("Failed to get songs: %v", err)
 			}
@@ -563,7 +563,7 @@ func TestGetSongs2WithSearch(t *testing.T) {
 
 	for _, tc := range testCases {
 		t.Run(tc.name, func(t *testing.T) {
-			songs, err := app.GetSongs2("entry", tc.searchPattern)
+			songs, err := app.GetSongs2("entry", tc.searchPattern, "")
 			if err != nil {
 				t.Fatalf("Failed to get songs: %v", err)
 			}

@@ -10,10 +10,12 @@ describe('<InfoBox />', () => {
   const mockLoadSongs = vi.fn();
   const mockUpdateStatus = vi.fn();
 
+  const mockSetSourceFilter = vi.fn();
+
   const renderInfoBox = (statusOverrides = {}) => {
     const status = createMockStatus(statusOverrides);
     return render(
-      <DataContext.Provider value={{ status, updateStatus: mockUpdateStatus }}>
+      <DataContext.Provider value={{ status, updateStatus: mockUpdateStatus, sourceFilter: '', setSourceFilter: mockSetSourceFilter }}>
         <InfoBox loadSongs={mockLoadSongs} />
       </DataContext.Provider>
     );
@@ -110,8 +112,9 @@ describe('<InfoBox />', () => {
 
   it('renders the sort dropdown with options', () => {
     renderInfoBox({ DatabaseReady: true, SongsReady: true });
-    const select = screen.getByRole('combobox');
-    expect(select).toBeInTheDocument();
+    const selects = screen.getAllByRole('combobox');
+    const sortSelect = selects[0];
+    expect(sortSelect).toBeInTheDocument();
     expect(screen.getByText('čísla')).toBeInTheDocument();
     expect(screen.getByText('názvu')).toBeInTheDocument();
   });
@@ -120,12 +123,12 @@ describe('<InfoBox />', () => {
     const user = userEvent.setup();
     const status = createMockStatus({ DatabaseReady: true, SongsReady: true, Sorting: 'entry' });
     render(
-      <DataContext.Provider value={{ status, updateStatus: mockUpdateStatus }}>
+      <DataContext.Provider value={{ status, updateStatus: mockUpdateStatus, sourceFilter: '', setSourceFilter: vi.fn() }}>
         <InfoBox loadSongs={mockLoadSongs} />
       </DataContext.Provider>
     );
-    const select = screen.getByRole('combobox');
-    await user.selectOptions(select, 'title');
+    const sortSelect = screen.getAllByRole('combobox')[0];
+    await user.selectOptions(sortSelect, 'title');
     expect(mockUpdateStatus).toHaveBeenCalledWith(expect.objectContaining({ Sorting: 'title' }));
   });
 

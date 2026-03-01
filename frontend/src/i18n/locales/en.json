@@ -22,6 +22,12 @@
             "title": "title",
             "authorMusic": "music author",
             "authorLyric": "lyrics author"
+        },
+        "sourceFilterLabel": "Songbook",
+        "sourceOptions": {
+            "both": "All",
+            "ez": "EZ – Evangelical Hymnal",
+            "kk": "KK – Catholic Hymnbook"
         }
     },
     "songCard": {

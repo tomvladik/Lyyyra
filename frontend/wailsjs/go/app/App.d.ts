@@ -24,9 +24,9 @@ export function GetSongProjection(arg1:number):Promise<string>;
 
 export function GetSongVerses(arg1:number):Promise<string>;
 
-export function GetSongs(arg1:string,arg2:string):Promise<Array<app.dtoSong>>;
+export function GetSongs(arg1:string,arg2:string,arg3:string):Promise<Array<app.dtoSong>>;
 
-export function GetSongs2(arg1:string,arg2:string):Promise<Array<app.dtoSongHeader>>;
+export function GetSongs2(arg1:string,arg2:string,arg3:string):Promise<Array<app.dtoSongHeader>>;
 
 export function GetStatus():Promise<app.AppStatus>;
 

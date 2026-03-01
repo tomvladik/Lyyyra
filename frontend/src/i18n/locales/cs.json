@@ -22,6 +22,12 @@
             "title": "názvu",
             "authorMusic": "autora hudby",
             "authorLyric": "autora textu"
+        },
+        "sourceFilterLabel": "Zpěvník",
+        "sourceOptions": {
+            "both": "Všechny",
+            "ez": "EZ – Evangelický zpěvník",
+            "kk": "KK – Katolický kancionál"
         }
     },
     "songCard": {

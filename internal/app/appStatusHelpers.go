@@ -88,8 +88,8 @@ func (a *App) hasDatabaseContent() bool {
 	if a.testRun {
 		return count > 0
 	}
-	if count != ExpectedSongCount {
-		slog.Warn("Unexpected number of songs in database", "found", count, "expected", ExpectedSongCount)
+	if count < ExpectedSongCount {
+		slog.Warn("Insufficient number of songs in database", "found", count, "expected_min", ExpectedSongCount)
 		return false
 	}
 	return true

@@ -9,13 +9,13 @@ import { dtoSong } from '../../models';
 
 
 export const SongList = () => {
-    const { status } = useContext(DataContext);
+    const { status, sourceFilter } = useContext(DataContext);
     const [songs, setSongs] = useState(new Array<dtoSong>());
 
     const fetchData = async () => {
         try {
             // Assume fetchData returns a Promise
-            const songs = await go.GetSongs(status.Sorting, status.SearchPattern);
+            const songs = await go.GetSongs(status.Sorting, status.SearchPattern, sourceFilter);
             setSongs(songs);
         } catch (error) {
             console.error("Failed to fetch songs:", error);
@@ -23,7 +23,7 @@ export const SongList = () => {
     };
     useEffect(() => {
         fetchData()
-    }, [status.SearchPattern, status.Sorting]);
+    }, [status.SearchPattern, status.Sorting, sourceFilter]);
 
     // Poll for new songs while database is being filled
     const shouldPoll = status.IsProgress && !status.DatabaseReady && status.SongsReady;

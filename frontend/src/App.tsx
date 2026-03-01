@@ -30,6 +30,14 @@ function App() {
 
     const [isStatusPanelVisible, setIsStatusPanelVisible] = useState(false);
     const [selectedSongs, setSelectedSongs] = useState<SelectedSong[]>([]);
+    const [sourceFilter, setSourceFilter] = useState<string>(
+        () => window.localStorage.getItem('sourceFilter') ?? ''
+    );
+
+    const updateSourceFilter = useCallback((f: string) => {
+        setSourceFilter(f);
+        window.localStorage.setItem('sourceFilter', f);
+    }, []);
 
     const loadSongs = () => {
         setStatus(prev => ({ ...prev, IsProgress: true }));
@@ -110,7 +118,7 @@ function App() {
 
     const isSongSelected = useCallback((id: number) => selectedSongs.some(song => song.id === id), [selectedSongs]);
 
-    const dataContextValue = useMemo(() => ({ status, updateStatus }), [status]);
+    const dataContextValue = useMemo(() => ({ status, updateStatus, sourceFilter, setSourceFilter: updateSourceFilter }), [status, sourceFilter, updateSourceFilter]);
     const selectionContextValue = useMemo(
         () => ({ selectedSongs, addSongToSelection, removeSongFromSelection, clearSelection, isSongSelected }),
         [selectedSongs, addSongToSelection, removeSongFromSelection, clearSelection, isSongSelected]
