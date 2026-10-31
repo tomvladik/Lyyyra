@@ -9,6 +9,8 @@ import (
 	"github.com/wailsapp/wails/v2/pkg/options/assetserver"
 
 	"lyyyra/internal/app"
+
+	_ "lyyyra/internal/mupdf_shims"
 )
 
 //go:embed all:frontend/dist

@@ -136,7 +136,7 @@ wails-build-windows-skip-frontend: ## Build Windows app (skip frontend rebuild, 
 ifeq ($(OS),Windows_NT)
 	@powershell -NoProfile -Command "$$env:CGO_ENABLED='1'; $$env:CC='x86_64-w64-mingw32-gcc'; $$env:CXX='x86_64-w64-mingw32-g++'; wails build -platform windows/amd64 -tags \"$(GO_PROD_TAGS)\" -devtools -skipbindings -s"
 else
-	CGO_ENABLED=1 CC=x86_64-w64-mingw32-gcc CXX=x86_64-w64-mingw32-g++ wails build -platform windows/amd64 -tags "$(GO_PROD_TAGS)" -devtools -skipbindings -s
+	CGO_ENABLED=1 CGO_LDFLAGS="-lssp -lssp_nonshared" CC=x86_64-w64-mingw32-gcc CXX=x86_64-w64-mingw32-g++ wails build -platform windows/amd64 -tags "$(GO_PROD_TAGS)" -devtools -skipbindings -s
 endif
 
 wails-build-windows: frontend-build wails-build-windows-skip-frontend ## Build Wails for Windows (cross-compile in devcontainer)

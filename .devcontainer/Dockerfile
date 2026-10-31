@@ -2,14 +2,21 @@ FROM mcr.microsoft.com/devcontainers/go:1-1.24-bookworm
 ENV PATH=$PATH:/opt/node/bin
 ENV DEBIAN_FRONTEND=noninteractive
 
+# COPY corporate-root-ca.crt /usr/local/share/ca-certificates/corporate-root-ca.crt
+RUN update-ca-certificates
+# ENV NODE_EXTRA_CA_CERTS=/usr/local/share/ca-certificates/corporate-root-ca.crt
+
 # Remove stale Yarn apt repo (shipped by base image) whose GPG key has expired
 RUN rm -f /etc/apt/sources.list.d/yarn.list /usr/share/keyrings/yarnkey.gpg 2>/dev/null || true
 
 RUN apt-get update && apt-get upgrade -y
 
 RUN set -eux; \
-    curl -fsSL https://deb.nodesource.com/setup_20.x | sudo bash -; \
-    sudo apt-get install -y nodejs
+    curl -fsSL https://deb.nodesource.com/setup_22.x -o /tmp/nodesource_setup.sh; \
+    bash /tmp/nodesource_setup.sh; \
+    rm -f /tmp/nodesource_setup.sh; \
+    apt-get install -y nodejs; \
+    npm --version
 
 RUN set -eux; \
     npm install -g npm@11.1.0; \
@@ -66,7 +73,7 @@ RUN set -eux; \
     rm -rf /var/lib/apt/lists/*
 
 RUN set -eux; \
-    gosu vscode go install github.com/wailsapp/wails/v2/cmd/wails@latest
+    gosu vscode go install github.com/wailsapp/wails/v2/cmd/wails@v2.11.0
 
 # Install frontend coverage tool during build
 RUN set -eux; \
