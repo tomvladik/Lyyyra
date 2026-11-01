@@ -107,13 +107,12 @@ install-tools: ## Install Go test, lint tools, and act for CI testing
 	@echo "Installing system dependencies..."
 	sudo apt-get update && sudo apt-get install -y libmupdf-dev gcc
 	@echo "Installing Go tools..."
-	go install gotest.tools/gotestsum@v1.11.0
-	go install github.com/golangci/golangci-lint/cmd/golangci-lint@v1.64.8
+	go install gotest.tools/gotestsum@v1.13.0
+	go install github.com/golangci/golangci-lint/v2/cmd/golangci-lint@v2.10.1
 	@echo "Installing frontend coverage tool..."
 	cd frontend && npm install -D @vitest/coverage-v8
 	@echo "Installing act for local CI testing..."
 	@curl -s https://raw.githubusercontent.com/nektos/act/master/install.sh | sudo bash
-
 # Wails tasks
 .PHONY: wails-dev wails-build wails-build-windows wails-install
 
@@ -130,7 +129,7 @@ else
 endif
 
 wails-build: ## Build Wails application for production
-	wails build -tags "$(GO_PROD_TAGS)"-devtools
+	wails build -tags "$(GO_PROD_TAGS)" -devtools
 
 wails-build-windows-skip-frontend: ## Build Windows app (skip frontend rebuild, devcontainer cross-compile)
 ifeq ($(OS),Windows_NT)
@@ -144,8 +143,8 @@ wails-build-windows: frontend-build wails-build-windows-skip-frontend ## Build W
 
 
 wails-install: ## Install Wails CLI
-	go install github.com/wailsapp/wails/v2/cmd/wails@latest
-
+	go install github.com/wailsapp/wails/v2/cmd/wails@v2.17.1
+	
 # CI/CD testing
 .PHONY: ci-test
 

@@ -1,4 +1,4 @@
-FROM mcr.microsoft.com/devcontainers/go:1-1.24-bookworm
+FROM mcr.microsoft.com/devcontainers/go:dev-1.26-bookworm
 ENV PATH=$PATH:/opt/node/bin
 ENV DEBIAN_FRONTEND=noninteractive
 
@@ -53,10 +53,9 @@ RUN set -eux; \
     usermod -aG docker vscode || true
 
 RUN set -eux; \
-    gosu vscode go install gotest.tools/gotestsum@v1.11.0; \
-    gosu vscode go install github.com/golangci/golangci-lint/cmd/golangci-lint@v1.64.8; \
-    gosu vscode go install golang.org/x/tools/gopls@v0.16.2
-
+    gosu vscode go install gotest.tools/gotestsum@v1.13.0; \
+    gosu vscode go install github.com/golangci/golangci-lint/v2/cmd/golangci-lint@v2.10.1; \
+    gosu vscode go install golang.org/x/tools/gopls@v0.21.0
 RUN set -eux; \
     curl -fsSL https://raw.githubusercontent.com/nektos/act/master/install.sh | bash
 
@@ -73,7 +72,7 @@ RUN set -eux; \
     rm -rf /var/lib/apt/lists/*
 
 RUN set -eux; \
-    gosu vscode go install github.com/wailsapp/wails/v2/cmd/wails@v2.11.0
+    gosu vscode go install github.com/wailsapp/wails/v2/cmd/wails@v2.17.1
 
 # Install frontend coverage tool during build
 RUN set -eux; \
