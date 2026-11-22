@@ -12,7 +12,13 @@ func TestUnzip(t *testing.T) {
 	if err != nil {
 		t.Fatalf("Failed to create temp dir: %v", err)
 	}
-	defer os.RemoveAll(tmpDir)
+	defer func() {
+		err := os.RemoveAll(tmpDir)
+		if err != nil {
+			// errcheck: Error return value of os.RemoveAll is not checked
+			t.Log("Error removing directory:", err)
+		}
+	}()
 
 	// Create a test zip file
 	zipPath := filepath.Join(tmpDir, "test.zip")
@@ -70,7 +76,13 @@ func TestCopyFile(t *testing.T) {
 	if err != nil {
 		t.Fatalf("Failed to create temp dir: %v", err)
 	}
-	defer os.RemoveAll(tmpDir)
+	defer func() {
+		err := os.RemoveAll(tmpDir)
+		if err != nil {
+			// errcheck: Error return value of os.RemoveAll is not checked
+			t.Log("Error removing directory:", err)
+		}
+	}()
 
 	tests := []struct {
 		name      string
@@ -136,7 +148,13 @@ func TestCopyDir(t *testing.T) {
 	if err != nil {
 		t.Fatalf("Failed to create temp dir: %v", err)
 	}
-	defer os.RemoveAll(tmpDir)
+	defer func() {
+		err := os.RemoveAll(tmpDir)
+		if err != nil {
+			// errcheck: Error return value of os.RemoveAll is not checked
+			t.Log("Error removing directory:", err)
+		}
+	}()
 
 	tests := []struct {
 		name      string

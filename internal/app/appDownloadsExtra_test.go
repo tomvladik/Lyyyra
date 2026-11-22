@@ -71,7 +71,7 @@ func TestUnzip_MultipleFiles(t *testing.T) {
 		f, _ := w.Create(fmt.Sprintf("song-%d.xml", i))
 		f.Write([]byte(fmt.Sprintf("<song>%d</song>", i))) //nolint
 	}
-	w.Close()
+	_ = w.Close()
 	zipPath := filepath.Join(tmpDir, "songs.zip")
 	if err := os.WriteFile(zipPath, buf.Bytes(), 0644); err != nil {
 		t.Fatal(err)

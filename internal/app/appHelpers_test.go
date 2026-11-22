@@ -58,7 +58,13 @@ func TestUpdateProgress(t *testing.T) {
 	if err != nil {
 		t.Fatalf("Failed to create temp dir: %v", err)
 	}
-	defer os.RemoveAll(tmpDir)
+	defer func() {
+		err := os.RemoveAll(tmpDir)
+		if err != nil {
+			// errcheck: Error return value of os.RemoveAll is not checked
+			t.Log("Error removing directory:", err)
+		}
+	}()
 
 	app := &App{
 		appDir: tmpDir,
@@ -114,7 +120,13 @@ func TestClearProgress(t *testing.T) {
 	if err != nil {
 		t.Fatalf("Failed to create temp dir: %v", err)
 	}
-	defer os.RemoveAll(tmpDir)
+	defer func() {
+		err := os.RemoveAll(tmpDir)
+		if err != nil {
+			// errcheck: Error return value of os.RemoveAll is not checked
+			t.Log("Error removing directory:", err)
+		}
+	}()
 
 	app := &App{
 		appDir: tmpDir,
@@ -143,7 +155,13 @@ func TestStartProgress(t *testing.T) {
 	if err != nil {
 		t.Fatalf("Failed to create temp dir: %v", err)
 	}
-	defer os.RemoveAll(tmpDir)
+	defer func() {
+		err := os.RemoveAll(tmpDir)
+		if err != nil {
+			// errcheck: Error return value of os.RemoveAll is not checked
+			t.Log("Error removing directory:", err)
+		}
+	}()
 
 	app := &App{
 		appDir: tmpDir,

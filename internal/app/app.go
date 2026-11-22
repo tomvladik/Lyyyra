@@ -78,7 +78,7 @@ func NewApp() *App {
 		slog.Error("Failed to parse PDF URL", "url", pdfUrl, "error", err)
 		return &App{}
 	}
-	appDir := filepath.Join(homeDir, "Lyyyra", strings.Replace(parsedURL.Host, ":", "_", -1))
+	appDir := filepath.Join(homeDir, "Lyyyra", strings.ReplaceAll(parsedURL.Host, ":", "_"))
 
 	app := App{
 		appDir:      appDir,

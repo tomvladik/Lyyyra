@@ -28,9 +28,12 @@ func setupTestApp(t *testing.T) *App {
 	return app
 }
 
-func teardownTestApp(app *App) {
+func teardownTestApp(app *App, t *testing.T) {
 	// Remove the temporary app directory
-	os.RemoveAll(app.appDir)
+	if err := os.RemoveAll(app.appDir); err != nil {
+		t.Error("Failed to remove app directory", "path", app.appDir, "error", err)
+	}
+
 }
 
 func TestDownloadFile(t *testing.T) {
@@ -63,7 +66,7 @@ func TestDownloadFile(t *testing.T) {
 	for _, tc := range tests {
 		t.Run(tc.name, func(t *testing.T) {
 			app := setupTestApp(t)
-			defer teardownTestApp(app)
+			defer teardownTestApp(app, t)
 
 			// Create a test server to serve a test file
 			ts := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
@@ -109,13 +112,13 @@ func createZipFromFiles(files map[string][]byte) []byte {
 		}
 	}
 
-	zipWriter.Close()
+	_ = zipWriter.Close()
 	return buf.Bytes()
 }
 
 func TestDownloadSongBase(t *testing.T) {
 	app := setupTestApp(t)
-	defer teardownTestApp(app)
+	defer teardownTestApp(app, t)
 
 	// Create a test server to serve a test zip file
 	ts := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
@@ -182,7 +185,7 @@ func TestDownloadEzRemote(t *testing.T) {
 	}
 
 	app := setupTestApp(t)
-	defer teardownTestApp(app)
+	defer teardownTestApp(app, t)
 	app.dbFilePath = filepath.Join(app.appDir, "Songs.db")
 	app.songBookDir = filepath.Join(app.appDir, "SongBook")
 	app.status.WebResourcesReady = true
@@ -210,7 +213,7 @@ func TestDownloadEzRemote(t *testing.T) {
 
 func TestDownloadSupplementalPDFs(t *testing.T) {
 	app := setupTestApp(t)
-	defer teardownTestApp(app)
+	defer teardownTestApp(app, t)
 	app.status.WebResourcesReady = false
 
 	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
@@ -238,7 +241,7 @@ func TestDownloadSupplementalPDFs(t *testing.T) {
 
 func TestDownloadEzTriggersSupplementalDownloads(t *testing.T) {
 	app := setupTestApp(t)
-	defer teardownTestApp(app)
+	defer teardownTestApp(app, t)
 	app.status.WebResourcesReady = false
 	app.status.SongsReady = true
 	app.status.DatabaseReady = true

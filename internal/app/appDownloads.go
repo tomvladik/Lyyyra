@@ -48,7 +48,7 @@ func (a *App) downloadFile(fileUrl, fileName string) (string, error) {
 	if err != nil {
 		return "", err
 	}
-	defer destFile.Close()
+	defer func() { _ = destFile.Close() }()
 
 	parsedURL, err := url.Parse(fileUrl)
 	if err != nil {
@@ -64,7 +64,7 @@ func (a *App) downloadFile(fileUrl, fileName string) (string, error) {
 		if err != nil {
 			return "", err
 		}
-		defer sourceFile.Close()
+		defer func() { _ = sourceFile.Close() }()
 		_, err = io.Copy(destFile, sourceFile)
 		if err != nil {
 			return "", err
@@ -87,7 +87,7 @@ func (a *App) downloadFile(fileUrl, fileName string) (string, error) {
 		if err != nil {
 			return "", err
 		}
-		defer response.Body.Close()
+		defer func() { _ = response.Body.Close() }()
 
 		// Check if the request was successful (status code 200)
 		if response.StatusCode != http.StatusOK {
@@ -216,8 +216,6 @@ func (a *App) DownloadSongBase() error {
 		slog.Error(err.Error())
 		return err
 	}
-	defer os.Remove(fileName)
-
 	a.updateProgress("Rozbaluji soubory...", 50)
 
 	ezDir := filepath.Join(a.songBookDir, "EZ")
@@ -229,6 +227,10 @@ func (a *App) DownloadSongBase() error {
 	if err := unzip(fileName, ezDir); err != nil {
 		slog.Error("Failed to unzip EZ song base", "error", err)
 		return err
+	}
+
+	if err := os.Remove(fileName); err != nil {
+		slog.Error("Failed to remove file", "path", fileName, "error", err)
 	}
 	return nil
 }
@@ -245,8 +247,12 @@ func (a *App) DownloadKK() error {
 		slog.Error(err.Error())
 		return err
 	}
-	defer os.Remove(fileName)
-
+	defer func() {
+		err := os.Remove(fileName)
+		if err != nil {
+			slog.Error(err.Error())
+		}
+	}()
 	a.updateProgress("Rozbaluji KK soubory...", 50)
 
 	kkDir := filepath.Join(a.songBookDir, "KK")

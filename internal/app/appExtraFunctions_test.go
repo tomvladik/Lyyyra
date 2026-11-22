@@ -77,7 +77,13 @@ func TestGetSongVerses(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	defer os.RemoveAll(xmlDir)
+	defer func() {
+		err := os.RemoveAll(xmlDir)
+		if err != nil {
+			// errcheck: Error return value of os.RemoveAll is not checked
+			t.Log("Error removing directory:", err)
+		}
+	}()
 
 	ezDir := filepath.Join(xmlDir, "EZ")
 	if err := os.MkdirAll(ezDir, 0755); err != nil {
@@ -119,7 +125,13 @@ func TestGetSongVerses_MultipleVersesSeparator(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	defer os.RemoveAll(xmlDir)
+	defer func() {
+		err := os.RemoveAll(xmlDir)
+		if err != nil {
+			// errcheck: Error return value of os.RemoveAll is not checked
+			t.Log("Error removing directory:", err)
+		}
+	}()
 
 	ezDir := filepath.Join(xmlDir, "EZ")
 	if err := os.MkdirAll(ezDir, 0755); err != nil {

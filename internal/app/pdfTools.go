@@ -42,7 +42,7 @@ func splitPdfByPages(inputPath string, outputDir string, filePrefix string, skip
 	if err != nil {
 		return nil, fmt.Errorf("error opening PDF file: %w", err)
 	}
-	defer pdfFile.Close()
+	defer func() { _ = pdfFile.Close() }()
 
 	// Read the PDF
 	pdfReader, err := model.NewPdfReader(pdfFile)
@@ -184,7 +184,7 @@ func (a *App) addPdfToCreator(c *creator.Creator, filename string) (int, error) 
 	if err != nil {
 		return 0, fmt.Errorf("unable to open %s: %w", filename, err)
 	}
-	defer file.Close()
+	defer func() { _ = file.Close() }()
 
 	reader, err := model.NewPdfReader(file)
 	if err != nil {
@@ -258,9 +258,11 @@ func (a *App) combinePdfsWithCrop(filenames []string) (string, error) {
 		}
 
 		reader, err := model.NewPdfReader(file)
-		file.Close()
 		if err != nil {
 			return "", fmt.Errorf("unable to read %s: %w", inputPath, err)
+		}
+		if err := file.Close(); err != nil {
+			slog.Warn("Error closing file", "error", err)
 		}
 
 		numPages, _ := reader.GetNumPages()
@@ -317,7 +319,11 @@ func firstPageSize(path string) (float64, float64, error) {
 	if err != nil {
 		return 0, 0, err
 	}
-	defer f.Close()
+	defer func() {
+		if err := f.Close(); err != nil {
+			slog.Warn("Error closing file", "error", err)
+		}
+	}()
 
 	r, err := model.NewPdfReader(f)
 	if err != nil {
@@ -375,7 +381,7 @@ func (a *App) updateSongFilenames(songFiles map[int]string) error {
 		if err != nil {
 			return err
 		}
-		defer stmt.Close()
+		defer func() { _ = stmt.Close() }()
 
 		for entry, filename := range songFiles {
 			if _, err := stmt.Exec(filename, entry); err != nil {

@@ -221,14 +221,18 @@ func TestApplyMigration_UnknownVersion(t *testing.T) {
 	// Call applyMigration directly via openDB
 	dbFile, _ := os.CreateTemp("", "testdb_*.sqlite")
 	dbPath := dbFile.Name()
-	dbFile.Close()
-	defer os.Remove(dbPath)
+	if err := dbFile.Close(); err != nil {
+		t.Errorf("close temp db file: %v", err)
+	}
+	// Remove temp file on test completion (ignore error on cleanup)
+	defer func() { _ = os.Remove(dbPath) }()
 
 	db, err := sql.Open("sqlite3", dbPath)
 	if err != nil {
 		t.Fatalf("open db: %v", err)
 	}
-	defer db.Close()
+	// Close database connection (error ignored for test cleanup)
+	_ = db.Close()
 
 	a := &App{}
 	if err := a.applyMigration(db, 99); err == nil {
@@ -339,14 +343,16 @@ func TestDetectSchemaVersion_SchemaVersionTableWithData(t *testing.T) {
 		t.Fatal(err)
 	}
 	dbPath := dbFile.Name()
-	dbFile.Close()
-	defer os.Remove(dbPath)
+	if err := dbFile.Close(); err != nil {
+		t.Errorf("close temp db file: %v", err)
+	}
+	defer func() { _ = os.Remove(dbPath) }()
 
 	db, err := sql.Open("sqlite3", dbPath)
 	if err != nil {
 		t.Fatal(err)
 	}
-	defer db.Close()
+	defer func() { _ = db.Close() }() // ignore error on cleanup
 
 	// Manually create schema_version table and insert version 2
 	if _, err := db.Exec(`CREATE TABLE schema_version (version INTEGER PRIMARY KEY, applied_at DATETIME DEFAULT CURRENT_TIMESTAMP)`); err != nil {
@@ -372,11 +378,13 @@ func TestDetectSchemaVersion_EmptySchemaVersionTable(t *testing.T) {
 		t.Fatal(err)
 	}
 	dbPath := dbFile.Name()
-	dbFile.Close()
-	defer os.Remove(dbPath)
+	if err := dbFile.Close(); err != nil {
+		t.Errorf("close temp db file: %v", err)
+	}
+	defer func() { _ = os.Remove(dbPath) }()
 
 	db, _ := sql.Open("sqlite3", dbPath)
-	defer db.Close()
+	defer func() { _ = db.Close() }()
 
 	// Create schema_version table but leave it empty
 	db.Exec(`CREATE TABLE schema_version (version INTEGER PRIMARY KEY, applied_at DATETIME)`) //nolint

@@ -17,7 +17,7 @@ func setupTestDB(t *testing.T) *App {
 		t.Fatalf("Failed to create temp database file: %v", err)
 	}
 	dbFilePath := dbFile.Name()
-	dbFile.Close()
+	_ = dbFile.Close()
 
 	// Initialize the App with the test database file path
 	app := &App{
@@ -32,7 +32,7 @@ func setupTestDB(t *testing.T) *App {
 
 func teardownTestDB(app *App) {
 	// Remove the temporary database file
-	os.Remove(app.dbFilePath)
+	_ = os.Remove(app.dbFilePath)
 }
 
 func TestFillDatabase(t *testing.T) {
@@ -44,7 +44,13 @@ func TestFillDatabase(t *testing.T) {
 	if err != nil {
 		t.Fatalf("Failed to create temp XML directory: %v", err)
 	}
-	defer os.RemoveAll(xmlDir)
+	defer func() {
+		err := os.RemoveAll(xmlDir)
+		if err != nil {
+			// errcheck: Error return value of os.RemoveAll is not checked
+			t.Log("Error removing directory:", err)
+		}
+	}()
 
 	// Create EZ subdirectory
 	ezDir := filepath.Join(xmlDir, "EZ")
@@ -69,7 +75,12 @@ func TestFillDatabase(t *testing.T) {
 	if err != nil {
 		t.Fatalf("Failed to open database: %v", err)
 	}
-	defer db.Close()
+	defer func() {
+		err = db.Close()
+		if err != nil {
+			t.Errorf("Failed to close database: %v", err)
+		}
+	}()
 
 	// Check if the song was inserted
 	var title string
@@ -129,7 +140,12 @@ func TestGetSongs(t *testing.T) {
 	if err != nil {
 		t.Fatalf("Failed to open database: %v", err)
 	}
-	defer db.Close()
+	defer func() {
+		err = db.Close()
+		if err != nil {
+			t.Errorf("Failed to close database: %v", err)
+		}
+	}()
 
 	_, err = db.Exec(`
         INSERT INTO songs (title, verse_order, entry) VALUES
@@ -595,8 +611,12 @@ func TestDetectSchemaVersion_FreshDatabase(t *testing.T) {
 		t.Fatalf("Failed to create temp database: %v", err)
 	}
 	dbPath := dbFile.Name()
-	dbFile.Close()
-	defer os.Remove(dbPath)
+	defer func() {
+		if cerr := dbFile.Close(); cerr != nil {
+			t.Errorf("Failed to close temp database: %v", cerr)
+		}
+		os.Remove(dbPath)
+	}()
 
 	db, err := sql.Open("sqlite3", dbPath)
 	if err != nil {
@@ -622,7 +642,7 @@ func TestCreateSchemaV1(t *testing.T) {
 		t.Fatalf("Failed to create temp database: %v", err)
 	}
 	dbPath := dbFile.Name()
-	dbFile.Close()
+	_ = dbFile.Close()
 	defer os.Remove(dbPath)
 
 	db, err := sql.Open("sqlite3", dbPath)
@@ -685,10 +705,13 @@ func TestDetectSchemaVersion_V1Database(t *testing.T) {
 	if err != nil {
 		t.Fatalf("Failed to create temp database: %v", err)
 	}
+	defer func() {
+		if cerr := dbFile.Close(); cerr != nil {
+			t.Errorf("Failed to close temp database: %v", cerr)
+		}
+	}()
 	dbPath := dbFile.Name()
-	dbFile.Close()
 	defer os.Remove(dbPath)
-
 	db, err := sql.Open("sqlite3", dbPath)
 	if err != nil {
 		t.Fatalf("Failed to open database: %v", err)
@@ -720,9 +743,8 @@ func TestMigrateToV2(t *testing.T) {
 		t.Fatalf("Failed to create temp database: %v", err)
 	}
 	dbPath := dbFile.Name()
-	dbFile.Close()
+	_ = dbFile.Close()
 	defer os.Remove(dbPath)
-
 	db, err := sql.Open("sqlite3", dbPath)
 	if err != nil {
 		t.Fatalf("Failed to open database: %v", err)
@@ -761,9 +783,8 @@ func TestDetectSchemaVersion_V2Database(t *testing.T) {
 		t.Fatalf("Failed to create temp database: %v", err)
 	}
 	dbPath := dbFile.Name()
-	dbFile.Close()
+	_ = dbFile.Close()
 	defer os.Remove(dbPath)
-
 	db, err := sql.Open("sqlite3", dbPath)
 	if err != nil {
 		t.Fatalf("Failed to open database: %v", err)
@@ -799,8 +820,11 @@ func TestColumnExists(t *testing.T) {
 	if err != nil {
 		t.Fatalf("Failed to create temp database: %v", err)
 	}
+
 	dbPath := dbFile.Name()
-	dbFile.Close()
+	if err := dbFile.Close(); err != nil {
+		t.Fatalf("Failed to close temp database: %v", err)
+	}
 	defer os.Remove(dbPath)
 
 	db, err := sql.Open("sqlite3", dbPath)
@@ -842,8 +866,11 @@ func TestAddColumnIfNotExists(t *testing.T) {
 	if err != nil {
 		t.Fatalf("Failed to create temp database: %v", err)
 	}
+
 	dbPath := dbFile.Name()
-	dbFile.Close()
+	if err := dbFile.Close(); err != nil {
+		t.Fatalf("Failed to close temp database: %v", err)
+	}
 	defer os.Remove(dbPath)
 
 	db, err := sql.Open("sqlite3", dbPath)
