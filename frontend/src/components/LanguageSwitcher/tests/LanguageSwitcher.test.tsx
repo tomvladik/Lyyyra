@@ -3,15 +3,19 @@ import { fireEvent, render, screen } from '@testing-library/react';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { LanguageSwitcher } from '../index';
 
-// Mock i18next
-const mockChangeLanguage = vi.fn();
-const mockT = vi.fn((key: string) => key);
+const { mockChangeLanguage, mockT, mockI18n } = vi.hoisted(() => ({
+    mockChangeLanguage: vi.fn(),
+    mockT: vi.fn((key: string) => key),
+    mockI18n: { language: 'cs' },
+}));
 
 vi.mock('react-i18next', () => ({
     useTranslation: () => ({
         t: mockT,
         i18n: {
-            language: 'cs',
+            get language() {
+                return mockI18n.language;
+            },
             changeLanguage: mockChangeLanguage,
         },
     }),
@@ -43,6 +47,7 @@ describe('<LanguageSwitcher />', () => {
     beforeEach(() => {
         vi.clearAllMocks();
         localStorageMock.clear();
+        mockI18n.language = 'cs';
     });
 
     it('renders both language buttons', () => {
@@ -127,35 +132,13 @@ describe('<LanguageSwitcher /> with EN language', () => {
     beforeEach(() => {
         vi.clearAllMocks();
         localStorageMock.clear();
-
-        // Mock English as current language
-        vi.resetModules();
-        vi.mock('react-i18next', () => ({
-            useTranslation: () => ({
-                t: mockT,
-                i18n: {
-                    language: 'en',
-                    changeLanguage: mockChangeLanguage,
-                },
-            }),
-        }));
+        mockI18n.language = 'en';
     });
 
     it('applies active class to EN button when English is selected', () => {
-        // Remock with English as current language
-        const mockChangeLanguageEN = vi.fn();
-        vi.doMock('react-i18next', () => ({
-            useTranslation: () => ({
-                t: mockT,
-                i18n: {
-                    language: 'en',
-                    changeLanguage: mockChangeLanguageEN,
-                },
-            }),
-        }));
+        render(<LanguageSwitcher />);
 
-        // This test would need a re-render with updated i18n context
-        // For simplicity, we're testing the basic class application logic
-        expect(true).toBe(true);
+        const enButton = screen.getByTitle('English');
+        expect(enButton.className).toContain('active');
     });
 });

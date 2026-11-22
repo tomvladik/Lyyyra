@@ -1,5 +1,6 @@
 FROM mcr.microsoft.com/devcontainers/go:dev-1.26-bookworm
-ENV DEBIAN_FRONTEND=noninteractive
+ENV DEBIAN_FRONTEND=noninteractive \
+    NPM_CONFIG_UPDATE_NOTIFIER=false
 
 
 RUN set -eux; \
