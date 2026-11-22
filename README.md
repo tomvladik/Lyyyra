@@ -1,78 +1,81 @@
 # Lyyyra
 
-Lyyyra je desktopová aplikace pro zpěvníky. Stahuje podklady z [evangelickyzpevnik.cz](https://www.evangelickyzpevnik.cz) a nabízí pohodlné vyhledávání, třídění i práci s notovými podklady.
+> <img src="https://flagcdn.com/gb.svg" width="20" alt="United Kingdom"> **English** · <img src="https://flagcdn.com/cz.svg" width="20" alt="Czechia"> [Čeština](README.cs.md)
 
-## Hlavní funkce
+Lyyyra is a desktop application for songbooks. It downloads sheet music from [evangelickyzpevnik.cz](https://www.evangelickyzpevnik.cz) and offers convenient searching, sorting, and working with sheet music PDFs.
 
-- **Aktuální databáze písní** – aplikace automaticky stáhne texty, metadata i PDF s notami.
-- **Vyhledávání a filtrování** – pište libovolný výraz (název, autor, text) a Lyyyra průběžně zužuje výběr.
-- **Řazení** – přepínejte mezi číselným pořadím, názvy a autory hudby či textu.
-- **Výběr písní** – u každé skladby přidejte noty do „Připravených not“ a stáhněte je jako jedno PDF.
-- **Offline režim** – po stažení zůstane databáze uložená lokálně.
+## Features
 
-## Jak začít
+- **Up-to-date song database** – lyrics, metadata, and sheet music PDFs are downloaded automatically.
+- **Search and filtering** – type any term (title, author, lyrics) and Lyyyra narrows the results as you type.
+- **Sorting** – switch between song number, title, music author, and lyric author.
+- **Song selection** – add sheet music to "Prepared sheets" for any song and download them as a single PDF.
+- **Offline mode** – after the initial download the database is stored locally.
 
-1. Stáhněte (nebo zkompilujte) aplikaci dle návodu níže.
-2. Spusťte Lyyru a v horní části klikněte na tlačítko **„Stáhnout data z internetu“**.
-3. Po dokončení importu můžete okamžitě vyhledávat, filtrovat a tisknout.
-4. Ikona 📋 přidá píseň do pravého panelu „Připravené noty“, kde lze stáhnout společné PDF.
+## Getting Started
+
+1. Download (or compile) the application using the instructions below.
+2. Launch Lyyyra and click **"Stáhnout data z internetu"** (Download data from the internet) at the top.
+3. Once the import finishes, you can immediately search, filter, and print.
+4. The 📋 icon adds a song to the **"Připravené noty"** (Prepared sheets) panel on the right, where you can download a combined PDF.
 
 > [!WARNING]
-> **Licenční upozornění:**
-> 
-> Materiály stažené z evangelickyzpevnik.cz slouží pouze pro osobní potřebu. Pro veřejné použití je nutné zajistit licenci u držitelů práv.
+> **License notice:**
+>
+> Materials downloaded from evangelickyzpevnik.cz are for personal use only. Public use requires a license from the rights holders.
 
-## Ukázka aplikace
+## App Preview
 
 ![Lyyyra demo](docs/images/demo.gif)
 
-## Stažení hotových binárek
+## Download Prebuilt Binaries
 
-### Z vydaných verzí (doporučeno)
+### From Releases (recommended)
 
-Hotové binárky pro Windows a Linux najdete v [sekci Releases](https://github.com/tomvladik/Lyyyra/releases):
+Prebuilt binaries for Windows and Linux are available in the [Releases section](https://github.com/tomvladik/Lyyyra/releases):
 
-1. Přejděte na [GitHub Releases](https://github.com/tomvladik/Lyyyra/releases)
-2. Vyberte poslední verzi (tag `v*`)
-3. Stáhněte odpovídající archiv:
-   - `Lyyyra-windows-amd64-*.zip` pro Windows
-   - `Lyyyra-linux-amd64-*.tar.gz` pro Linux
+1. Go to [GitHub Releases](https://github.com/tomvladik/Lyyyra/releases).
+2. Pick the latest version (tag `v*`).
+3. Download the matching archive:
+   - `Lyyyra-windows-amd64-*.zip` for Windows
+   - `Lyyyra-linux-amd64-*.tar.gz` for Linux
 
-**Pro Windows uživatele:** Binárka není digitálně podepsaná, proto Windows může zobrazit varování. Postup:
-- Po stažení extrahujte `Lyyyra.exe` z archivu
-- Při prvním spuštění klikněte na **„Další informace"** (More info) v okně Windows SmartScreen
-- Poté vyberte **„Přesto spustit"** (Run anyway)
-- Alternativně: klikněte pravým tlačítkem na `Lyyyra.exe` → Vlastnosti → zaškrtněte „Odblokovat" (Unblock) → OK
+**For Windows users:** The binary is not digitally signed, so Windows may show a warning:
 
-### Z GitHub Actions (nejnovější buildy)
+- After downloading, extract `Lyyyra.exe` from the archive.
+- On first launch, click **"More info"** in the Windows SmartScreen dialog.
+- Then choose **"Run anyway"**.
+- Alternatively: right-click `Lyyyra.exe` → Properties → check "Unblock" → OK.
 
-Pro nejnovější neveřejné buildy z větve `main`:
+### From GitHub Actions (latest builds)
 
-1. Přejděte na [GitHub Actions](https://github.com/tomvladik/Lyyyra/actions)
-2. Otevřete poslední úspěšný běh workflow **Build and Package**
-3. V sekci **Artifacts** stáhněte binárku pro svůj systém
+For the newest unpublished builds from the `main` branch:
 
-### Ručnní build
+1. Go to [GitHub Actions](https://github.com/tomvladik/Lyyyra/actions).
+2. Open the latest successful **Build and Package** workflow run.
+3. In the **Artifacts** section, download the binary for your OS.
 
-Manuální build je stále možný z příkazové řádky podle instrukcí v části Developer Notes níže.
+### Manual build
 
-## Často kladené dotazy
+You can still build manually from the command line — see the Developer Notes below.
 
-**Musím být online?**
-Ano při prvním stažení dat. Poté může aplikace fungovat offline.
+## Frequently Asked Questions
 
-**Kde najdu hotové PDF?**
-Každý song otevřete ikonou 🎵. Více písní lze seřadit do „Připravených not“ a získat jedno PDF klikem na „Zobrazit připravené noty“.
+**Do I need to be online?**
+Yes, for the initial data download. After that the app works offline.
 
-**Co dělat, když se stahování zasekne?**
-Zkontrolujte připojení k internetu a klikněte znovu na „Stáhnout data z internetu“.
+**Where do I find the finished PDFs?**
+Open a song with the 🎵 icon. Multiple songs can be added to "Prepared sheets" and exported as one PDF by clicking "Zobrazit připravené noty" (Show prepared sheets).
 
-**Jak přepínat třídění?**
-V InfoBoxu je rozbalovací nabídka „Řadit podle“. Volba se uloží a příště se použije automaticky.
+**What if the download gets stuck?**
+Check your internet connection and click "Stáhnout data z internetu" again.
+
+**How do I change the sorting?**
+Use the "Řadit podle" (Sort by) dropdown in the InfoBox. The choice is saved and applied automatically next time.
 
 ---
 
-# Developer Notes (English)
+# Developer Notes
 
 ## Quick Start
 
@@ -156,7 +159,7 @@ Run `make help` for a quick overview of all available targets.
 ## Testing & Tooling
 
 - Vitest config lives in `frontend/vitest.config.ts` with `src/test/setup.ts`.
-- See [TESTING.md](TESTING.md) for detailed coverage notes.
+- Run `make test-coverage` and `make frontend-test-coverage` to generate coverage reports.
 - Run `npx tsc --noEmit` inside `frontend/` to ensure the React code compiles.
 
 ## Building Releases

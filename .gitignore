@@ -20,6 +20,7 @@ changeme
 
 # Docs in progress
 *.md
+!/README*.md
 
 # OS noise
 .DS_Store
