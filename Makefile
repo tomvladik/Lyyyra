@@ -65,7 +65,7 @@ lint: ## Lint Go code (requires golangci-lint)
 .PHONY: frontend-install frontend-build frontend-dev frontend-test
 
 frontend-install: ## Install frontend dependencies
-	cd frontend && npm install
+	cd frontend && npm ci
 
 frontend-build: ## Build frontend for production
 	cd frontend && npm run build
@@ -105,14 +105,14 @@ test-all-coverage: test-coverage frontend-test-coverage ## Run all tests with co
 
 install-tools: ## Install Go test, lint tools, and act for CI testing
 	@echo "Installing system dependencies..."
-	sudo apt-get update && sudo apt-get install -y libmupdf-dev gcc
+	sudo apt-get update && sudo apt-get install -y libmupdf-dev gcc=4:12.2.0-3
 	@echo "Installing Go tools..."
 	go install gotest.tools/gotestsum@v1.13.0
 	go install github.com/golangci/golangci-lint/v2/cmd/golangci-lint@v2.10.1
 	@echo "Installing frontend coverage tool..."
-	cd frontend && npm install -D @vitest/coverage-v8
+	cd frontend && npm install -D @vitest/coverage-v8@4.0.17
 	@echo "Installing act for local CI testing..."
-	@curl -s https://raw.githubusercontent.com/nektos/act/master/install.sh | sudo bash
+	@curl -fsSL https://github.com/nektos/act/releases/download/v0.2.94/act_Linux_x86_64.tar.gz | sudo tar -xz -C /usr/local/bin act
 # Wails tasks
 .PHONY: wails-dev wails-build wails-build-windows wails-install
 
@@ -151,7 +151,7 @@ wails-install: ## Install Wails CLI
 ci-test: ## Test GitHub Actions workflow locally (requires act and sudo access)
 	@if ! command -v act >/dev/null 2>&1; then \
 		echo "Installing act locally..."; \
-		curl -fsSL https://raw.githubusercontent.com/nektos/act/master/install.sh | bash; \
+		curl -fsSL https://github.com/nektos/act/releases/download/v0.2.94/act_Linux_x86_64.tar.gz | tar -xz -C /tmp act && sudo mv /tmp/act /usr/local/bin/act; \
 	fi
 	@echo "Running GitHub Actions workflow locally..."
 	sudo -E $(shell command -v act) workflow_dispatch -j test --artifact-server-path /tmp/artifacts

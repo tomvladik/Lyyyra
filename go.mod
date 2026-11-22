@@ -2,6 +2,8 @@ module lyyyra
 
 go 1.26.0
 
+toolchain go1.26.10
+
 require (
 	github.com/antchfx/htmlquery v1.3.4
 	github.com/mattn/go-sqlite3 v1.14.28

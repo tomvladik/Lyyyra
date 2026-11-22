@@ -14,14 +14,21 @@
 	],
 	"containerEnv": {
 		"GOMODCACHE": "/go/pkg/mod",
-		"GOCACHE": "/home/vscode/.cache/go-build"
+		"GOCACHE": "/home/vscode/.cache/go-build",
+		"OLLAMA_HOST": "http://host.docker.internal:11434"
 	},
+	"runArgs": [
+		"--add-host=host.docker.internal:host-gateway"
+	],
 	"customizations": {
 		"vscode": {
 			"settings": {
 				"terminal.integrated.defaultProfile.linux": "bash"
-			}
+			},
+			"extensions": [
+				"sst-dev.opencode"
+			]
 		}
 	},
-	"postAttachCommand": "sudo chown -R vscode:vscode /workspaces/Lyyyra/frontend/node_modules; cd /workspaces/Lyyyra/frontend && npm install -D @vitest/coverage-v8 2>/dev/null || true"
+	"postAttachCommand": "sudo chown -R vscode:vscode /workspaces/Lyyyra/frontend/node_modules; cd /workspaces/Lyyyra/frontend && npm install -D @vitest/coverage-v8@4.0.17 2>/dev/null || true"
 }
