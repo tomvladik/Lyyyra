@@ -15,6 +15,13 @@ WEBKIT_TAG ?= webkit2_41
 GO_DEV_TAGS ?= dev $(WEBKIT_TAG)
 GO_PROD_TAGS ?= $(WEBKIT_TAG)
 
+GOTESTSUM_VERSION ?= v1.13.0
+GOLANGCI_LINT_VERSION ?= v2.10.1
+ACT_VERSION ?= v0.2.94
+WAILS_VERSION ?= v2.17.1
+GCC_VERSION ?= 4:12.2.0-3
+VITEST_COVERAGE_VERSION ?= 4.0.17
+
 # CGO configuration for go-mupdf (PDF rendering)
 CGO_ENABLED ?= 1
 
@@ -105,14 +112,14 @@ test-all-coverage: test-coverage frontend-test-coverage ## Run all tests with co
 
 install-tools: ## Install Go test, lint tools, and act for CI testing
 	@echo "Installing system dependencies..."
-	sudo apt-get update && sudo apt-get install -y libmupdf-dev gcc=4:12.2.0-3
+	sudo apt-get update && sudo apt-get install -y libmupdf-dev gcc=$(GCC_VERSION)
 	@echo "Installing Go tools..."
-	go install gotest.tools/gotestsum@v1.13.0
-	go install github.com/golangci/golangci-lint/v2/cmd/golangci-lint@v2.10.1
+	go install gotest.tools/gotestsum@$(GOTESTSUM_VERSION)
+	go install github.com/golangci/golangci-lint/v2/cmd/golangci-lint@$(GOLANGCI_LINT_VERSION)
 	@echo "Installing frontend coverage tool..."
-	cd frontend && npm install -D @vitest/coverage-v8@4.0.17
+	cd frontend && npm install -D --save-exact @vitest/coverage-v8@$(VITEST_COVERAGE_VERSION)
 	@echo "Installing act for local CI testing..."
-	@curl -fsSL https://github.com/nektos/act/releases/download/v0.2.94/act_Linux_x86_64.tar.gz | sudo tar -xz -C /usr/local/bin act
+	@curl -fsSL https://github.com/nektos/act/releases/download/$(ACT_VERSION)/act_Linux_x86_64.tar.gz | sudo tar -xz -C /usr/local/bin act
 # Wails tasks
 .PHONY: wails-dev wails-build wails-build-windows wails-install
 
@@ -143,7 +150,7 @@ wails-build-windows: frontend-build wails-build-windows-skip-frontend ## Build W
 
 
 wails-install: ## Install Wails CLI
-	go install github.com/wailsapp/wails/v2/cmd/wails@v2.17.1
+	go install github.com/wailsapp/wails/v2/cmd/wails@$(WAILS_VERSION)
 	
 # CI/CD testing
 .PHONY: ci-test
@@ -151,7 +158,7 @@ wails-install: ## Install Wails CLI
 ci-test: ## Test GitHub Actions workflow locally (requires act and sudo access)
 	@if ! command -v act >/dev/null 2>&1; then \
 		echo "Installing act locally..."; \
-		curl -fsSL https://github.com/nektos/act/releases/download/v0.2.94/act_Linux_x86_64.tar.gz | tar -xz -C /tmp act && sudo mv /tmp/act /usr/local/bin/act; \
+		curl -fsSL https://github.com/nektos/act/releases/download/$(ACT_VERSION)/act_Linux_x86_64.tar.gz | tar -xz -C /tmp act && sudo mv /tmp/act /usr/local/bin/act; \
 	fi
 	@echo "Running GitHub Actions workflow locally..."
 	sudo -E $(shell command -v act) workflow_dispatch -j test --artifact-server-path /tmp/artifacts

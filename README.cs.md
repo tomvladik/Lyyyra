@@ -99,9 +99,21 @@ make test-all
 
 ## Vývoj
 
+Repozitář obsahuje dev-kontejnér pro VS Code (`.devcontainer/devcontainer.json` a `.devcontainer/Dockerfile`). S běžícím Dockerem na hostu otevřete projekt ve VS Code a zvolte **Dev Containers: Reopen in Container**; repozitář je připojen na `/workspaces/Lyyyra`. Image obsahuje Go 1.26, Node 22, Wails CLI, WebKitGTK 4.1, MinGW, Xvfb a nástroje/lintery používané Make cíli; pojmenované diskové svazky uchovávají cache a historii bashu mezi sestaveními kontejnéru.
+
 - `make wails-dev` / `wails dev` – Wails + Vite vývojový server (hot reload na http://localhost:34115)
 - Devcontainer cílí na WebKitGTK 4.1 (`webkit2_41`). V případě potřeby přepište pomocí `WEBKIT_TAG=webkit2_40 make wails-dev`.
 - Uvnitř headless devcontaineru není GUI relace, proto `make wails-dev` automaticky použije `xvfb-run`, když je `$DISPLAY` prázdné. Nainstalujte jej pomocí `sudo apt-get update && sudo apt-get install -y xvfb`, pokud příkaz chybí, nebo spusťte ručně `xvfb-run -a wails dev -tags "dev webkit2_41"`.
+
+### Historie bashu v dev-kontejnéru
+
+Devcontainer ukládá historii bashu na pojmenovaný diskový svazek `lyyyra-bash-history` (viz `.devcontainer/devcontainer.json`), připojený na `/home/vscode/.bash_history_data`. `HISTFILE` ukazuje na `/home/vscode/.bash_history_data/.bash_history`; `histappend` a `history -a` / `history -n` v `PROMPT_COMMAND` zajistí, že příkazy ze všech terminálů se okamžitě zapisují a jsou viditelné v ostatních terminálech (`ignoreboth` ignoruje duplicity a příkazy začínající mezerou). Limity jsou 10 000 příkazů v paměti a 20 000 v souboru.
+
+Protože jde o pojmenovaný svazek, historie přetrvává i po rebuildu či znovuvytvoření kontejneru a není součástí repozitáře (workspace je samostatný bind mount). Na hostu spusťte `docker volume inspect lyyyra-bash-history` a podívejte se na `Mountpoint`; u Docker Desktopu je tato cesta uvnitř Docker VM (nyní `/data/docker/volumes/lyyyra-bash-history/_data`), takže soubor je tam `/data/docker/volumes/lyyyra-bash-history/_data/.bash_history`. Pro čtení nebo zálohu bez procházení VM spusťte na hostu (nikoli uvnitř kontejneru):
+
+```bash
+docker run --rm -v lyyyra-bash-history:/history alpine cat /history/.bash_history
+```
 
 ## Make cíle
 

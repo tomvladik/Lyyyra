@@ -99,9 +99,21 @@ make test-all
 
 ## Development
 
+The repo includes a VS Code devcontainer (`.devcontainer/devcontainer.json` and `.devcontainer/Dockerfile`). With Docker running on the host, open the project in VS Code and choose **Dev Containers: Reopen in Container**; the repository is mounted at `/workspaces/Lyyyra`. The image provides Go 1.26, Node 22, Wails CLI, WebKitGTK 4.1, MinGW, Xvfb, and the linters/tools used by the Make targets; named volumes preserve caches and bash history across rebuilds, and the host Docker socket is mounted for Docker-based tooling.
+
 - `make wails-dev` / `wails dev` – Wails + Vite dev server (hot reload on http://localhost:34115)
 - The devcontainer targets WebKitGTK 4.1 (`webkit2_41`). Override via `WEBKIT_TAG=webkit2_40 make wails-dev` if needed.
 - Inside a headless devcontainer there is no GUI session, so `make wails-dev` automatically falls back to `xvfb-run` when `$DISPLAY` is empty. Install it via `sudo apt-get update && sudo apt-get install -y xvfb` if the command is missing, or run `xvfb-run -a wails dev -tags "dev webkit2_41"` manually.
+
+### Bash history in the devcontainer
+
+The devcontainer stores bash history on the named Docker volume `lyyyra-bash-history` (see `.devcontainer/devcontainer.json`), mounted at `/home/vscode/.bash_history_data`. `HISTFILE` points to `/home/vscode/.bash_history_data/.bash_history`; `histappend` and `history -a` / `history -n` in `PROMPT_COMMAND` make commands from all terminals append immediately and appear in other terminals (`ignoreboth` skips duplicates and commands starting with a space). The limits are 10,000 commands in memory and 20,000 in the file.
+
+Because it is a named volume, the history survives rebuilding/recreating the container and is not part of the repository (the workspace is a separate bind mount). On the host run `docker volume inspect lyyyra-bash-history` to see its `Mountpoint`; with Docker Desktop this path is inside the Docker VM (currently `/data/docker/volumes/lyyyra-bash-history/_data`), so the file there is `/data/docker/volumes/lyyyra-bash-history/_data/.bash_history`. To read or back it up without going into the VM, run this on the host (not inside the container):
+
+```bash
+docker run --rm -v lyyyra-bash-history:/history alpine cat /history/.bash_history
+```
 
 ## Make Targets
 
