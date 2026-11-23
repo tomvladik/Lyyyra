@@ -60,6 +60,9 @@ function App() {
                 ...goStatus,
                 Sorting: goStatus.Sorting as SortingOption,
                 ProgressMessage: goStatus.ProgressMessage || '',
+                ProgressKey: goStatus.ProgressKey || '',
+                ProgressCurrent: goStatus.ProgressCurrent || 0,
+                ProgressTotal: goStatus.ProgressTotal || 0,
                 ProgressPercent: goStatus.ProgressPercent || 0
             };
             setStatus(prev => (isEqualAppStatus(newStatus, prev) ? prev : newStatus));

@@ -6,6 +6,9 @@ type AppStatus struct {
 	DatabaseReady     bool
 	IsProgress        bool
 	ProgressMessage   string
+	ProgressKey       string
+	ProgressCurrent   int
+	ProgressTotal     int
 	ProgressPercent   int
 	LastSave          string
 	Sorting           SortingOption
@@ -73,15 +76,17 @@ type dtoSong struct {
 	AuthorMusic     string
 	AuthorLyric     string
 	KytaraFile      string
+	VarhanyFile     string
 	SongbookAcronym string
 }
 
 type dtoSongHeader struct {
-	Id         int
-	Entry      int
-	Title      string
-	TitleD     string
-	KytaraFile string
+	Id          int
+	Entry       int
+	Title       string
+	TitleD      string
+	KytaraFile  string
+	VarhanyFile string
 }
 
 type SortingOption string

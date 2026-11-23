@@ -5,11 +5,15 @@ import (
 	"database/sql"
 	"encoding/base64"
 	"fmt"
+	"io"
 	"log/slog"
+	"net/http"
 	"os"
 	"path/filepath"
 	"regexp"
 	"strings"
+	"sync"
+	"time"
 
 	"pdf-crop/pkg/crop"
 
@@ -371,13 +375,108 @@ func (a *App) ProcessKytaraPDF() error {
 	}
 
 	// Update database with filenames
-	return a.updateSongFilenames(songFiles)
+	return a.updateSongFilenames(songFiles, "kytara_file")
 }
 
-// updateSongFilenames updates the database with the song PDF filenames
-func (a *App) updateSongFilenames(songFiles map[int]string) error {
+// ProcessVarhanyPDFs downloads and stores EZ organ sheets from proscholy.cz.
+// Files are optional per song; missing files are skipped.
+func (a *App) ProcessVarhanyPDFs() error {
+	if a.testRun {
+		return nil
+	}
+
+	entries, err := a.getEZSongEntries()
+	if err != nil {
+		return err
+	}
+
+	type result struct {
+		entry    int
+		fileName string
+		ok       bool
+	}
+
+	workers := 8
+	jobs := make(chan int)
+	results := make(chan result, len(entries))
+	var wg sync.WaitGroup
+
+	for i := 0; i < workers; i++ {
+		wg.Add(1)
+		go func() {
+			defer wg.Done()
+			for entry := range jobs {
+				fileName := fmt.Sprintf("varhany_%03d.pdf", entry)
+				targetPath := filepath.Join(a.pdfDir, fileName)
+				if _, err := os.Stat(targetPath); err == nil {
+					results <- result{entry: entry, fileName: fileName, ok: true}
+					continue
+				}
+
+				baseURL := a.varhanyBaseURL
+				if baseURL == "" {
+					baseURL = "https://zpevnik.proscholy.cz/soubor/ez/pdf/varhany"
+				}
+				fileURL := fmt.Sprintf("%s/%03d.pdf", strings.TrimRight(baseURL, "/"), entry)
+				if err := a.downloadOptionalPdf(fileURL, targetPath); err != nil {
+					slog.Debug("Varhany sheet not available", "entry", entry, "error", err)
+					results <- result{entry: entry}
+					continue
+				}
+				results <- result{entry: entry, fileName: fileName, ok: true}
+			}
+		}()
+	}
+
+	go func() {
+		for _, entry := range entries {
+			jobs <- entry
+		}
+		close(jobs)
+		wg.Wait()
+		close(results)
+	}()
+
+	songFiles := make(map[int]string)
+	processed := 0
+	total := len(entries)
+	for r := range results {
+		processed++
+		if r.ok {
+			songFiles[r.entry] = r.fileName
+		}
+		if processed%25 == 0 || processed == total {
+			percent := 90
+			if total > 0 {
+				percent = 90 + (processed*10)/total
+				if percent > 99 {
+					percent = 99
+				}
+			}
+			a.updateProgressKey("progress.downloadingOrganSheetsProgress", percent, processed, total)
+		}
+	}
+
+	if len(songFiles) == 0 {
+		slog.Info("No varhany sheets downloaded")
+		return nil
+	}
+	return a.updateSongFilenames(songFiles, "varhany_file")
+}
+
+// updateSongFilenames updates the database with the song PDF filenames for a given column.
+func (a *App) updateSongFilenames(songFiles map[int]string, column string) error {
+	allowedColumns := map[string]bool{
+		"kytara_file":  true,
+		"varhany_file": true,
+	}
+	if !allowedColumns[column] {
+		return fmt.Errorf("unsupported song filename column: %s", column)
+	}
+
 	return a.withDB(func(db *sql.DB) error {
-		stmt, err := db.Prepare("UPDATE songs SET kytara_file = ? WHERE entry = ? AND songbook_acronym = 'EZ'")
+		query := fmt.Sprintf("UPDATE songs SET %s = ? WHERE entry = ? AND songbook_acronym = 'EZ'", column)
+		stmt, err := db.Prepare(query)
 		if err != nil {
 			return err
 		}
@@ -385,9 +484,59 @@ func (a *App) updateSongFilenames(songFiles map[int]string) error {
 
 		for entry, filename := range songFiles {
 			if _, err := stmt.Exec(filename, entry); err != nil {
-				slog.Warn(fmt.Sprintf("Error updating kytara_file for song %d: %v", entry, err))
+				slog.Warn(fmt.Sprintf("Error updating %s for song %d: %v", column, entry, err))
 			}
 		}
 		return nil
 	})
+}
+
+func (a *App) getEZSongEntries() ([]int, error) {
+	var entries []int
+	err := a.withDB(func(db *sql.DB) error {
+		rows, err := db.Query("SELECT entry FROM songs WHERE songbook_acronym = 'EZ' ORDER BY entry")
+		if err != nil {
+			return err
+		}
+		defer rows.Close()
+
+		for rows.Next() {
+			var entry int
+			if err := rows.Scan(&entry); err != nil {
+				return err
+			}
+			entries = append(entries, entry)
+		}
+		return nil
+	})
+	return entries, err
+}
+
+func (a *App) downloadOptionalPdf(fileURL, targetPath string) error {
+	client := &http.Client{Timeout: 15 * time.Second}
+	resp, err := client.Get(fileURL)
+	if err != nil {
+		return err
+	}
+	defer func() { _ = resp.Body.Close() }()
+
+	if resp.StatusCode != http.StatusOK {
+		return fmt.Errorf("HTTP %d", resp.StatusCode)
+	}
+
+	tmpPath := targetPath + ".tmp"
+	out, err := os.Create(tmpPath)
+	if err != nil {
+		return err
+	}
+	if _, err := io.Copy(out, resp.Body); err != nil {
+		_ = out.Close()
+		_ = os.Remove(tmpPath)
+		return err
+	}
+	if err := out.Close(); err != nil {
+		_ = os.Remove(tmpPath)
+		return err
+	}
+	return os.Rename(tmpPath, targetPath)
 }

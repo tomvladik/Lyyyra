@@ -108,6 +108,9 @@ func TestUpdateProgress(t *testing.T) {
 			if app.status.ProgressMessage != tt.expectedMessage {
 				t.Errorf("expected message %q, got %q", tt.expectedMessage, app.status.ProgressMessage)
 			}
+			if app.status.ProgressKey != "" {
+				t.Errorf("expected empty progress key, got %q", app.status.ProgressKey)
+			}
 			if app.status.ProgressPercent != tt.expectedPercent {
 				t.Errorf("expected percent %d, got %d", tt.expectedPercent, app.status.ProgressPercent)
 			}
@@ -133,7 +136,10 @@ func TestClearProgress(t *testing.T) {
 		status: AppStatus{
 			IsProgress:      true,
 			ProgressMessage: "In progress",
-			ProgressPercent: 75,
+			ProgressKey:     "progress.test",
+			ProgressCurrent: 1,
+			ProgressTotal:   2,
+			ProgressPercent: 50,
 		},
 	}
 
@@ -144,6 +150,12 @@ func TestClearProgress(t *testing.T) {
 	}
 	if app.status.ProgressMessage != "" {
 		t.Errorf("expected empty message, got %q", app.status.ProgressMessage)
+	}
+	if app.status.ProgressKey != "" {
+		t.Errorf("expected empty progress key, got %q", app.status.ProgressKey)
+	}
+	if app.status.ProgressCurrent != 0 || app.status.ProgressTotal != 0 {
+		t.Errorf("expected progress counts reset, got %d/%d", app.status.ProgressCurrent, app.status.ProgressTotal)
 	}
 	if app.status.ProgressPercent != 0 {
 		t.Errorf("expected percent 0, got %d", app.status.ProgressPercent)

@@ -15,6 +15,7 @@ export interface dtoSong {
     AuthorMusic: string
     AuthorLyric: string
     KytaraFile: string
+    VarhanyFile: string
     SongbookAcronym: string
 }
 
@@ -22,8 +23,10 @@ export interface SelectedSong {
     id: number;
     entry: number;
     title: string;
-    filename?: string;
-    hasNotes: boolean;
+    guitarFilename?: string;
+    organFilename?: string;
+    hasGuitarNotes: boolean;
+    hasOrganNotes: boolean;
 }
 
 export interface dtoSongHeader {
@@ -32,6 +35,7 @@ export interface dtoSongHeader {
     Title: string
     TitleD: string
     KytaraFile: string
+    VarhanyFile: string
 }
 
 export interface Author {

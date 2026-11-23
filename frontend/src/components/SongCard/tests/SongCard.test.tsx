@@ -23,6 +23,8 @@ describe('<SongCard />', () => {
     AuthorMusic: '',
     AuthorLyric: '',
     KytaraFile: '',
+    VarhanyFile: '',
+    SongbookAcronym: 'EZ',
   };
 
   const renderWithContext = async (
@@ -200,8 +202,10 @@ describe('<SongCard />', () => {
       id: songWithPdf.Id,
       entry: songWithPdf.Entry,
       title: songWithPdf.Title,
-      filename: songWithPdf.KytaraFile,
-      hasNotes: true,
+      guitarFilename: songWithPdf.KytaraFile,
+      organFilename: undefined,
+      hasGuitarNotes: true,
+      hasOrganNotes: false,
     });
   });
 
@@ -217,8 +221,10 @@ describe('<SongCard />', () => {
       id: mockSong.Id,
       entry: mockSong.Entry,
       title: mockSong.Title,
-      filename: undefined,
-      hasNotes: false,
+      guitarFilename: undefined,
+      organFilename: undefined,
+      hasGuitarNotes: false,
+      hasOrganNotes: false,
     });
   });
 
@@ -229,7 +235,7 @@ describe('<SongCard />', () => {
       id: songWithPdf.Id,
       entry: songWithPdf.Entry,
       title: songWithPdf.Title,
-      filename: songWithPdf.KytaraFile!,
+      guitarFilename: songWithPdf.KytaraFile!
     }];
 
     const { selectionContextValue } = await renderWithContext(

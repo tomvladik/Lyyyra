@@ -32,6 +32,8 @@ describe('<SongList />', () => {
             AuthorMusic: 'Composer 1',
             AuthorLyric: 'Lyricist 1',
             KytaraFile: 'file1.pdf',
+            VarhanyFile: '',
+            SongbookAcronym: 'EZ',
         },
         {
             Id: 2,
@@ -41,6 +43,8 @@ describe('<SongList />', () => {
             AuthorMusic: 'Composer 2',
             AuthorLyric: 'Lyricist 2',
             KytaraFile: 'file2.pdf',
+            VarhanyFile: '',
+            SongbookAcronym: 'EZ',
         },
         {
             Id: 3,
@@ -50,6 +54,8 @@ describe('<SongList />', () => {
             AuthorMusic: 'Composer 3',
             AuthorLyric: 'Lyricist 3',
             KytaraFile: '',
+            VarhanyFile: '',
+            SongbookAcronym: 'EZ',
         },
     ];
 

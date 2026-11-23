@@ -20,17 +20,18 @@ import (
 
 // App struct
 type App struct {
-	ctx         context.Context
-	appDir      string
-	pdfFiles    SongFilesSources
-	pdfDir      string
-	xmlUrl      string
-	dbFilePath  string
-	songBookDir string
-	urlDomain   string
-	status      AppStatus
-	logFile     *os.File
-	testRun     bool
+	ctx            context.Context
+	appDir         string
+	pdfFiles       SongFilesSources
+	pdfDir         string
+	xmlUrl         string
+	dbFilePath     string
+	songBookDir    string
+	urlDomain      string
+	status         AppStatus
+	logFile        *os.File
+	testRun        bool
+	varhanyBaseURL string
 	// supplemental download coordination
 	supplementalMu    sync.Mutex
 	supplementalErrCh chan error
@@ -81,14 +82,15 @@ func NewApp() *App {
 	appDir := filepath.Join(homeDir, "Lyyyra", strings.ReplaceAll(parsedURL.Host, ":", "_"))
 
 	app := App{
-		appDir:      appDir,
-		pdfDir:      filepath.Join(appDir, "PdfSources"),
-		pdfFiles:    SongFilesSources{Domain: parsedURL.Host, Url: pdfUrl, UrlScheme: parsedURL.Scheme, Items: []FileItem{}},
-		xmlUrl:      xmlUrl,
-		dbFilePath:  filepath.Join(appDir, "Songs.db"),
-		songBookDir: filepath.Join(appDir, "SongBook"),
-		urlDomain:   parsedURL.Host,
-		logFile:     logFile,
+		appDir:         appDir,
+		pdfDir:         filepath.Join(appDir, "PdfSources"),
+		pdfFiles:       SongFilesSources{Domain: parsedURL.Host, Url: pdfUrl, UrlScheme: parsedURL.Scheme, Items: []FileItem{}},
+		xmlUrl:         xmlUrl,
+		dbFilePath:     filepath.Join(appDir, "Songs.db"),
+		songBookDir:    filepath.Join(appDir, "SongBook"),
+		urlDomain:      parsedURL.Host,
+		logFile:        logFile,
+		varhanyBaseURL: "https://zpevnik.proscholy.cz/soubor/ez/pdf/varhany",
 	}
 
 	if err := os.MkdirAll(app.songBookDir, os.ModePerm); err != nil {
@@ -173,7 +175,7 @@ func (a *App) GetPdfFile(filename string) (string, error) {
 // ResetData deletes all stored app data and re-initializes songs and database.
 func (a *App) ResetData() error {
 	// Show progress in UI
-	a.startProgress("Mažu uložená data...")
+	a.startProgressKey("progress.deletingData")
 	defer a.clearProgress()
 
 	// Force close any database connections by opening and immediately closing
@@ -213,7 +215,7 @@ func (a *App) ResetData() error {
 	a.InitializeDatabase()
 
 	// Re-run full download and DB preparation
-	a.updateProgress("Znovu stahuji a připravuji data...", 0)
+	a.updateProgressKey("progress.redownloadingData", 0, 0, 0)
 	return a.DownloadEz()
 }
 

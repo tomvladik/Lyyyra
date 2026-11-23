@@ -1,4 +1,5 @@
 import React, { useContext, useState } from "react";
+import { useTranslation } from "react-i18next";
 import styles from "./index.module.less";
 
 import { GetStatus, ResetData } from "../../../wailsjs/go/app/App";
@@ -10,6 +11,7 @@ interface StatusPanelProps {
 }
 
 const StatusPanel: React.FC<StatusPanelProps> = ({ onHide }) => {
+    const { t } = useTranslation();
     const { status: data, updateStatus } = useContext(DataContext);
     const [isResetting, setIsResetting] = useState(false);
     const [error, setError] = useState<string | null>(null);
@@ -32,7 +34,9 @@ const StatusPanel: React.FC<StatusPanelProps> = ({ onHide }) => {
 
     const progressPercent = Math.max(0, Math.min(100, data.ProgressPercent || 0));
     const isBusy = data.IsProgress;
-    const progressMessage = data.ProgressMessage?.trim() || (isBusy ? "Pracuji..." : "Hotovo");
+    const progressMessage = data.ProgressKey
+        ? t(data.ProgressKey, { current: data.ProgressCurrent || 0, total: data.ProgressTotal || 0 })
+        : (data.ProgressMessage?.trim() || (isBusy ? t('statusPanel.working') : t('statusPanel.done')));
     const versionLabel = data.BuildVersion || "dev";
     const lastSaveLabel = formatDate(data.LastSave);
     const allReady = data.WebResourcesReady && data.DatabaseReady && data.SongsReady;
@@ -57,7 +61,10 @@ const StatusPanel: React.FC<StatusPanelProps> = ({ onHide }) => {
         setError(null);
         updateStatus({
             IsProgress: true,
-            ProgressMessage: "Mažu uložená data...",
+            ProgressMessage: "",
+            ProgressKey: "progress.deletingData",
+            ProgressCurrent: 0,
+            ProgressTotal: 0,
             ProgressPercent: 0,
             WebResourcesReady: false,
             DatabaseReady: false,
@@ -71,11 +78,14 @@ const StatusPanel: React.FC<StatusPanelProps> = ({ onHide }) => {
                 ...finalStatus,
                 Sorting: (finalStatus.Sorting || "entry") as SortingOption,
                 ProgressMessage: finalStatus.ProgressMessage || "",
+                ProgressKey: finalStatus.ProgressKey || "",
+                ProgressCurrent: finalStatus.ProgressCurrent || 0,
+                ProgressTotal: finalStatus.ProgressTotal || 0,
                 ProgressPercent: finalStatus.ProgressPercent || 0,
             } as Partial<AppStatus>);
         } catch (err) {
             console.error(err);
-            setError("Nepodařilo se smazat data. Zkuste to prosím znovu.");
+            setError(t('statusPanel.resetError'));
         } finally {
             setIsResetting(false);
         }
@@ -88,7 +98,7 @@ const StatusPanel: React.FC<StatusPanelProps> = ({ onHide }) => {
             onDoubleClick={handleDoubleClick}
         >
             <div className={styles.statusRow}>
-                <span className={styles.statusLabel}>Verze:</span>
+                <span className={styles.statusLabel}>{t('statusPanel.version')}</span>
                 <span className={styles.statusValueTight} title={versionLabel}>
                     {versionLabel}
                 </span>
@@ -101,22 +111,22 @@ const StatusPanel: React.FC<StatusPanelProps> = ({ onHide }) => {
                 </div>
             )}
             <div className={styles.statusRow}>
-                <span className={styles.statusLabel}>Uloženo:</span>
+                <span className={styles.statusLabel}>{t('statusPanel.saved')}</span>
                 <span className={styles.statusValueTight} title={lastSaveLabel}>
                     {lastSaveLabel}
                 </span>
             </div>
             <div className={styles.statusRow}>
-                <span className={styles.statusLabel}>Podklady:</span>
-                <span className={styles.statusValue}>{data.WebResourcesReady ? "OK" : "čekám"}</span>
+                <span className={styles.statusLabel}>{t('statusPanel.resources')}</span>
+                <span className={styles.statusValue}>{data.WebResourcesReady ? t('statusPanel.ok') : t('statusPanel.waiting')}</span>
             </div>
             <div className={styles.statusRow}>
-                <span className={styles.statusLabel}>Databáze:</span>
-                <span className={styles.statusValue}>{data.DatabaseReady ? "OK" : "čekám"}</span>
+                <span className={styles.statusLabel}>{t('statusPanel.database')}</span>
+                <span className={styles.statusValue}>{data.DatabaseReady ? t('statusPanel.ok') : t('statusPanel.waiting')}</span>
             </div>
             <div className={styles.statusRow}>
-                <span className={styles.statusLabel}>Skladby:</span>
-                <span className={styles.statusValue}>{data.SongsReady ? "OK" : "čekám"}</span>
+                <span className={styles.statusLabel}>{t('statusPanel.songs')}</span>
+                <span className={styles.statusValue}>{data.SongsReady ? t('statusPanel.ok') : t('statusPanel.waiting')}</span>
             </div>
             <div className={styles.statusRow} >
 
@@ -125,8 +135,8 @@ const StatusPanel: React.FC<StatusPanelProps> = ({ onHide }) => {
                     onClick={handleReset}
                     disabled={isResetting || isBusy}
                     data-testid="reset-data-button"
-                    title="Smazat data a znovu inicializovat"
-                    aria-label="Smazat data a znovu inicializovat"
+                    title={t('statusPanel.resetTitle')}
+                    aria-label={t('statusPanel.resetTitle')}
                 >
                     <svg
                         width="16"

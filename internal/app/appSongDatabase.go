@@ -14,7 +14,7 @@ import (
 )
 
 // Current database schema version
-const CurrentDBVersion = 2
+const CurrentDBVersion = 3
 
 // InitializeDatabase checks schema version and applies migrations.
 // This is called on every app startup to ensure the database schema is up-to-date.
@@ -102,6 +102,8 @@ func (a *App) applyMigration(db *sql.DB, version int) error {
 	switch version {
 	case 2:
 		return a.migrateToV2(db)
+	case 3:
+		return a.migrateToV3(db)
 	default:
 		return fmt.Errorf("unknown migration version: %d", version)
 	}
@@ -118,7 +120,8 @@ func (a *App) createSchemaV1(db *sql.DB) error {
             title TEXT,
             title_d TEXT,
             verse_order TEXT,
-            kytara_file TEXT
+            kytara_file TEXT,
+            varhany_file TEXT
         );`,
 		`CREATE TABLE IF NOT EXISTS authors (
             id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -232,6 +235,19 @@ func (a *App) migrateToV2(db *sql.DB) error {
 	return err
 }
 
+// ============ SCHEMA V3 (Migration) ============
+// migrateToV3 adds support for organ sheet music files.
+func (a *App) migrateToV3(db *sql.DB) error {
+	slog.Info("Migrating to schema v3")
+
+	if err := a.addColumnIfNotExists(db, "songs", "varhany_file", "TEXT"); err != nil {
+		return fmt.Errorf("error adding varhany_file column: %w", err)
+	}
+
+	_, err := db.Exec(`INSERT INTO schema_version (version) VALUES (3)`)
+	return err
+}
+
 // ============ HELPER FUNCTIONS ============
 // columnExists checks if a column exists in a table
 func (a *App) columnExists(db *sql.DB, table, column string) (bool, error) {
@@ -263,7 +279,7 @@ func (a *App) addColumnIfNotExists(db *sql.DB, table, column, columnDef string) 
 }
 
 func (a *App) FillDatabase() {
-	a.updateProgress("Plním databázi...", 0)
+	a.updateProgressKey("progress.fillingDatabase", 0, 0, 0)
 
 	_ = a.withDB(func(db *sql.DB) error {
 		// Process EZ songbook
@@ -299,8 +315,7 @@ func (a *App) fillEZSongs(db *sql.DB) error {
 	for i, xmlFile := range xmlFiles {
 		if i%10 == 0 || i == totalFiles-1 {
 			percent := int((float64(i+1) / float64(totalFiles)) * 50) // 0-50%
-			message := fmt.Sprintf("Plním EZ databázi... (%d/%d)", i+1, totalFiles)
-			a.updateProgress(message, percent)
+			a.updateProgressKey("progress.fillingEzDatabase", percent, i+1, totalFiles)
 		}
 
 		if err := a.processEZSongFile(db, xmlFile, songbookAcronym); err != nil {
@@ -332,8 +347,7 @@ func (a *App) fillKKSongs(db *sql.DB) error {
 	for i, xmlFile := range xmlFiles {
 		if i%10 == 0 || i == totalFiles-1 {
 			percent := 50 + int((float64(i+1)/float64(totalFiles))*50) // 50-100%
-			message := fmt.Sprintf("Plním KK databázi... (%d/%d)", i+1, totalFiles)
-			a.updateProgress(message, percent)
+			a.updateProgressKey("progress.fillingKkDatabase", percent, i+1, totalFiles)
 		}
 
 		if err := a.processKKSongFile(db, xmlFile, songbookAcronym); err != nil {
@@ -693,6 +707,7 @@ func (a *App) GetSongs(orderBy string, searchPattern string, sourceFilter string
             WHERE song_id = s.id AND author_type = 'words'
             ORDER BY id LIMIT 1),'') AS authorLyric,
     COALESCE(kytara_file, '') AS kytara_file,
+    COALESCE(varhany_file, '') AS varhany_file,
     COALESCE(s.songbook_acronym, '') AS songbook_acronym
   FROM songs s
   JOIN verses v ON s.id = v.song_id
@@ -721,16 +736,16 @@ order by ` + orderColumn + `, v.name`
 
 		for rows.Next() {
 			var (
-				title, allVerses, authorMusic, authorLyric, kytaraFile, songbookAcronym string
-				id, entry                                                               int
+				title, allVerses, authorMusic, authorLyric, kytaraFile, varhanyFile, songbookAcronym string
+				id, entry                                                                            int
 			)
-			err := rows.Scan(&id, &entry, &title, &allVerses, &authorMusic, &authorLyric, &kytaraFile, &songbookAcronym)
+			err := rows.Scan(&id, &entry, &title, &allVerses, &authorMusic, &authorLyric, &kytaraFile, &varhanyFile, &songbookAcronym)
 			if err != nil {
 				slog.Error(fmt.Sprintf("Error scanning row: %s", err))
 				return err
 			}
 
-			result = append(result, dtoSong{Id: id, Entry: entry, Title: title, Verses: allVerses, AuthorMusic: authorMusic, AuthorLyric: authorLyric, KytaraFile: kytaraFile, SongbookAcronym: songbookAcronym})
+			result = append(result, dtoSong{Id: id, Entry: entry, Title: title, Verses: allVerses, AuthorMusic: authorMusic, AuthorLyric: authorLyric, KytaraFile: kytaraFile, VarhanyFile: varhanyFile, SongbookAcronym: songbookAcronym})
 		}
 		return nil
 	})
@@ -750,7 +765,8 @@ SELECT DISTINCT s.id,
        s.title,
        title_d,
        verse_order,
-       kytara_file
+       kytara_file,
+       varhany_file
   FROM songs s
 `
 
@@ -774,16 +790,16 @@ order by ` + orderColumn
 
 		for rows.Next() {
 			var (
-				title, title_d, verse_order, kytaraFile sql.NullString
-				id, entry                               int
+				title, title_d, verse_order, kytaraFile, varhanyFile sql.NullString
+				id, entry                                            int
 			)
-			err := rows.Scan(&id, &entry, &title, &title_d, &verse_order, &kytaraFile)
+			err := rows.Scan(&id, &entry, &title, &title_d, &verse_order, &kytaraFile, &varhanyFile)
 			if err != nil {
 				slog.Error(fmt.Sprintf("Error scanning row: %s", err))
 				return err
 			}
 
-			result = append(result, dtoSongHeader{Id: id, Entry: entry, Title: title.String, TitleD: title_d.String, KytaraFile: kytaraFile.String})
+			result = append(result, dtoSongHeader{Id: id, Entry: entry, Title: title.String, TitleD: title_d.String, KytaraFile: kytaraFile.String, VarhanyFile: varhanyFile.String})
 		}
 		return nil
 	})

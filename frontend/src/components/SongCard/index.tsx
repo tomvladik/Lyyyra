@@ -12,8 +12,10 @@ export const SongCard = ({ data }: { data: dtoSong }) => {
     const [authorData, setData] = useState(new Array<Author>());
     const [, setError] = useState(false);
     const [pdfModalOpen, setPdfModalOpen] = useState(false);
+    const [pdfFilename, setPdfFilename] = useState<string | undefined>(undefined);
     const { addSongToSelection, isSongSelected } = useContext(SelectionContext);
-    const hasNotes = !!data.KytaraFile;
+    const hasKytaraNotes = !!data.KytaraFile;
+    const hasVarhanyNotes = !!data.VarhanyFile;
 
     const fetchData = async () => {
         try {
@@ -25,10 +27,10 @@ export const SongCard = ({ data }: { data: dtoSong }) => {
         }
     };
 
-    const handleOpenPdf = () => {
-        if (hasNotes) {
-            setPdfModalOpen(true);
-        }
+    const handleOpenPdf = (filename?: string) => {
+        if (!filename) return;
+        setPdfFilename(filename);
+        setPdfModalOpen(true);
     };
 
     const isSelected = isSongSelected(data.Id);
@@ -42,8 +44,10 @@ export const SongCard = ({ data }: { data: dtoSong }) => {
             id: data.Id,
             entry: data.Entry,
             title: data.Title,
-            filename: data.KytaraFile || undefined,
-            hasNotes: !!data.KytaraFile,
+            guitarFilename: data.KytaraFile || undefined,
+            organFilename: data.VarhanyFile || undefined,
+            hasGuitarNotes: hasKytaraNotes,
+            hasOrganNotes: hasVarhanyNotes,
         });
     };
 
@@ -93,13 +97,22 @@ export const SongCard = ({ data }: { data: dtoSong }) => {
                 </div>
                 <div className={styles.songFooterRow}>
                     <div className={styles.songFooter}>
-                        {hasNotes && (
+                        {hasKytaraNotes && (
                             <span
                                 className={styles.actionIcon}
-                                onClick={handleOpenPdf}
-                                title={t('songCard.showNotes')}
+                                onClick={() => handleOpenPdf(data.KytaraFile || undefined)}
+                                title={t('songCard.showGuitarNotes')}
                             >
-                                🎵
+                                🎸
+                            </span>
+                        )}
+                        {hasVarhanyNotes && (
+                            <span
+                                className={styles.actionIcon}
+                                onClick={() => handleOpenPdf(data.VarhanyFile || undefined)}
+                                title={t('songCard.showOrganNotes')}
+                            >
+                                🎹
                             </span>
                         )}
                         <span
@@ -115,7 +128,7 @@ export const SongCard = ({ data }: { data: dtoSong }) => {
             </div>
             <PdfModal
                 isOpen={pdfModalOpen}
-                filename={data.KytaraFile || undefined}
+                filename={pdfFilename}
                 songNumber={data.Entry}
                 songName={data.Title}
                 onClose={() => setPdfModalOpen(false)}

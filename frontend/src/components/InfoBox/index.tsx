@@ -85,7 +85,11 @@ export function InfoBox(props: Props) {
       </div>
       }
       {status.IsProgress && <div>
-        <div style={{ marginBottom: '12px' }}>{status.ProgressMessage || t('infoBox.preparingData')}</div>
+        <div style={{ marginBottom: '12px' }}>
+          {status.ProgressKey
+            ? t(status.ProgressKey, { current: status.ProgressCurrent || 0, total: status.ProgressTotal || 0 })
+            : (status.ProgressMessage || t('infoBox.preparingData'))}
+        </div>
         {status.ProgressPercent > 0 && (
           <div>
             <div style={{

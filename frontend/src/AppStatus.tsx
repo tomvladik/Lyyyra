@@ -6,6 +6,9 @@ export interface AppStatus {
     DatabaseReady: boolean;
     IsProgress: boolean;
     ProgressMessage: string;
+    ProgressKey?: string;
+    ProgressCurrent?: number;
+    ProgressTotal?: number;
     ProgressPercent: number;
     LastSave: string;
     Sorting: SortingOption;
@@ -23,6 +26,9 @@ export const isEqualAppStatus = (status1: AppStatus, status2: AppStatus): boolea
         status1.Sorting === status2.Sorting &&
         status1.SearchPattern === status2.SearchPattern &&
         status1.ProgressMessage === status2.ProgressMessage &&
+        status1.ProgressKey === status2.ProgressKey &&
+        status1.ProgressCurrent === status2.ProgressCurrent &&
+        status1.ProgressTotal === status2.ProgressTotal &&
         status1.ProgressPercent === status2.ProgressPercent &&
         status1.BuildVersion === status2.BuildVersion
     );

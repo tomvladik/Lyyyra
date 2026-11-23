@@ -6,6 +6,9 @@ export namespace app {
 	    DatabaseReady: boolean;
 	    IsProgress: boolean;
 	    ProgressMessage: string;
+	    ProgressKey: string;
+	    ProgressCurrent: number;
+	    ProgressTotal: number;
 	    ProgressPercent: number;
 	    LastSave: string;
 	    Sorting: string;
@@ -23,6 +26,9 @@ export namespace app {
 	        this.DatabaseReady = source["DatabaseReady"];
 	        this.IsProgress = source["IsProgress"];
 	        this.ProgressMessage = source["ProgressMessage"];
+	        this.ProgressKey = source["ProgressKey"];
+	        this.ProgressCurrent = source["ProgressCurrent"];
+	        this.ProgressTotal = source["ProgressTotal"];
 	        this.ProgressPercent = source["ProgressPercent"];
 	        this.LastSave = source["LastSave"];
 	        this.Sorting = source["Sorting"];
@@ -52,6 +58,7 @@ export namespace app {
 	    AuthorMusic: string;
 	    AuthorLyric: string;
 	    KytaraFile: string;
+	    VarhanyFile: string;
 	    SongbookAcronym: string;
 	
 	    static createFrom(source: any = {}) {
@@ -67,6 +74,7 @@ export namespace app {
 	        this.AuthorMusic = source["AuthorMusic"];
 	        this.AuthorLyric = source["AuthorLyric"];
 	        this.KytaraFile = source["KytaraFile"];
+	        this.VarhanyFile = source["VarhanyFile"];
 	        this.SongbookAcronym = source["SongbookAcronym"];
 	    }
 	}
@@ -76,6 +84,7 @@ export namespace app {
 	    Title: string;
 	    TitleD: string;
 	    KytaraFile: string;
+	    VarhanyFile: string;
 	
 	    static createFrom(source: any = {}) {
 	        return new dtoSongHeader(source);
@@ -88,6 +97,7 @@ export namespace app {
 	        this.Title = source["Title"];
 	        this.TitleD = source["TitleD"];
 	        this.KytaraFile = source["KytaraFile"];
+	        this.VarhanyFile = source["VarhanyFile"];
 	    }
 	}
 

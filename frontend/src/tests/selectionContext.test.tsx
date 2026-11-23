@@ -12,7 +12,7 @@ describe('SelectionContext defaults', () => {
     it('default addSongToSelection is a no-op', () => {
         const { result } = renderHook(() => useContext(SelectionContext));
         expect(() =>
-            result.current.addSongToSelection({ id: 1, entry: 1, title: 'Test', filename: '', hasNotes: false })
+            result.current.addSongToSelection({ id: 1, entry: 1, title: 'Test', guitarFilename: '', organFilename: '', hasGuitarNotes: false, hasOrganNotes: false })
         ).not.toThrow();
     });
 

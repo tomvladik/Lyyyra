@@ -32,6 +32,8 @@
     },
     "songCard": {
         "showNotes": "Zobrazit noty",
+        "showGuitarNotes": "Zobrazit kytarové noty",
+        "showOrganNotes": "Zobrazit varhanní noty",
         "notesUnavailable": "Noty nejsou dostupné",
         "authorWords": "Text:",
         "authorMusic": "Hudba:",
@@ -48,8 +50,12 @@
         "removeFromList": "Odebrat ze seznamu",
         "selectionLabel": "Výběr skladeb",
         "noNotesAvailable": "Žádná z písní ve výběru nemá dostupné noty.",
+        "noGuitarNotesAvailable": "Žádná z písní ve výběru nemá dostupné kytarové noty.",
+        "noOrganNotesAvailable": "Žádná z písní ve výběru nemá dostupné varhanní noty.",
         "selectedHaveNoNotes": "Vámi vybrané skladby nemají dostupné noty",
         "showPreparedNotes": "Zobrazit připravené noty",
+        "showPreparedGuitarNotes": "Zobrazit připravené kytarové noty",
+        "showPreparedOrganNotes": "Zobrazit připravené varhanní noty",
         "creatingPdf": "Vytvářím PDF…",
         "preparedNotes": "Připravené noty",
         "pdfCreationFailed": "Nepodařilo se vytvořit společné PDF. Zkuste to prosím znovu.",
@@ -78,9 +84,32 @@
         "loadingPdf": "Načítání PDF..."
     },
     "progress": {
+        "startingPreparation": "Zahajuji přípravu dat...",
+        "deletingData": "Mažu uložená data...",
+        "downloadingXml": "Stahuji XML soubory...",
+        "extractingFiles": "Rozbaluji soubory...",
+        "downloadingKkXml": "Stahuji KK XML soubory...",
+        "extractingKkFiles": "Rozbaluji KK soubory...",
         "fillingDatabase": "Plním databázi...",
-        "fillingDatabaseProgress": "Plním databázi... ({{current}}/{{total}})",
+        "fillingEzDatabase": "Plním EZ databázi... ({{current}}/{{total}})",
+        "fillingKkDatabase": "Plním KK databázi... ({{current}}/{{total}})",
+        "processingPdfs": "Zpracovávám PDF soubory...",
+        "downloadingOrganSheets": "Stahuji varhanní noty...",
+        "downloadingOrganSheetsProgress": "Stahuji varhanní noty... ({{current}}/{{total}})",
         "preparingDatabase": "Připravuji databázi...",
         "redownloadingData": "Znovu stahuji a připravuji data..."
+    },
+    "statusPanel": {
+        "working": "Pracuji...",
+        "done": "Hotovo",
+        "version": "Verze:",
+        "saved": "Uloženo:",
+        "resources": "Podklady:",
+        "database": "Databáze:",
+        "songs": "Skladby:",
+        "ok": "OK",
+        "waiting": "čekám",
+        "resetTitle": "Smazat data a znovu inicializovat",
+        "resetError": "Nepodařilo se smazat data. Zkuste to prosím znovu."
     }
 }

@@ -22,6 +22,19 @@ func (a *App) withDB(fn func(*sql.DB) error) error {
 // updateProgress updates the progress message and percentage, then saves status
 func (a *App) updateProgress(message string, percent int) {
 	a.status.ProgressMessage = message
+	a.status.ProgressKey = ""
+	a.status.ProgressCurrent = 0
+	a.status.ProgressTotal = 0
+	a.status.ProgressPercent = percent
+	a.saveStatus()
+}
+
+// updateProgressKey updates progress using a localization key and optional counts.
+func (a *App) updateProgressKey(key string, percent int, current int, total int) {
+	a.status.ProgressMessage = ""
+	a.status.ProgressKey = key
+	a.status.ProgressCurrent = current
+	a.status.ProgressTotal = total
 	a.status.ProgressPercent = percent
 	a.saveStatus()
 }
@@ -30,6 +43,9 @@ func (a *App) updateProgress(message string, percent int) {
 func (a *App) clearProgress() {
 	a.status.IsProgress = false
 	a.status.ProgressMessage = ""
+	a.status.ProgressKey = ""
+	a.status.ProgressCurrent = 0
+	a.status.ProgressTotal = 0
 	a.status.ProgressPercent = 0
 	a.saveStatus()
 }
@@ -38,4 +54,10 @@ func (a *App) clearProgress() {
 func (a *App) startProgress(message string) {
 	a.status.IsProgress = true
 	a.updateProgress(message, 0)
+}
+
+// startProgressKey sets IsProgress and initializes localized progress tracking.
+func (a *App) startProgressKey(key string) {
+	a.status.IsProgress = true
+	a.updateProgressKey(key, 0, 0, 0)
 }

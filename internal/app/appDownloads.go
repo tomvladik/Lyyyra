@@ -209,14 +209,14 @@ func (a *App) DownloadSongBase() error {
 	if err := os.MkdirAll(a.songBookDir, os.ModePerm); err != nil {
 		return err
 	}
-	a.updateProgress("Stahuji XML soubory...", 0)
+	a.updateProgressKey("progress.downloadingXml", 0, 0, 0)
 
 	fileName, err := a.downloadFile(a.xmlUrl, "Songs.zip")
 	if err != nil {
 		slog.Error(err.Error())
 		return err
 	}
-	a.updateProgress("Rozbaluji soubory...", 50)
+	a.updateProgressKey("progress.extractingFiles", 50, 0, 0)
 
 	ezDir := filepath.Join(a.songBookDir, "EZ")
 	if err := os.MkdirAll(ezDir, os.ModePerm); err != nil {
@@ -240,7 +240,7 @@ func (a *App) DownloadKK() error {
 		return err
 	}
 
-	a.updateProgress("Stahuji KK XML soubory...", 0)
+	a.updateProgressKey("progress.downloadingKkXml", 0, 0, 0)
 
 	fileName, err := a.downloadFile(XMLUrl_KK, "SongsKK.zip")
 	if err != nil {
@@ -253,7 +253,7 @@ func (a *App) DownloadKK() error {
 			slog.Error(err.Error())
 		}
 	}()
-	a.updateProgress("Rozbaluji KK soubory...", 50)
+	a.updateProgressKey("progress.extractingKkFiles", 50, 0, 0)
 
 	kkDir := filepath.Join(a.songBookDir, "KK")
 	if err := os.MkdirAll(kkDir, os.ModePerm); err != nil {
@@ -296,7 +296,7 @@ func (a *App) DownloadEz() error {
 
 	var err error
 	// Set progress flag at the start
-	a.startProgress("Zahajuji přípravu dat...")
+	a.startProgressKey("progress.startingPreparation")
 
 	supplementalErrCh := a.startSupplementalDownload()
 
@@ -320,7 +320,7 @@ func (a *App) DownloadEz() error {
 	}
 
 	if !a.status.DatabaseReady {
-		a.updateProgress("Naplňuji databázi...", 0)
+		a.updateProgressKey("progress.fillingDatabase", 0, 0, 0)
 
 		a.FillDatabase()
 		a.status.DatabaseReady = true
@@ -335,11 +335,21 @@ func (a *App) DownloadEz() error {
 		a.status.WebResourcesReady = true
 		a.saveStatus()
 
-		// Process kytara.pdf after download
-		a.updateProgress("Zpracovávám PDF soubory...", 90)
+		// Process PDF files after download
+		a.updateProgressKey("progress.processingPdfs", 85, 0, 0)
 		if err := a.ProcessKytaraPDF(); err != nil {
 			slog.Warn("Error processing kytara.pdf", "error", err)
 			// Don't fail the whole process if PDF splitting fails
+		}
+		a.updateProgressKey("progress.downloadingOrganSheets", 90, 0, 0)
+		if err := a.ProcessVarhanyPDFs(); err != nil {
+			slog.Warn("Error processing varhany PDFs", "error", err)
+		}
+	} else if a.status.WebResourcesReady {
+		// Ensure optional sheet files are processed for existing installations.
+		a.updateProgressKey("progress.downloadingOrganSheets", 90, 0, 0)
+		if err := a.ProcessVarhanyPDFs(); err != nil {
+			slog.Warn("Error processing varhany PDFs", "error", err)
 		}
 	}
 

@@ -42,8 +42,10 @@ describe('<SelectedSongsPanel />', () => {
     id: 1,
     entry: 10,
     title: 'Test song',
-    filename: 'song.pdf',
-    hasNotes: true,
+    guitarFilename: 'song.pdf',
+    organFilename: undefined,
+    hasGuitarNotes: true,
+    hasOrganNotes: false,
   };
 
   beforeEach(() => {
@@ -100,11 +102,11 @@ describe('<SelectedSongsPanel />', () => {
       renderWithSelection(value);
     });
 
-    const combineButton = screen.getByRole('button', { name: /Zobrazit připravené noty/ });
+    const combineButton = screen.getByRole('button', { name: /Zobrazit připravené kytarové noty/ });
     fireEvent.click(combineButton);
 
     await waitFor(() => {
-      expect(AppModule.GetCombinedPdfWithOptions).toHaveBeenCalledWith([sampleSong.filename], false, 0.02);
+      expect(AppModule.GetCombinedPdfWithOptions).toHaveBeenCalledWith([sampleSong.guitarFilename], false, 0.02);
     });
 
     expect(await screen.findByTestId('pdf-modal')).toBeTruthy();

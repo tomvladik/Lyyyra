@@ -32,6 +32,8 @@
     },
     "songCard": {
         "showNotes": "Show sheet music",
+        "showGuitarNotes": "Show guitar sheet music",
+        "showOrganNotes": "Show organ sheet music",
         "notesUnavailable": "Sheet music not available",
         "authorWords": "Lyrics:",
         "authorMusic": "Music:",
@@ -48,8 +50,12 @@
         "removeFromList": "Remove from list",
         "selectionLabel": "Song selection",
         "noNotesAvailable": "None of the selected songs have sheet music available.",
+        "noGuitarNotesAvailable": "None of the selected songs have guitar sheet music available.",
+        "noOrganNotesAvailable": "None of the selected songs have organ sheet music available.",
         "selectedHaveNoNotes": "Your selected songs have no sheet music available",
         "showPreparedNotes": "Show prepared sheet music",
+        "showPreparedGuitarNotes": "Show prepared guitar sheets",
+        "showPreparedOrganNotes": "Show prepared organ sheets",
         "creatingPdf": "Creating PDF…",
         "preparedNotes": "Prepared Sheet Music",
         "pdfCreationFailed": "Failed to create combined PDF. Please try again.",
@@ -78,9 +84,32 @@
         "loadingPdf": "Loading PDF..."
     },
     "progress": {
+        "startingPreparation": "Starting data preparation...",
+        "deletingData": "Deleting stored data...",
+        "downloadingXml": "Downloading XML files...",
+        "extractingFiles": "Extracting files...",
+        "downloadingKkXml": "Downloading KK XML files...",
+        "extractingKkFiles": "Extracting KK files...",
         "fillingDatabase": "Filling database...",
-        "fillingDatabaseProgress": "Filling database... ({{current}}/{{total}})",
+        "fillingEzDatabase": "Filling EZ database... ({{current}}/{{total}})",
+        "fillingKkDatabase": "Filling KK database... ({{current}}/{{total}})",
+        "processingPdfs": "Processing PDF files...",
+        "downloadingOrganSheets": "Downloading organ sheets...",
+        "downloadingOrganSheetsProgress": "Downloading organ sheets... ({{current}}/{{total}})",
         "preparingDatabase": "Preparing database...",
         "redownloadingData": "Re-downloading and preparing data..."
+    },
+    "statusPanel": {
+        "working": "Working...",
+        "done": "Done",
+        "version": "Version:",
+        "saved": "Saved:",
+        "resources": "Resources:",
+        "database": "Database:",
+        "songs": "Songs:",
+        "ok": "OK",
+        "waiting": "waiting",
+        "resetTitle": "Delete data and reinitialize",
+        "resetError": "Failed to delete data. Please try again."
     }
 }

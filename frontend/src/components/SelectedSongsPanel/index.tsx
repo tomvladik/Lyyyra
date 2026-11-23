@@ -101,17 +101,19 @@ export const SelectedSongsPanel = () => {
 
     const handleRemove = (id: number) => removeSongFromSelection(id);
 
-    const handleCombineClick = async () => {
+    const handleCombineClick = async (type: "guitar" | "organ") => {
         if (!selectedSongs.length) return;
-        const songsWithNotes = selectedSongs.filter(s => s.hasNotes);
+        const songsWithNotes = selectedSongs.filter(s => type === "guitar" ? s.hasGuitarNotes : s.hasOrganNotes);
         if (!songsWithNotes.length) {
-            setError(t('selectedSongs.noNotesAvailable'));
+            setError(type === "guitar" ? t('selectedSongs.noGuitarNotesAvailable') : t('selectedSongs.noOrganNotesAvailable'));
             return;
         }
         setIsCombining(true);
         setError("");
         try {
-            const filenames = songsWithNotes.map(song => song.filename).filter(Boolean) as string[];
+            const filenames = songsWithNotes
+                .map(song => type === "guitar" ? song.guitarFilename : song.organFilename)
+                .filter(Boolean) as string[];
             const dataUrl = await GetCombinedPdfWithOptions(filenames, shouldCropPdf, 0.02);
             setCombinedPdf(dataUrl);
             setIsModalOpen(true);
@@ -292,9 +294,15 @@ export const SelectedSongsPanel = () => {
                                 <div>
                                     <span className={styles.itemNumber}>{song.entry}.</span>
                                     <span className={styles.itemTitle}>{song.title}</span>
-                                    {!song.hasNotes && (
+                                    {!song.hasGuitarNotes && !song.hasOrganNotes && (
                                         <span className={styles.songNoteInfo}>
                                             {t('selectedSongs.withoutNotes')}
+                                        </span>
+                                    )}
+                                    {(song.hasGuitarNotes || song.hasOrganNotes) && (
+                                        <span className={styles.songNoteInfo}>
+                                            {song.hasGuitarNotes ? "🎸" : ""}
+                                            {song.hasOrganNotes ? " 🎹" : ""}
                                         </span>
                                     )}
                                 </div>
@@ -343,7 +351,7 @@ export const SelectedSongsPanel = () => {
                                 type="checkbox"
                                 checked={shouldCropPdf}
                                 onChange={(e) => setShouldCropPdf(e.target.checked)}
-                                disabled={!selectedSongs.some(s => s.hasNotes) || isCombining}
+                                disabled={!selectedSongs.some(s => s.hasGuitarNotes || s.hasOrganNotes) || isCombining}
                             />
                             <span>
                                 {t('selectedSongs.cropCombinedPdf')}
@@ -357,11 +365,20 @@ export const SelectedSongsPanel = () => {
                             <button
                                 type="button"
                                 className={styles.actionButton}
-                                onClick={handleCombineClick}
-                                disabled={!selectedSongs.length || !selectedSongs.some(s => s.hasNotes) || isCombining}
-                                title={!selectedSongs.some(s => s.hasNotes) && selectedSongs.length ? t('selectedSongs.selectedHaveNoNotes') : ""}
+                                onClick={() => handleCombineClick("guitar")}
+                                disabled={!selectedSongs.length || !selectedSongs.some(s => s.hasGuitarNotes) || isCombining}
+                                title={!selectedSongs.some(s => s.hasGuitarNotes) && selectedSongs.length ? t('selectedSongs.noGuitarNotesAvailable') : ""}
                             >
-                                {isCombining ? t('selectedSongs.creatingPdf') : t('selectedSongs.showPreparedNotes')}
+                                {isCombining ? t('selectedSongs.creatingPdf') : t('selectedSongs.showPreparedGuitarNotes')}
+                            </button>
+                            <button
+                                type="button"
+                                className={styles.actionButton}
+                                onClick={() => handleCombineClick("organ")}
+                                disabled={!selectedSongs.length || !selectedSongs.some(s => s.hasOrganNotes) || isCombining}
+                                title={!selectedSongs.some(s => s.hasOrganNotes) && selectedSongs.length ? t('selectedSongs.noOrganNotesAvailable') : ""}
+                            >
+                                {isCombining ? t('selectedSongs.creatingPdf') : t('selectedSongs.showPreparedOrganNotes')}
                             </button>
                             <button
                                 type="button"
