@@ -10,6 +10,8 @@ interface Props {
   // status: AppStatus
   // isProgress: boolean
   loadSongs: () => void
+  isStatusPanelVisible: boolean
+  onToggleStatusPanel: () => void
 }
 
 export function InfoBox(props: Props) {
@@ -76,7 +78,19 @@ export function InfoBox(props: Props) {
 
   return (
     <div className="InfoBox">
-      <LanguageSwitcher />
+      <div className={styles.topBar}>
+        <button
+          type="button"
+          className={`${styles.settingsButton} ${props.isStatusPanelVisible ? styles.active : ''}`.trim()}
+          onClick={props.onToggleStatusPanel}
+          title={t('infoBox.toggleStatusPanel')}
+          aria-label={t('infoBox.toggleStatusPanel')}
+          aria-pressed={props.isStatusPanelVisible}
+        >
+          ⚙
+        </button>
+        <LanguageSwitcher />
+      </div>
       {isButtonVisible && <div>
         {resultText} &gt;&gt;&gt;
         {!status.IsProgress && <button className={styles.actionButton} onClick={() => {

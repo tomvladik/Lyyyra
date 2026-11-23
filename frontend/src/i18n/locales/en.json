@@ -11,6 +11,7 @@
         "downloadData": "Download data from internet",
         "importData": "Import data",
         "preparingData": "Preparing data, please wait....",
+        "toggleStatusPanel": "Show/hide status panel",
         "copyrightNotice": "Please note that materials downloaded from <1>www.evangelickyzpevnik.cz</1> are for personal use only. A licensing agreement with the copyright holders is required for any other use.",
         "searchLabel": "Search in text",
         "searchPlaceholder": "Search text...",
@@ -110,6 +111,7 @@
         "ok": "OK",
         "waiting": "waiting",
         "resetTitle": "Delete data and reinitialize",
+        "resetConfirm": "Delete all downloaded data and reinitialize?",
         "resetError": "Failed to delete data. Please try again."
     }
 }

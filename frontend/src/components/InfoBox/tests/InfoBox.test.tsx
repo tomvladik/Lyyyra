@@ -16,7 +16,7 @@ describe('<InfoBox />', () => {
     const status = createMockStatus(statusOverrides);
     return render(
       <DataContext.Provider value={{ status, updateStatus: mockUpdateStatus, sourceFilter: '', setSourceFilter: mockSetSourceFilter }}>
-        <InfoBox loadSongs={mockLoadSongs} />
+        <InfoBox loadSongs={mockLoadSongs} isStatusPanelVisible={false} onToggleStatusPanel={vi.fn()} />
       </DataContext.Provider>
     );
   };
@@ -124,7 +124,7 @@ describe('<InfoBox />', () => {
     const status = createMockStatus({ DatabaseReady: true, SongsReady: true, Sorting: 'entry' });
     render(
       <DataContext.Provider value={{ status, updateStatus: mockUpdateStatus, sourceFilter: '', setSourceFilter: vi.fn() }}>
-        <InfoBox loadSongs={mockLoadSongs} />
+        <InfoBox loadSongs={mockLoadSongs} isStatusPanelVisible={false} onToggleStatusPanel={vi.fn()} />
       </DataContext.Provider>
     );
     const sortSelect = screen.getAllByRole('combobox')[0];

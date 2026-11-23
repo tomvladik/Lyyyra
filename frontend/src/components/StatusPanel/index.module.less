@@ -2,9 +2,9 @@
 
 .statusPanel {
     width: 100%;
-    display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
-    gap: 4px 10px;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 4px 16px;
     padding: 8px 12px;
     background: fade(@myDarkBlueColour, 88%);
     color: #f2f4f8;
@@ -13,14 +13,16 @@
     border-top: 1px solid fade(#ffffff, 12%);
     border-left: 1px solid fade(#ffffff, 6%);
     border-right: 1px solid fade(#000000, 10%);
+    align-items: center;
 }
 
 .statusRow,
 .progressRow {
-    display: grid;
-    grid-template-columns: max-content 1fr;
+    display: inline-flex;
     align-items: center;
     gap: 3px 6px;
+    min-width: 0;
+    flex: 0 0 auto;
 }
 
 .statusRowWithAction {
@@ -47,15 +49,17 @@
 .statusValueTight {
     .statusValue();
     white-space: nowrap;
-    overflow: hidden;
-    text-overflow: ellipsis;
+    overflow: visible;
+    text-overflow: clip;
 }
 
 .progressRow {
-    grid-column: 1 / -1;
+    flex: 1 1 100%;
+    width: 100%;
     border-top: 1px solid fade(#ffffff, 12%);
     padding-top: 4px;
-    grid-template-columns: 1fr max-content;
+    display: flex;
+    justify-content: space-between;
 }
 
 .resetButton {
@@ -90,6 +94,10 @@
 .resetIcon {
     display: block;
     min-width: 0;
+}
+
+.resetRow {
+    margin-left: auto;
 }
 
 .progressMessage {

@@ -54,7 +54,7 @@ const StatusPanel: React.FC<StatusPanelProps> = ({ onHide }) => {
     const handleReset = async () => {
         if (isResetting) return;
 
-        const confirmed = window.confirm("Smazat všechna stažená data a znovu inicializovat?");
+        const confirmed = window.confirm(t('statusPanel.resetConfirm'));
         if (!confirmed) return;
 
         setIsResetting(true);
@@ -128,8 +128,7 @@ const StatusPanel: React.FC<StatusPanelProps> = ({ onHide }) => {
                 <span className={styles.statusLabel}>{t('statusPanel.songs')}</span>
                 <span className={styles.statusValue}>{data.SongsReady ? t('statusPanel.ok') : t('statusPanel.waiting')}</span>
             </div>
-            <div className={styles.statusRow} >
-
+            <div className={`${styles.statusRow} ${styles.resetRow}`}>
                 <button
                     className={styles.resetButton}
                     onClick={handleReset}

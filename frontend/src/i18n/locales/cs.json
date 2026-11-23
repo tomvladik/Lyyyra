@@ -11,6 +11,7 @@
         "downloadData": "Stáhnout data z internetu",
         "importData": "Importovat data",
         "preparingData": "Připravuji data, vyčkejte ....",
+        "toggleStatusPanel": "Zobrazit/skrýt stavový panel",
         "copyrightNotice": "Upozorňujeme, že materiály stahované z <1>www.evangelickyzpevnik.cz</1> slouží pouze pro vlastní potřebu a k případnému dalšímu užití je třeba uzavřít licenční smlouvu s nositeli autorských práv.",
         "searchLabel": "Hledat v textu (diakritika se ignoruje)",
         "searchPlaceholder": "Hledat text ...",
@@ -110,6 +111,7 @@
         "ok": "OK",
         "waiting": "čekám",
         "resetTitle": "Smazat data a znovu inicializovat",
+        "resetConfirm": "Smazat všechna stažená data a znovu inicializovat?",
         "resetError": "Nepodařilo se smazat data. Zkuste to prosím znovu."
     }
 }
