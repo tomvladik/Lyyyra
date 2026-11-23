@@ -58,7 +58,7 @@ func (a *App) parseHtml(fileName string) []FileItem {
 	if err != nil {
 		slog.Error(err.Error())
 	}
-	defer func() { _ = file.Close() }()
+	defer file.Close()
 	// Parse the HTML document
 	doc, err := htmlquery.Parse(file)
 	if err != nil {

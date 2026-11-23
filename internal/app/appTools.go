@@ -14,7 +14,7 @@ func unzip(zipFile, destination string) error {
 	if err != nil {
 		return err
 	}
-	defer func() { _ = r.Close() }()
+	defer r.Close() //nolint:errcheck
 
 	for _, file := range r.File {
 		// Decode CP852-encoded names (common in Czech/Central European zips)
@@ -44,14 +44,14 @@ func unzip(zipFile, destination string) error {
 		if err != nil {
 			return err
 		}
-		defer func() { _ = outFile.Close() }()
+		defer outFile.Close()
 
 		// Open the zip file
 		rc, err := file.Open()
 		if err != nil {
 			return err
 		}
-		defer func() { _ = rc.Close() }()
+		defer rc.Close()
 
 		// Copy the contents of the file
 		_, err = io.Copy(outFile, rc)
@@ -68,12 +68,12 @@ func copyFile(src, dst string) error {
 	if err != nil {
 		return err
 	}
-	defer func() { _ = sourceFile.Close() }()
+	defer sourceFile.Close()
 	destFile, err := os.Create(dst)
 	if err != nil {
 		return err
 	}
-	defer func() { _ = destFile.Close() }()
+	defer destFile.Close()
 
 	_, err = io.Copy(destFile, sourceFile)
 	return err

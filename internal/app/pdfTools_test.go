@@ -36,7 +36,7 @@ func TestSplitPdfByPages(t *testing.T) {
 	if err != nil {
 		t.Fatalf("Failed to download PDF: %v", err)
 	}
-	defer func() { _ = resp.Body.Close() }()
+	defer resp.Body.Close()
 
 	if resp.StatusCode != http.StatusOK {
 		t.Fatalf("Failed to download PDF: HTTP %d", resp.StatusCode)
@@ -46,7 +46,7 @@ func TestSplitPdfByPages(t *testing.T) {
 	if err != nil {
 		t.Fatalf("Failed to create PDF file: %v", err)
 	}
-	defer func() { _ = pdfFile.Close() }()
+	defer pdfFile.Close()
 
 	_, err = io.Copy(pdfFile, resp.Body)
 	if err != nil {
@@ -101,14 +101,14 @@ func TestSplitPdfByPages(t *testing.T) {
 			t.Errorf("Failed to open source file %s: %v", srcPath, err)
 			continue
 		}
-		defer func() { _ = srcFile.Close() }()
+		defer srcFile.Close()
 
 		dstFile, err := os.Create(dstPath)
 		if err != nil {
 			t.Errorf("Failed to create destination file %s: %v", dstPath, err)
 			continue
 		}
-		defer func() { _ = dstFile.Close() }()
+		defer dstFile.Close()
 
 		if _, err := io.Copy(dstFile, srcFile); err != nil {
 			t.Errorf("Failed to copy file %s: %v", entry.Name(), err)
@@ -149,13 +149,13 @@ func TestSplitPdfByPagesWithSkip(t *testing.T) {
 	if err != nil {
 		t.Fatalf("Failed to download PDF: %v", err)
 	}
-	defer func() { _ = resp.Body.Close() }()
+	defer resp.Body.Close()
 
 	pdfFile, err := os.Create(pdfPath)
 	if err != nil {
 		t.Fatalf("Failed to create file: %v", err)
 	}
-	defer func() { _ = pdfFile.Close() }()
+	defer pdfFile.Close()
 
 	if _, err := io.Copy(pdfFile, resp.Body); err != nil {
 		t.Fatalf("Failed to write PDF file: %v", err)
@@ -196,9 +196,9 @@ func TestSplitPdfByPagesWithSkip(t *testing.T) {
 					src := filepath.Join(outputDir, entry.Name())
 					dst := filepath.Join(workspaceDir, entry.Name())
 					srcFile, _ := os.Open(src)
-					defer func() { _ = srcFile.Close() }()
+					defer srcFile.Close()
 					dstFile, _ := os.Create(dst)
-					defer func() { _ = dstFile.Close() }()
+					defer dstFile.Close()
 					_, _ = io.Copy(dstFile, srcFile)
 				}
 			}

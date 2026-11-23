@@ -15,7 +15,7 @@ func (a *App) withDB(fn func(*sql.DB) error) error {
 		slog.Error(fmt.Sprintf("Error opening database: %s", err))
 		return err
 	}
-	defer func() { _ = db.Close() }()
+	defer db.Close()
 	return fn(db)
 }
 

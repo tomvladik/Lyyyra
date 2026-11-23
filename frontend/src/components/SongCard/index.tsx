@@ -22,7 +22,7 @@ export const SongCard = ({ data }: { data: dtoSong }) => {
             // Assume fetchData returns a Promise
             const result = await GetSongAuthors(data.Id);
             setData(result);
-        } catch (error) {
+        } catch {
             setError(true);
         }
     };

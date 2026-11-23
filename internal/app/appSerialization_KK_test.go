@@ -54,7 +54,7 @@ func Test_insertSongKK_stripsTitleNumber(t *testing.T) {
 	if err != nil {
 		t.Fatalf("Failed to open test database: %v", err)
 	}
-	defer func() { _ = db.Close() }()
+	defer db.Close()
 
 	tests := []struct {
 		name          string
@@ -161,7 +161,7 @@ func Test_insertVersesKK_parsesVerseMarkers(t *testing.T) {
 	if err != nil {
 		t.Fatalf("Failed to open test database: %v", err)
 	}
-	defer func() { _ = db.Close() }()
+	defer db.Close()
 
 	app = &App{}
 	songID := int64(1)
@@ -189,7 +189,7 @@ func Test_insertVersesKK_parsesVerseMarkers(t *testing.T) {
 	if err != nil {
 		t.Fatalf("Failed to query verses: %v", err)
 	}
-	defer func() { _ = rows.Close() }()
+	defer rows.Close()
 
 	var verses []struct {
 		name  string

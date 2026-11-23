@@ -48,7 +48,7 @@ func (a *App) downloadFile(fileUrl, fileName string) (string, error) {
 	if err != nil {
 		return "", err
 	}
-	defer func() { _ = destFile.Close() }()
+	defer destFile.Close()
 
 	parsedURL, err := url.Parse(fileUrl)
 	if err != nil {
@@ -64,7 +64,7 @@ func (a *App) downloadFile(fileUrl, fileName string) (string, error) {
 		if err != nil {
 			return "", err
 		}
-		defer func() { _ = sourceFile.Close() }()
+		defer sourceFile.Close()
 		_, err = io.Copy(destFile, sourceFile)
 		if err != nil {
 			return "", err
@@ -87,7 +87,7 @@ func (a *App) downloadFile(fileUrl, fileName string) (string, error) {
 		if err != nil {
 			return "", err
 		}
-		defer func() { _ = response.Body.Close() }()
+		defer response.Body.Close()
 
 		// Check if the request was successful (status code 200)
 		if response.StatusCode != http.StatusOK {

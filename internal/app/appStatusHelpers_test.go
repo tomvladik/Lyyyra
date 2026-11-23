@@ -181,7 +181,7 @@ func TestHasPdfSources_MissingOnePDF(t *testing.T) {
 
 func TestHasPdfSources_EmptyPdfDir(t *testing.T) {
 	app := setupTestApp(t) // pdfDir not created
-	app.pdfDir = ""       // explicitly empty
+	app.pdfDir = ""        // explicitly empty
 	if app.hasPdfSources() {
 		t.Error("expected false when pdfDir is empty string")
 	}

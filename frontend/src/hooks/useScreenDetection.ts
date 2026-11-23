@@ -75,7 +75,7 @@ export function useScreenDetection(): ScreenDetailed[] {
                         setAvailableScreens([primaryScreen]);
                     }
                 }
-            } catch (err) {
+            } catch {
                 // Screen detection not available or denied - default to single screen
                 setAvailableScreens([{
                     left: 0,

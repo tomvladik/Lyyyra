@@ -182,7 +182,7 @@ export const SelectedSongsPanel = () => {
                         const verses = Array.isArray(obj.verses) ? obj.verses.map((vv: unknown) => ({ name: (vv as { name?: string }).name || "", lines: (vv as { lines?: string }).lines || "" })) : [];
                         const verseOrder = typeof obj.verse_order === "string" ? obj.verse_order : "";
                         songsData.push({ title: `${song.entry}: ${song.title}`, verseOrder, verses });
-                    } catch (e) {
+                    } catch {
                         songsData.push({ title: `${song.entry}: ${song.title}`, verseOrder: "", verses: [] });
                     }
                 } else {
@@ -228,7 +228,7 @@ export const SelectedSongsPanel = () => {
                     setIsProjectionOpen(false);
                     projectionWindowRef.current = null;
                 });
-            } catch (e) {
+            } catch {
                 try {
                     w.document.open();
                     w.document.write(html);
@@ -246,7 +246,7 @@ export const SelectedSongsPanel = () => {
                     throw e2;
                 }
             }
-        } catch (err) {
+        } catch {
             setError(t('selectedSongs.projectionOpenFailed'));
             setIsProjectionOpen(false);
             projectionWindowRef.current = null;
